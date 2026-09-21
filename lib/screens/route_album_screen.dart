@@ -1,3 +1,4 @@
+import '../widgets/route_design/route_design.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -30,6 +31,8 @@ class RouteAlbumScreen extends StatefulWidget {
 class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
   bool _uploading = false;
   String _progress = '';
+  DocumentReference<Map<String,dynamic>>? _selected;
+  bool _selectedVideo=false, _selectedAllowed=false;
   late final _album = FirebaseFirestore.instance
       .collection('travel_plans')
       .doc(widget.plan.id)
@@ -165,24 +168,9 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-        child: Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Yalnızca katılımcılar görebilir',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: _uploading ? null : _upload,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Fotoğraf / video ekle'),
-            ),
-          ],
-        ),
-      ),
+      const Padding(padding:EdgeInsets.fromLTRB(16,12,16,8),child:Row(children:[Icon(Icons.lock_outline,size:14,color:AppColors.textMuted),SizedBox(width:6),Text('Yalnızca katılımcılar görebilir',style:TextStyle(color:AppColors.textMuted,fontSize:12))])),
+      Padding(padding:const EdgeInsets.fromLTRB(16,4,16,12),child:RouteAction(label:'Fotoğraf veya video ekle',icon:Icons.add,outlined:true,onPressed:_uploading?null:_upload)),
+      if(_selected==null)const Padding(padding:EdgeInsets.only(bottom:8),child:Text('Paylaşmak için bir içeriğe uzun bas.',style:TextStyle(color:AppColors.textMuted,fontSize:12))),
       if (_uploading) ...[
         const LinearProgressIndicator(),
         Padding(padding: const EdgeInsets.all(8), child: Text(_progress)),
@@ -206,16 +194,17 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
                 ),
               );
             return GridView.builder(
-              padding: const EdgeInsets.all(3),
+              padding: const EdgeInsets.symmetric(horizontal:12,vertical:4),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
               ),
               itemCount: s.data!.docs.length,
               itemBuilder: (_, i) {
                 final doc = s.data!.docs[i], d = doc.data();
                 return InkWell(
+                  onLongPress:()=>setState((){_selected=doc.reference;_selectedVideo=d['kind']=='video';_selectedAllowed=d['ownerId']==FirebaseAuth.instance.currentUser?.uid||d['allowExport']==true;}),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -228,6 +217,8 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
                       _PrivateThumbnail(
                         path: (d['thumbnailPath'] ?? '').toString(),
                       ),
+                      if(_selected?.id==doc.id)Positioned.fill(child:Container(decoration:BoxDecoration(border:Border.all(color:AppColors.cyan,width:3),borderRadius:BorderRadius.circular(8)))),
+                      if(_selected?.id==doc.id)const Positioned(top:6,left:6,child:Icon(Icons.check_circle,color:AppColors.cyan)),
                       if (d['kind'] == 'video')
                         const Positioned(
                           top: 5,
@@ -257,6 +248,11 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
           },
         ),
       ),
+      if(_selected!=null)SafeArea(top:false,child:Padding(padding:const EdgeInsets.all(12),child:RoutePanel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[const Expanded(child:Text('1 içerik seçildi')),IconButton(tooltip:'Seçimi kaldır',onPressed:()=>setState(()=>_selected=null),icon:const Icon(Icons.close))]),
+        Text(_selectedAllowed?'Paylaşmadan önce düzenleyebilirsin.':'Yükleyen kişi dışarıya paylaşmayı kapattı.',style:const TextStyle(color:AppColors.textMuted,fontSize:12)),
+        const SizedBox(height:8),Row(children:[for(final a in [('download','İndir',Icons.download),('story','Story',Icons.add_circle_outline),('post',_selectedVideo?'Reels':'Gönderi',Icons.send_outlined)])Expanded(child:TextButton(onPressed:!_selectedAllowed?null:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>_AlbumViewer(reference:_selected!,initialAction:a.$1))),child:Column(children:[Icon(a.$3),Text(a.$2)])))]),
+      ])))),
     ],
   );
 }
@@ -287,7 +283,8 @@ class _PrivateThumbnailState extends State<_PrivateThumbnail> {
 }
 
 class _AlbumViewer extends StatefulWidget {
-  const _AlbumViewer({required this.reference});
+  const _AlbumViewer({required this.reference,this.initialAction});
+  final String? initialAction;
   final DocumentReference<Map<String, dynamic>> reference;
   @override
   State<_AlbumViewer> createState() => _AlbumViewerState();
@@ -321,7 +318,7 @@ class _AlbumViewerState extends State<_AlbumViewer> {
       }
       _file = file;
       _isVideo = d['kind'] == 'video';
-      if (mounted) setState(() {});
+      if (mounted) {setState(() {});if(widget.initialAction!=null)await _action(widget.initialAction!);}
     } catch (e) {
       if (mounted) setState(() => _error = userFacingError(e));
     }

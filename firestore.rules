@@ -554,20 +554,30 @@ service cloud.firestore {
         function pollMember() { return signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]); }
         allow read: if pollMember();
         allow create: if pollMember() && request.resource.data.authorId == request.auth.uid &&
-          request.resource.data.keys().hasOnly(['authorId','question','options','closed','createdAt']) &&
+          request.resource.data.keys().hasOnly(['authorId','question','options','closed','createdAt','allowMultiple','closesAt']) &&
           request.resource.data.question is string && request.resource.data.question.size() > 0 && request.resource.data.question.size() <= 180 &&
           request.resource.data.options is list && request.resource.data.options.size() >= 2 && request.resource.data.options.size() <= 4 &&
+          request.resource.data.get('allowMultiple',false) is bool &&
+          (!('closesAt' in request.resource.data) || (request.resource.data.closesAt is timestamp && request.resource.data.closesAt > request.time)) &&
           request.resource.data.closed == false && request.resource.data.createdAt == request.time;
         allow update: if pollMember() && (resource.data.authorId == request.auth.uid || get(/databases/$(database)/documents/travel_plans/$(planId)).data.ownerId == request.auth.uid) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['closed']) && request.resource.data.closed is bool;
         allow delete: if false;
         match /votes/{uid} {
           allow read: if pollMember();
+          function poll() { return get(/databases/$(database)/documents/travel_plans/$(planId)/polls/$(pollId)).data; }
           allow create, update: if pollMember() && request.auth.uid == uid &&
-            get(/databases/$(database)/documents/travel_plans/$(planId)/polls/$(pollId)).data.closed == false &&
-            request.resource.data.keys().hasOnly(['choice','updatedAt']) && request.resource.data.choice is int && request.resource.data.choice >= 0 &&
-            request.resource.data.choice < get(/databases/$(database)/documents/travel_plans/$(planId)/polls/$(pollId)).data.options.size() &&
-            request.resource.data.updatedAt == request.time;
+            poll().closed == false && (!('closesAt' in poll()) || poll().closesAt > request.time) &&
+            request.resource.data.updatedAt == request.time && (
+              (request.resource.data.keys().hasOnly(['choice','updatedAt']) &&
+               request.resource.data.choice is int && request.resource.data.choice >= 0 && request.resource.data.choice < poll().options.size()) ||
+              (poll().get('allowMultiple',false) == true && request.resource.data.keys().hasOnly(['choices','updatedAt']) &&
+               request.resource.data.choices is list && request.resource.data.choices.size() <= poll().options.size() &&
+               request.resource.data.choices.toSet().size() == request.resource.data.choices.size() &&
+               request.resource.data.choices.hasOnly([0,1,2,3]) &&
+               (poll().options.size() >= 3 || !request.resource.data.choices.hasAny([2,3])) &&
+               (poll().options.size() >= 4 || !request.resource.data.choices.hasAny([3])))
+            );
           allow delete: if false;
         }
       }

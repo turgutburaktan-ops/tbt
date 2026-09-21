@@ -185,7 +185,7 @@ class TravelPlanService {
   }
 
   Future<String> copyPlan(TravelPlan plan) async {
-    final spots = await resolveRouteSpots(plan);
+    final spots = await resolveSpots(plan);
     return create(
       title: '${plan.title} kopyası',
       city: plan.city,

@@ -263,7 +263,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
         Polyline(
           polylineId: const PolylineId('itinerary'),
           points: widget.itinerary!.points,
-          color: AppColors.blue,
+          color: AppColors.cyan,
           width: 5,
         ),
     },

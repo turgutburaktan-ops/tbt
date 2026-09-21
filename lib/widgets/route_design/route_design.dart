@@ -38,7 +38,7 @@ class RouteModePicker extends StatelessWidget {
         decoration: BoxDecoration(color: value == mode ? AppColors.selection : AppColors.surface,
           border: Border.all(color: value == mode ? AppColors.cyan : AppColors.border), borderRadius: BorderRadius.circular(16)),
         child: Column(children: [Icon(icon(mode), color: value == mode ? AppColors.cyan : AppColors.textMuted),
-          const SizedBox(height: 6), Text(mode, maxLines: 1, style: TextStyle(fontSize: 12, color: value == mode ? AppColors.cyan : AppColors.textMuted))]))))]);
+          const SizedBox(height: 6), Text(mode, maxLines: 1, style: TextStyle(fontSize: 12, color: value == mode ? AppColors.cyan : AppColors.textMuted))])))))]);
 }
 
 class RoutePanel extends StatelessWidget {

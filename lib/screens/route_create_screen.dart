@@ -87,6 +87,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     } catch (_) {}
     _city.addListener(_scheduleDraft);
     _title.addListener(_scheduleDraft);
+    _description.addListener(_scheduleDraft);
     _meetingNote.addListener(_scheduleDraft);
     if(widget.existingPlan != null) {
       final p=widget.existingPlan!;_title.text=p.title;_city.text=p.city;_transport=p.transport;_visibility=p.visibility;
@@ -234,6 +235,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     if (!mounted) return;
     setState(() {
       _title.clear();
+      _origin=null;_originLabel='Başlangıç noktası seç';_manual=false;_roundTrip=false;_description.clear();_difficulty='';_allowJoin=false;
       _city.clear();
       _meetingNote.clear();
       _stops.clear();
@@ -807,7 +809,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     backgroundColor:AppColors.background,appBar:AppBar(leading:IconButton(onPressed:_busy?null:_back,icon:const Icon(Icons.arrow_back)),title:Text(_stepTitles[_step]),actions:[PopupMenuButton<String>(enabled:!_busy,onSelected:(v){if(v=='new')_newDraft();if(v=='sort')_smartSort();if(v=='suggest')_suggest();},itemBuilder:(_)=>[const PopupMenuItem(value:'new',child:Text('Yeni taslak')),if(_step==1)...[const PopupMenuItem(value:'suggest',child:Text('Bana rota öner')),PopupMenuItem(value:'sort',enabled:_stops.length>=3,child:const Text('Akıllı sırala'))]])]),
     bottomNavigationBar:SafeArea(child:Padding(padding:const EdgeInsets.all(16),child:Column(mainAxisSize:MainAxisSize.min,children:[
       if(_step==1||_step==2)Padding(padding:const EdgeInsets.only(bottom:10),child:Text(_summary,style:const TextStyle(color:AppColors.textMuted))),
-      RouteAction(label:_busy?'Hazırlanıyor…':_step==0?'Rotanı oluşturmaya başla':_step==1?'Rotayı incele':_step==2?'Devam':'Rotayı kaydet',onPressed:_busy||_restoring||(_step>0&&_stops.isEmpty)?null:_step==3?_save:()async{_next();if(_step==1&&_stops.isEmpty){if(_fromMap)await _path();else await _places();}}),
+      RouteAction(label:_busy?'Hazırlanıyor…':_step==0?'Rotanı oluşturmaya başla':_step==1?'Rotayı incele':_step==2?'Devam':'Rotayı kaydet',onPressed:_busy||_restoring||(_step>0&&(_stops.isEmpty||_routing))?null:_step==3?_save:()async{_next();if(_step==1&&_stops.isEmpty){if(_fromMap)await _path();else await _places();}}),
     ]))),
     body:_restoring?const Center(child:CircularProgressIndicator()):AbsorbPointer(absorbing:_busy,child:_step==0?_basics():_step==1?_editor():_step==2?_review():_settings()),
   ));

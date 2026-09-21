@@ -1,3 +1,5 @@
+import '../screens/route_create_screen.dart';
+import '../screens/travel_plan_invite_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
@@ -36,8 +38,20 @@ class _RouteManagementMenuState extends State<RouteManagementMenu> {
     if(uid==null||(!owner&&!widget.plan.memberIds.contains(uid)))return const SizedBox.shrink();
     return PopupMenuButton<String>(
       enabled:!_busy,tooltip:'Rota işlemleri',icon:const Icon(Icons.more_vert),
-      onSelected:(_)=>_act(owner),
-      itemBuilder:(_)=>[PopupMenuItem(value:'remove',child:Text(owner?'Rotayı sil':'Rotadan ayrıl'))],
+      onSelected:(action) async {
+        if(action=='remove'){await _act(owner);return;}
+        try {
+          if(action=='invite'){await Navigator.push(context,MaterialPageRoute(builder:(_)=>TravelPlanInviteScreen(planId:widget.plan.id,planTitle:widget.plan.title)));return;}
+          final spots=await TravelPlanService.instance.resolveSpots(widget.plan);
+          if(!mounted)return;
+          if(action=='edit')await Navigator.push(context,MaterialPageRoute(builder:(_)=>RouteCreateScreen(existingPlan:widget.plan,initialStops:spots)));
+          if(action=='copy'){
+            final id=await TravelPlanService.instance.copyPlan(widget.plan);final copy=await TravelPlanService.instance.read(id);
+            if(mounted)await Navigator.push(context,MaterialPageRoute(builder:(_)=>RouteCreateScreen(existingPlan:copy,initialStops:spots)));
+          }
+        }catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Rota işlemi tamamlanamadı. Tekrar dene.')));}
+      },
+      itemBuilder:(_)=>[if(owner)...[const PopupMenuItem(value:'edit',child:Text('Rotayı düzenle')),const PopupMenuItem(value:'invite',child:Text('Davet et'))],const PopupMenuItem(value:'copy',child:Text('Kopyasını oluştur')),PopupMenuItem(value:'remove',child:Text(owner?'Rotayı sil':'Rotadan ayrıl'))],
     );
   }
 }

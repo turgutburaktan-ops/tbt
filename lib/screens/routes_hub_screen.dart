@@ -1,3 +1,5 @@
+import 'package:geolocator/geolocator.dart';
+import '../services/route_draft_store.dart';
 import 'route_filters_screen.dart';
 import '../widgets/route_design/route_design.dart';
 import '../widgets/route_management_menu.dart';
@@ -37,6 +39,8 @@ class RoutesHubScreen extends StatefulWidget {
 class _RoutesHubScreenState extends State<RoutesHubScreen> {
   int _tab = 0, _filter = 0;
   String _search = '';
+  Position? _nearby;
+  bool _nearbyBusy=false;
   String _city = '';
   RouteFilters _parkurFilters = const RouteFilters();
   late final _mine = TravelPlanService.instance.watchMine();
@@ -100,6 +104,24 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
     super.dispose();
   }
 
+  Future<void> _nearMe() async {
+    if(_nearby!=null){setState(()=>_nearby=null);return;}
+    if(_nearbyBusy)return;setState(()=>_nearbyBusy=true);
+    try {
+      if(!await Geolocator.isLocationServiceEnabled())throw Exception('Konum hizmetini aç.');
+      var permission=await Geolocator.checkPermission();if(permission==LocationPermission.denied)permission=await Geolocator.requestPermission();
+      if(permission==LocationPermission.denied||permission==LocationPermission.deniedForever)throw Exception('Konum izni verilmedi. Bölge filtresini kullanabilirsin.');
+      final location=await Geolocator.getCurrentPosition().timeout(const Duration(seconds:15));
+      if(mounted)setState(()=>_nearby=location);
+    }catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(userFacingError(e))));}
+    finally{if(mounted)setState(()=>_nearbyBusy=false);}
+  }
+  bool _isNearby(TravelPlan p) {
+    if(_nearby==null)return true;
+    final point=p.routeOrigin.isNotEmpty?p.routeOrigin:p.stopSnapshots.firstOrNull;
+    if(point==null||point['latitude'] is! num||point['longitude'] is! num)return false;
+    return Geolocator.distanceBetween(_nearby!.latitude,_nearby!.longitude,(point['latitude'] as num).toDouble(),(point['longitude'] as num).toDouble())<=50000;
+  }
   void _create() => Navigator.push(
     context,
     MaterialPageRoute(builder: (_) => const RouteCreateScreen()),
@@ -135,6 +157,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
             children: [
               AppPageHeading(
                 title: 'Rota',
+                action:IconButton(tooltip:'Kaydedilen rotalar',icon:const Icon(Icons.bookmark_border),onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>Scaffold(appBar:AppBar(title:const Text('Kaydedilen rotalar')),body:const SingleChildScrollView(padding:EdgeInsets.all(16),child:_SavedRoutes()))))),
 
               ),
               const SizedBox(height: 8),
@@ -170,7 +193,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                     for (var i = 0; i < 3; i++)
                       ChoiceChip(
                         label: Text(
-                          ['Planlanan', 'Tamamlanan', 'Kaydedilen'][i],
+                          ['Planlanan', 'Tamamlanan', 'Taslaklar'][i],
                         ),
                         selected: _filter == i,
                         onSelected: (_) => setState(() => _filter = i),
@@ -179,7 +202,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (_filter == 2)
-                  const _SavedRoutes()
+                  FutureBuilder<Map<String,dynamic>?>(future:FirebaseAuth.instance.currentUser==null?Future.value(null):RouteDraftStore.read(FirebaseAuth.instance.currentUser!.uid),builder:(c,s)=>s.data==null?_message('Henüz taslağın yok. Yeni rota oluşturarak başlayabilirsin.'):RoutePanel(child:ListTile(leading:const Icon(Icons.edit_note),title:Text((s.data!['title']??'Rota taslağı').toString()),subtitle:const Text('Kaldığın yerden devam et'),trailing:const Icon(Icons.chevron_right),onTap:_create))))
                 else if (mine.hasError)
                   _message(userFacingError(mine.error!))
                 else if (mine.connectionState == ConnectionState.waiting)
@@ -227,7 +250,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                     final filtered = all
                         .where(
                           (p) =>
-                              _parkurFilters.matches(p, _subscriptions.keys.toSet()) &&
+                              _isNearby(p) && _parkurFilters.matches(p, _subscriptions.keys.toSet()) &&
                               (selectedCity.isEmpty ||
                                   p.city == selectedCity) &&
                               '${p.title} ${p.city} ${p.spotNames.join(' ')}'
@@ -240,6 +263,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                       children: [
                         Row(children:[
                           Expanded(child:SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:[
+                            Padding(padding:const EdgeInsets.only(right:8),child:FilterChip(label:Text(_nearbyBusy?'Konum alınıyor…':'Yakınımda'),selected:_nearby!=null,onSelected:(_)=>_nearMe())),
                             for(final mode in ['Yürüyüş','Bisiklet','Araç'])Padding(padding:const EdgeInsets.only(right:8),child:FilterChip(label:Text(mode),selected:_parkurFilters.mode==mode,onSelected:(v)=>setState(()=>_parkurFilters=RouteFilters(mode:v?mode:'',city:_parkurFilters.city,maxKm:_parkurFilters.maxKm,duration:_parkurFilters.duration,roundTrip:_parkurFilters.roundTrip,following:_parkurFilters.following,difficulties:_parkurFilters.difficulties)))),
                           ]))),
                           IconButton(tooltip:'Parkur filtreleri',icon:const Icon(Icons.tune),onPressed:()async{final value=await Navigator.push<RouteFilters>(context,MaterialPageRoute(builder:(_)=>RouteFiltersScreen(value:_parkurFilters,cities:cities)));if(mounted&&value!=null)setState(()=>_parkurFilters=value);}),

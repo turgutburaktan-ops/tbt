@@ -1,3 +1,4 @@
+import 'spot_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -145,33 +146,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
         .toList();
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              Expanded(child: _tab('Yer ekle', false)),
-              Expanded(child: _tab('Duraklarım (${widget.stops.length})', true)),
-              PopupMenuButton<String>(
-                tooltip: 'Rota seçenekleri',
-                enabled: !widget.busy,
-                onSelected: (value) {
-                  if (value == 'suggest') widget.onSuggest();
-                  if (value == 'search') widget.onSearch();
-                  if (value == 'sort') widget.onSort();
-                },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'suggest', child: Text('Bana rota öner')),
-                  const PopupMenuItem(value: 'search', child: Text('Çoklu seçim')),
-                  PopupMenuItem(
-                    value: 'sort',
-                    enabled: widget.stops.length >= 3,
-                    child: const Text('Akıllı sırala'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+        Padding(padding:const EdgeInsets.symmetric(horizontal:16,vertical:8),child:SegmentedButton<bool>(segments:const[ButtonSegment(value:false,label:Text('Yer ara'),icon:Icon(Icons.search)),ButtonSegment(value:true,label:Text('Haritadan seç'),icon:Icon(Icons.map_outlined))],selected:{_showMap},onSelectionChanged:(v){FocusScope.of(context).unfocus();setState(()=>_showMap=v.first);if(_showMap&&_center==null)unawaited(_locate());})),
         if (!_showStops) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
@@ -342,6 +317,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
               key: ValueKey('place-${spot.id}'),
               selected: selected,
               selectedTileColor: AppColors.surface,
+              leading:ClipRRect(borderRadius:BorderRadius.circular(10),child:SizedBox(width:56,height:56,child:SpotImage(spot:spot,width:56,height:56))),
               title: Text(spot.name, maxLines: 2, overflow: TextOverflow.ellipsis),
               subtitle: Text(spot.category),
               trailing: selected

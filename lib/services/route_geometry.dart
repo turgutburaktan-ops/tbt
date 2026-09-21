@@ -27,7 +27,15 @@ class RouteGeometry {
   };
   static RouteItinerary? decode(Map<String,dynamic> data) {
     try {
-      final points = (data['geometry'] as List).map((p) => LatLng((p['lat'] as num).toDouble(),(p['lng'] as num).toDouble())).toList();
+      final raw = data['geometry'] as List;
+      if (raw.length < 2 || raw.length > 2000) return null;
+      final points = <LatLng>[];
+      for (final p in raw) {
+        final lat = (p['lat'] as num).toDouble();
+        final lng = (p['lng'] as num).toDouble();
+        if (!lat.isFinite || !lng.isFinite || lat.abs() > 90 || lng.abs() > 180) return null;
+        points.add(LatLng(lat, lng));
+      }
       final legs = (data['legs'] as List).map((p) => RouteLeg((p['meters'] as num).toDouble(),(p['seconds'] as num).toDouble())).toList();
       if(points.length<2 || points.length>2000 || points.any((p)=>!p.latitude.isFinite || !p.longitude.isFinite || p.latitude.abs()>90 || p.longitude.abs()>180) || legs.any((l)=>!l.meters.isFinite || l.meters<0 || !l.seconds.isFinite || l.seconds<0)) return null;
       return RouteItinerary(points,legs);
