@@ -6,7 +6,7 @@ import '../lib/models/photo_spot.dart';
 import '../lib/screens/route_create_screen.dart';
 import '../lib/services/route_draft_store.dart';
 import '../lib/theme/app_theme.dart';
-import '../lib/widgets/route_editor_map.dart';
+import '../lib/widgets/route_design/route_design.dart';
 
 const stop = PhotoSpot(
   id: 'map:harput',
@@ -23,154 +23,58 @@ const stop = PhotoSpot(
 Future<List<PhotoSpot>> catalog(int category) async => const [];
 
 void main() {
-  testWidgets('selected catalog place can be removed, re-added and kept across steps', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+  Future<void> open(WidgetTester tester, {double width = 390}) async {
+    tester.view.physicalSize = Size(width, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.dark,
-      home: RouteCreateScreen(
-        initialStops: const [stop],
-        loadCatalog: (_) async => const [stop],
-      ),
-    ));
+    await tester.pumpWidget(MaterialApp(theme: AppTheme.dark,
+      home: RouteCreateScreen(initialStops: const [stop], loadCatalog: catalog)));
     await tester.pumpAndSettle();
+  }
+  testWidgets('four stages preserve transport and selected stops', (tester) async {
+    await open(tester);
+    expect(find.text('Yeni rota'), findsOneWidget);
+    await tester.tap(find.text('Bisiklet'));
+    await tester.tap(find.text('Rotanı oluşturmaya başla'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rotam'), findsOneWidget);
+    expect(find.text('1 durak'), findsOneWidget);
+    await tester.tap(find.text('Rotayı incele'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rotayı düzenle'), findsOneWidget);
     await tester.tap(find.text('Devam'));
     await tester.pumpAndSettle();
-    expect(find.text('Duraklarım (1)'), findsOneWidget);
-    await tester.tap(find.text('Kaldır'));
+    expect(find.text('Elazığ gezisi'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextField, 'Elazığ gezisi'), 'Sabah bisikleti');
+    await tester.tap(find.byIcon(Icons.arrow_back).first);
     await tester.pumpAndSettle();
-    expect(find.text('Duraklarım (0)'), findsOneWidget);
-    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Devam')).onPressed, isNull);
-    await tester.tap(find.byTooltip('Rotaya ekle'));
+    await tester.tap(find.text('Rotayı düzenle'));
     await tester.pumpAndSettle();
-    expect(find.text('Duraklarım (1)'), findsOneWidget);
-    // Tapping the selected row must also undo selection.
-    await tester.tap(find.text('Harput'));
-    await tester.pumpAndSettle();
-    expect(find.text('Duraklarım (0)'), findsOneWidget);
-    await tester.tap(find.text('Harput'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Duraklarım (1)'));
-    await tester.pumpAndSettle();
-    expect(find.text('Harput'), findsOneWidget);
-    await tester.tap(find.byTooltip('Durağı kaldır'));
-    await tester.pumpAndSettle();
-    expect(find.text('Duraklarım (0)'), findsOneWidget);
-    await tester.tap(find.text('Yer ekle'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Rotaya ekle'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Devam'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Geri'));
-    await tester.pumpAndSettle();
-    expect(find.text('Duraklarım (1)'), findsOneWidget);
-    expect(find.text('Kaldır'), findsOneWidget);
+    expect(find.text('1 durak'), findsOneWidget);
+    expect(tester.widget<RouteModePicker>(find.byType(RouteModePicker)).value, 'Bisiklet');
     expect(tester.takeException(), isNull);
   });
-
-  testWidgets(
-    'three steps retain title, transport and stops; map is available separately',
-    (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.dark,
-          home: RouteCreateScreen(
-            initialStops: const [stop],
-            loadCatalog: catalog,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Rotanı başlat'), findsOneWidget);
-      expect(find.text('1/3'), findsOneWidget);
-      expect(find.text('Tarih ve saat'), findsNothing);
-      await tester.enterText(find.byType(TextField).first, 'Hafta sonu');
-      await tester.tap(find.text('Bisiklet'));
-      await tester.tap(find.text('Devam'));
-      await tester.pumpAndSettle();
-      expect(find.text('2/3'), findsOneWidget);
-      expect(find.byType(RouteEditorMap), findsNothing);
-      await tester.tap(find.text('Harita'));
-      await tester.pumpAndSettle();
-      expect(find.byType(RouteEditorMap), findsOneWidget);
-      await tester.tap(find.text('Liste'));
-      await tester.pumpAndSettle();
-      for (final category in ['Gezi', 'Lezzet', 'Kafeler', 'Oteller']) {
-        expect(find.text(category), findsOneWidget);
-      }
-      await tester.tap(find.text('Devam'));
-      await tester.pumpAndSettle();
-      expect(find.text('3/3'), findsOneWidget);
-      expect(find.text('Hafta sonu'), findsOneWidget);
-      expect(find.textContaining('Bisiklet'), findsOneWidget);
-      expect(find.text('Daha sonra belirle'), findsNWidgets(2));
-      await tester.tap(find.text('Kimler katılabilir?'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Herkes'));
-      await tester.pumpAndSettle();
-      expect(find.text('Herkes'), findsOneWidget);
-      await tester.tap(find.text('Geri'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Geri'));
-      await tester.pumpAndSettle();
-      expect(find.text('Hafta sonu'), findsOneWidget);
-      expect(
-        tester
-            .widget<SegmentedButton<String>>(
-              find.byType(SegmentedButton<String>),
-            )
-            .selected,
-        {'Bisiklet'},
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-  testWidgets(
-    'small screen has reachable controls and cannot advance without a city or stop',
-    (tester) async {
-      tester.view.physicalSize = const Size(320, 740);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.dark,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: const TextScaler.linear(1.5)),
-            child: child!,
-          ),
-          home: RouteCreateScreen(loadCatalog: catalog),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
-      await tester.tap(find.text('Devam'));
-      await tester.pumpAndSettle();
-      expect(find.text('1/3'), findsOneWidget);
-      await tester.enterText(find.byType(TextField).last, 'ela');
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Elazığ'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Devam'));
-      await tester.pumpAndSettle();
-      expect(find.text('2/3'), findsOneWidget);
-      expect(
-        tester
-            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Devam'))
-            .onPressed,
-        isNull,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('removal disables review and undo restores the stop once', (tester) async {
+    await open(tester);
+    await tester.tap(find.text('Rotanı oluşturmaya başla'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byTooltip('Durağı kaldır'));
+    await tester.tap(find.byTooltip('Durağı kaldır'));
+    await tester.pumpAndSettle();
+    expect(find.text('0 durak'), findsOneWidget);
+    expect(tester.widget<RouteAction>(find.widgetWithText(RouteAction, 'Rotayı incele')).onPressed, isNull);
+    await tester.tap(find.text('Geri al'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 durak'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('320px screen keeps the start action visible without overflow', (tester) async {
+    await open(tester, width: 320);
+    expect(find.text('Rotanı oluşturmaya başla').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   test(
     'draft storage isolates accounts and preserves mixed stop metadata',
     () async {

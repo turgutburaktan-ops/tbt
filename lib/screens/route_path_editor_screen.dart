@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/photo_spot.dart';
 import '../services/route_geometry.dart';
+import '../services/route_draft_store.dart';
 import '../services/route_itinerary_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/route_editor_map.dart';
@@ -52,7 +53,7 @@ class _RoutePathEditorScreenState extends State<RoutePathEditorScreen> {
         TextButton(onPressed:()=>Navigator.pop(c,'remove'),child:const Text('Rotadan kaldır'))])));
     final name=controller.text.trim();controller.dispose();if(!mounted||result==null)return;
     _history.add([..._stops]);
-    setState((){if(result=='remove'){_stops.removeWhere((s)=>s.id==stop.id);}else if(name.isNotEmpty){final i=_stops.indexWhere((s)=>s.id==stop.id); if(i>=0)_stops[i]=PhotoSpot(id:stop.id,name:name,city:stop.city,latitude:stop.latitude,longitude:stop.longitude,rating:stop.rating,bestTime:stop.bestTime,angle:stop.angle,imageUrl:stop.imageUrl,category:stop.category);}});
+    setState((){if(result=='remove'){_stops.removeWhere((s)=>s.id==stop.id);}else if(name.isNotEmpty){final i=_stops.indexWhere((s)=>s.id==stop.id); if(i>=0)_stops[i]=RouteDraftStore.decodeSpot({...RouteDraftStore.encodeSpot(stop),'name':name});}});
     _calculate();
   }
   @override

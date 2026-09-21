@@ -491,6 +491,9 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         : _city.text.trim();
     if (_startAt != null && !_startAt!.isAfter(DateTime.now()))
       throw Exception('İleri bir tarih ve saat seç.');
+    if (_allowJoin && (_visibility == 'private' || _startAt == null)) {
+      throw Exception('Onayla katılım için bir tarih ve takipçilere ya da herkese açık görünürlük seç.');
+    }
     if(widget.existingPlan != null) {
       final old=widget.existingPlan!;
       await TravelPlanService.instance.updateDesignedRoute(old.id,{
@@ -606,7 +609,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                       ? Icons.radio_button_checked
                       : Icons.radio_button_off,
                   color: _visibility == option.$1
-                      ? AppColors.blue
+                      ? AppColors.cyan
                       : AppColors.textMuted,
                 ),
                 onTap: () => Navigator.pop(context, option.$1),
@@ -892,13 +895,13 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 height: 28,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.blue.withValues(alpha: .16),
+                  color: AppColors.cyan.withValues(alpha: .16),
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   '${i + 1}',
                   style: const TextStyle(
-                    color: AppColors.blue,
+                    color: AppColors.cyan,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

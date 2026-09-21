@@ -1,4 +1,4 @@
-import '../lib/widgets/route_stops_step.dart';
+import '../lib/widgets/route_editor_map.dart';
 
 import 'dart:async';
 
@@ -97,23 +97,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(RouteCreateScreen), findsOneWidget);
       expect(find.text('Şehir veya bölge ara'), findsNothing);
-      await tester.tap(find.text('Devam'));
+      await tester.tap(find.text('Rotanı oluşturmaya başla'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Duraklarım (2)'));
-      await tester.pumpAndSettle();
-      expect(find.text('Harput'), findsOneWidget);
-      expect(
-        tester
-            .widget<RouteStopsStep>(find.byType(RouteStopsStep))
-            .stops
-            .map((s) => s.id),
-        ['a', 'b'],
-      );
-      await tester.tap(find.byTooltip('Rota seçenekleri'));
-      await tester.pumpAndSettle();
-      expect(find.text('Çoklu seçim'), findsOneWidget);
-      await tester.tapAt(const Offset(10, 10));
-      await tester.pumpAndSettle();
+      expect(tester.widget<RouteEditorMap>(find.byType(RouteEditorMap)).stops.map((s) => s.id), ['a', 'b']);
       expect(find.byType(ReorderableDragStartListener), findsWidgets);
       await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);

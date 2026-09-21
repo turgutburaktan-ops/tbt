@@ -202,7 +202,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (_filter == 2)
-                  FutureBuilder<Map<String,dynamic>?>(future:FirebaseAuth.instance.currentUser==null?Future.value(null):RouteDraftStore.read(FirebaseAuth.instance.currentUser!.uid),builder:(c,s)=>s.data==null?_message('Henüz taslağın yok. Yeni rota oluşturarak başlayabilirsin.'):RoutePanel(child:ListTile(leading:const Icon(Icons.edit_note),title:Text((s.data!['title']??'Rota taslağı').toString()),subtitle:const Text('Kaldığın yerden devam et'),trailing:const Icon(Icons.chevron_right),onTap:_create))))
+                  FutureBuilder<Map<String,dynamic>?>(future:FirebaseAuth.instance.currentUser==null?Future.value(null):RouteDraftStore.read(FirebaseAuth.instance.currentUser!.uid),builder:(c,s)=>s.data==null?_message('Henüz taslağın yok. Yeni rota oluşturarak başlayabilirsin.'):RoutePanel(child:ListTile(leading:const Icon(Icons.edit_note),title:Text((s.data!['title']??'Rota taslağı').toString()),subtitle:const Text('Kaldığın yerden devam et'),trailing:const Icon(Icons.chevron_right),onTap:_create)))
                 else if (mine.hasError)
                   _message(userFacingError(mine.error!))
                 else if (mine.connectionState == ConnectionState.waiting)
