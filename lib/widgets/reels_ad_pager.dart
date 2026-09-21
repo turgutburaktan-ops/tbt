@@ -22,9 +22,10 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
   final _pages = PageController();
   late final Key _visibilityKey = UniqueKey();
   ReelsAdHandle? _ad;
+  Timer? _expiry;
   int? _adIndex;
   int _page = 0, _nextBoundary = 5, _attemptedBoundary = -1, _generation = 0;
-  bool _loading = false, _scrolling = false, _seenAd = false;
+  bool _loading = false, _scrolling = false, _seenAd = false, _expired = false;
   bool _visible = false, _foreground = true, _enabled = false;
 
   int _videoIndex(int page) => page - (_adIndex != null && page > _adIndex! ? 1 : 0);
@@ -78,15 +79,18 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
     });
   }
   void _releaseAd() {
+    _expiry?.cancel();
+    _expiry = null;
     final old = _ad;
     _ad = null;
     _adIndex = null;
     _seenAd = false;
+    _expired = false;
     // Let AdWidget leave the tree before releasing its platform view.
     if (old != null) WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
   }
   void _removeAd() {
-    final index = _videoIndex(_page).clamp(0, widget.videoIds.length - 1);
+    final index = widget.videoIds.isEmpty ? 0 : _videoIndex(_page).clamp(0, widget.videoIds.length - 1);
     final hadSlot = _adIndex != null;
     setState(() {
       _releaseAd();
@@ -96,6 +100,7 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
   }
   void _settle() {
     if (!mounted || _scrolling || widget.videoIds.isEmpty) return;
+    if (_expired) _removeAd();
     if (_adIndex != null) {
       if (_page == _adIndex) { _seenAd = true; return; }
       if (_seenAd || _page > _adIndex! || _page < _adIndex! - 1) _removeAd();
@@ -126,13 +131,22 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
       ad?.dispose();
       return;
     }
-    if (ad != null) setState(() => _ad = ad);
+    if (ad != null) {
+      setState(() => _ad = ad);
+      _expiry = Timer(const Duration(minutes: 1), () {
+        if (!mounted || _seenAd) return;
+        // Never change page indices during a gesture. Mark it for removal at rest.
+        _expired = true;
+        if (!_scrolling) _removeAd();
+      });
+    }
     _settle();
   }
   @override
   void dispose() {
     _generation++;
     WidgetsBinding.instance.removeObserver(this);
+    _expiry?.cancel();
     _ad?.dispose();
     _pages.dispose();
     super.dispose();

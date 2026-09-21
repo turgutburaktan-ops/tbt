@@ -97,4 +97,25 @@ void main() {
     expect(find.text('video 4 playing'), findsOneWidget);
     await close(tester);
   });
+  testWidgets('an unused prefetched ad expires without moving the video', (tester) async {
+    final ad = FakeAd();
+    await showFeed(tester, () async => ad);
+    await next(tester); await next(tester);
+    await tester.pump(const Duration(seconds: 61));
+    await tester.pumpAndSettle();
+    expect(ad.disposed, 1);
+    expect(find.text('video 3 playing'), findsOneWidget);
+    await close(tester);
+    expect(ad.disposed, 1);
+  });
+  testWidgets('removing all videos releases the pending ad safely', (tester) async {
+    final ad = FakeAd();
+    Future<ReelsAdHandle?> loader() async => ad;
+    await showFeed(tester, loader);
+    await next(tester); await next(tester);
+    await showFeed(tester, loader, ids: []);
+    expect(ad.disposed, 1);
+    expect(tester.takeException(), isNull);
+    await close(tester);
+  });
 }
