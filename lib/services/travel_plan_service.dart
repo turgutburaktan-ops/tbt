@@ -173,7 +173,7 @@ class TravelPlanService {
       tx.update(ref, {
         'visibility': v,
         'isPublic': v == 'public',
-        'joinEnabled': v != 'private' && scheduled,
+        'joinEnabled': v != 'private' && scheduled && d['joinEnabled'] == true,
         'hasSchedule': scheduled,
         if (startAt != null) 'startAt': Timestamp.fromDate(startAt),
         if (transport != null) 'transport': transport,

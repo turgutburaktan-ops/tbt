@@ -252,7 +252,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       if(!mounted)return;
       await Navigator.push(context,MaterialPageRoute(builder:(_)=>RouteCreateScreen(existingPlan:current,initialStops:editable)));
     } else {
-      await Navigator.push(context,MaterialPageRoute(builder:(_)=>Scaffold(appBar:AppBar(title:Text(current.title)),body:RouteMapPreview(stops:current.stopSnapshots,transport:current.transport,dayPlan:current.dayPlan,origin:current.routeOrigin,onOpen:(){}))));
+      await Navigator.push(context,MaterialPageRoute(builder:(_)=>Scaffold(appBar:AppBar(title:Text(current.title)),body:RouteMapPreview(height:MediaQuery.sizeOf(context).height-MediaQuery.paddingOf(context).vertical-kToolbarHeight-60,interactive:true,stops:current.stopSnapshots,transport:current.transport,dayPlan:current.dayPlan,origin:current.routeOrigin,onOpen:(){}))));
     }
   }
 
@@ -549,7 +549,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                                       setState(() => _legacyKey = ''),
                                   child: Text(_legacyError!),
                                 ),
-                        RouteParticipation(
+                        if (!_owned) RouteParticipation(
                           routeId: plan.id,
                           data: data,
                           showSettings: false,

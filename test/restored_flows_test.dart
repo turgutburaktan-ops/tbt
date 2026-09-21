@@ -100,6 +100,7 @@ void main() {
       await tester.tap(find.text('Rotanı oluşturmaya başla'));
       await tester.pumpAndSettle();
       expect(tester.widget<RouteEditorMap>(find.byType(RouteEditorMap)).stops.map((s) => s.id), ['a', 'b']);
+      await tester.scrollUntilVisible(find.byTooltip('Durağı kaldır').first, 180, scrollable: find.byType(Scrollable).first);
       expect(find.byType(ReorderableDragStartListener), findsWidgets);
       await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);

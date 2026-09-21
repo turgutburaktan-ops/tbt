@@ -129,7 +129,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
       canvas.drawCircle(
         const Offset(36, 36),
         32,
-        Paint()..color = AppColors.blue,
+        Paint()..color = AppColors.cyan,
       );
       canvas.drawCircle(
         const Offset(36, 36),

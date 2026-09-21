@@ -16,9 +16,13 @@ class RouteMapPreview extends StatefulWidget {
     required this.onOpen,
     this.dayPlan = const {},
     this.origin = const {},
+    this.height = 170,
+    this.interactive = false,
   });
   final List<Map<String, dynamic>> stops;
   final String transport;
+  final double height;
+  final bool interactive;
   final Map<String,dynamic> dayPlan, origin;
   final VoidCallback onOpen;
   @override
@@ -46,7 +50,7 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
       .toList();
   void _load() {
     final origin = widget.origin['latitude'] is num && widget.origin['longitude'] is num ? LatLng((widget.origin['latitude'] as num).toDouble(),(widget.origin['longitude'] as num).toDouble()) : null;
-    final spots=widget.stops.map((p)=>RouteDraftStore.decodeSpot({...p,'id':(p['id']??'').toString(),'name':(p['name']??'Durak').toString(),'city':(p['city']??'').toString()})).toList();
+    final spots=widget.stops.where((p)=>p['latitude'] is num && p['longitude'] is num).map((p)=>RouteDraftStore.decodeSpot({...p,'id':(p['id']??'').toString(),'name':(p['name']??'Durak').toString(),'city':(p['city']??'').toString()})).toList();
     final points=RouteGeometry.waypoints(spots,origin:origin,roundTrip:widget.dayPlan['roundTrip']==true);
     final valid=widget.dayPlan['signature']==RouteGeometry.signature(spots,widget.transport,origin:origin,roundTrip:widget.dayPlan['roundTrip']==true);
     final saved=valid?RouteGeometry.decode(widget.dayPlan):null;
@@ -81,14 +85,14 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
         child: Column(
           children: [
             SizedBox(
-              height: 170,
+              height: widget.height,
               child: !_showMap
                   ? const ColoredBox(
                       color: AppColors.surfaceAlt,
                       child: Center(child: Text('Harita hazırlanıyor…')),
                     )
                   : GoogleMap(
-                      liteModeEnabled: true,
+                      liteModeEnabled: !widget.interactive,
                       key: ValueKey(points.toString()),
                       initialCameraPosition: CameraPosition(
                         target: points.first,
@@ -98,16 +102,17 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
                       zoomControlsEnabled: false,
                       myLocationButtonEnabled: false,
                       mapToolbarEnabled: false,
-                      scrollGesturesEnabled: false,
-                      zoomGesturesEnabled: false,
-                      rotateGesturesEnabled: false,
-                      tiltGesturesEnabled: false,
+                      scrollGesturesEnabled: widget.interactive,
+                      zoomGesturesEnabled: widget.interactive,
+                      rotateGesturesEnabled: widget.interactive,
+                      tiltGesturesEnabled: widget.interactive,
                       onTap: (_) => widget.onOpen(),
                       onMapCreated: (c) async {
                         if (points.length > 1) {
-                          final lat = points.map((p) => p.latitude).toList()
+                          final fitPoints = [...points, ...?s.data?.points];
+                          final lat = fitPoints.map((p) => p.latitude).toList()
                             ..sort();
-                          final lng = points.map((p) => p.longitude).toList()
+                          final lng = fitPoints.map((p) => p.longitude).toList()
                             ..sort();
                           if (lat.first != lat.last || lng.first != lng.last) {
                             try {
