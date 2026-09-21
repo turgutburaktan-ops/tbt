@@ -1,3 +1,5 @@
+import '../services/spot_repository.dart';
+import '../screens/spot_detail_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +101,10 @@ class FeedPostCard extends StatefulWidget {
 
 class _FeedPostCardState extends State<FeedPostCard> {
   bool _hidden = false;
+  bool _openingSpot = false;
+  String? _editedCaption, _editedSpotName;
+  String get _caption => _editedCaption ?? widget.caption;
+  String get _spotName => _editedSpotName ?? widget.spotName;
   bool get _isVideo =>
       widget.mediaType == 'video' && widget.videoUrl.isNotEmpty;
   String _timeLabel() {
@@ -144,7 +150,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
                 'userName': widget.userName,
                 'userPhotoUrl': widget.userPhotoUrl,
                 'videoUrl': widget.videoUrl,
-                'caption': widget.caption,
+                'caption': _caption,
                 'mediaType': 'video',
               },
             ),
@@ -193,14 +199,132 @@ class _FeedPostCardState extends State<FeedPostCard> {
           likeOnly: true,
           id: widget.postId,
           ownerId: widget.userId,
-          title: widget.caption.trim().isEmpty
+          title: _caption.trim().isEmpty
               ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
-              : widget.caption,
+              : _caption,
           sourceType: 'post',
         );
     } catch (e) {
       _message(e.toString().replaceFirst('Exception: ', ''));
     }
+  }
+
+  Future<void> _openSpot(String spotName) async {
+    if (_openingSpot || spotName.trim().isEmpty) return;
+    setState(() => _openingSpot = true);
+    try {
+      final results = await SpotRepository.instance.search(
+        spotName,
+        limit: 2000,
+      );
+      if (!mounted) return;
+      if (results.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bu çekim noktası kartı henüz bulunamadı.'),
+          ),
+        );
+        return;
+      }
+      final normalized = spotName.trim().toLowerCase();
+      final exact = results.where(
+        (s) => s.name.trim().toLowerCase() == normalized,
+      );
+      final spot = exact.isNotEmpty ? exact.first : results.first;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+      );
+    } catch (_) {
+      _message('Çekim noktası açılamadı. Tekrar deneyebilirsin.');
+    } finally {
+      if (mounted) setState(() => _openingSpot = false);
+    }
+  }
+
+  Future<void> _edit() async {
+    final captionController = TextEditingController(
+      text: _caption,
+    );
+    final spotController = TextEditingController(
+      text: _spotName,
+    );
+    final save = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (c) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          18,
+          20,
+          MediaQuery.of(c).viewInsets.bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Gönderiyi Düzenle',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: captionController,
+                minLines: 3,
+                maxLines: 6,
+                maxLength: 500,
+                decoration: const InputDecoration(labelText: 'Açıklama'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: spotController,
+                decoration: const InputDecoration(
+                  labelText: 'Konum / çekim noktası',
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(c, true),
+                  child: const Text('Kaydet'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (save == true) {
+      try {
+        await PostService.instance.updatePost(
+          postId: widget.postId,
+          caption: captionController.text,
+          spotName: spotController.text,
+        );
+        if (mounted)
+          setState(() {
+            _editedCaption = captionController.text.trim();
+            _editedSpotName = spotController.text.trim();
+          });
+      } catch (e) {
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+      }
+    }
+    captionController.dispose();
+    spotController.dispose();
   }
 
   Future<void> _delete() async {
@@ -401,10 +525,13 @@ class _FeedPostCardState extends State<FeedPostCard> {
                           fontSize: 14,
                         ),
                       ),
-                      if (widget.spotName.isNotEmpty || _timeLabel().isNotEmpty)
-                        Text(
+                      if (_spotName.isNotEmpty || _timeLabel().isNotEmpty)
+                        InkWell(
+                          onTap: _spotName.isEmpty || _openingSpot
+                              ? null : () => _openSpot(_spotName),
+                          child: Text(
                           [
-                            if (widget.spotName.isNotEmpty) widget.spotName,
+                            if (_spotName.isNotEmpty) _spotName,
                             if (_timeLabel().isNotEmpty) _timeLabel(),
                           ].join(' • '),
                           maxLines: 1,
@@ -414,6 +541,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
                             color: Colors.white54,
                           ),
                         ),
+                        ),
                     ],
                   ),
                 ),
@@ -421,9 +549,14 @@ class _FeedPostCardState extends State<FeedPostCard> {
               mine
                   ? PopupMenuButton<String>(
                       onSelected: (v) {
+                        if (v == 'edit') _edit();
                         if (v == 'delete') _delete();
                       },
                       itemBuilder: (_) => const [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Gönderiyi düzenle'),
+                        ),
                         PopupMenuItem(
                           value: 'delete',
                           child: Text('Gönderiyi sil'),
@@ -446,19 +579,19 @@ class _FeedPostCardState extends State<FeedPostCard> {
             collection: 'posts',
             contentId: widget.postId,
             ownerId: widget.userId,
-            title: widget.caption.trim().isEmpty
+            title: _caption.trim().isEmpty
                 ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
-                : widget.caption,
+                : _caption,
             sourceType: 'post',
           ),
         ),
         if (widget.mediaType == 'video') PostSoundChip(postId: widget.postId),
         ExternalSourceButton(url: widget.externalSourceUrl),
-        if (widget.caption.trim().isNotEmpty)
+        if (_caption.trim().isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
             child: ExpandableCaption(
-              text: widget.caption,
+              text: _caption,
               style: const TextStyle(color: Colors.white70, height: 1.3),
             ),
           ),
