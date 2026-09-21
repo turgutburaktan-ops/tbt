@@ -1,0 +1,19 @@
+name: Discover feed layout verification
+on:
+  push:
+    branches: [codex/discover-home-layout-20260921]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  flutter-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/discover_post_feed_test.dart test/discover_content_grid_test.dart test/discover_ranker_test.dart test/reels_ad_pager_test.dart test/video_playback_test.dart
