@@ -23,8 +23,56 @@ const stop = PhotoSpot(
 Future<List<PhotoSpot>> catalog(int category) async => const [];
 
 void main() {
+  testWidgets('selected catalog place can be removed, re-added and kept across steps', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.dark,
+      home: RouteCreateScreen(
+        initialStops: const [stop],
+        loadCatalog: (_) async => const [stop],
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Devam'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duraklarım (1)'), findsOneWidget);
+    await tester.tap(find.text('Kaldır'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duraklarım (0)'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Devam')).onPressed, isNull);
+    await tester.tap(find.byTooltip('Rotaya ekle'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duraklarım (1)'), findsOneWidget);
+    // Tapping the selected row must also undo selection.
+    await tester.tap(find.text('Harput'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duraklarım (0)'), findsOneWidget);
+    await tester.tap(find.text('Harput'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Duraklarım (1)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Harput'), findsOneWidget);
+    await tester.tap(find.byTooltip('Durağı kaldır'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duraklarım (0)'), findsOneWidget);
+    await tester.tap(find.text('Yer ekle'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Rotaya ekle'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Devam'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Geri'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duraklarım (1)'), findsOneWidget);
+    expect(find.text('Kaldır'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    'three steps retain title, transport and stops; map is embedded in step two',
+    'three steps retain title, transport and stops; map is available separately',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -48,7 +96,12 @@ void main() {
       await tester.tap(find.text('Devam'));
       await tester.pumpAndSettle();
       expect(find.text('2/3'), findsOneWidget);
+      expect(find.byType(RouteEditorMap), findsNothing);
+      await tester.tap(find.text('Harita'));
+      await tester.pumpAndSettle();
       expect(find.byType(RouteEditorMap), findsOneWidget);
+      await tester.tap(find.text('Liste'));
+      await tester.pumpAndSettle();
       for (final category in ['Gezi', 'Lezzet', 'Kafeler', 'Oteller']) {
         expect(find.text(category), findsOneWidget);
       }

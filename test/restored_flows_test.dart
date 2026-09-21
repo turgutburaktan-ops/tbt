@@ -109,7 +109,11 @@ void main() {
             .map((s) => s.id),
         ['a', 'b'],
       );
+      await tester.tap(find.byTooltip('Rota seçenekleri'));
+      await tester.pumpAndSettle();
       expect(find.text('Çoklu seçim'), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
       expect(find.byType(ReorderableDragStartListener), findsWidgets);
       await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);
