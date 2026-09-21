@@ -938,6 +938,13 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                             busy: _busy,
                             loadItems: widget.loadCatalog,
                             onAdd: _addSpot,
+                            onRemove: (spot) {
+                              if (_busy) return;
+                              setState(() {
+                                _stops.removeWhere((s) => s.id == spot.id);
+                                _refreshRoute();
+                              });
+                            },
                             onMapTap: _mapPoint,
                             onSuggest: _suggest,
                             onSort: _smartSort,
