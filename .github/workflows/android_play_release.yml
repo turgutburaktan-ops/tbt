@@ -130,6 +130,7 @@ jobs:
           python3 tool/configure_notifications.py android
           python3 tool/configure_android_crashlytics.py
           python3 tool/configure_route_album.py android
+          python3 tool/configure_reels_ads.py android
       - name: Build Play app bundle
         env:
           PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
