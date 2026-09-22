@@ -1,0 +1,14 @@
+name: Upload branded TBT Android 1.0.31 (59) draft
+on:
+  push:
+    branches: [codex/ios-logo-release-20260922]
+    paths: ['.github/workflows/store_release59_android.yml', '.github/workflows/android_play_release59.yml', 'tool/upload_play_build59.cjs', 'tool/verify_android_branding.py']
+permissions:
+  contents: read
+concurrency:
+  group: tbt-android-release59
+  cancel-in-progress: false
+jobs:
+  android:
+    uses: ./.github/workflows/android_play_release59.yml
+    secrets: inherit
