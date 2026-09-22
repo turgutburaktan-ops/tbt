@@ -15,7 +15,9 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 
 class SpotSuggestionScreen extends StatefulWidget {
-  const SpotSuggestionScreen({super.key});
+  const SpotSuggestionScreen({super.key, this.sourceRouteId, this.initialStop});
+  final String? sourceRouteId;
+  final Map<String, dynamic>? initialStop;
   @override
   State<SpotSuggestionScreen> createState() => _SpotSuggestionScreenState();
 }
@@ -30,6 +32,19 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
   LatLng? _pickedLocation;
   File? _photo;
   bool _submitting = false, _locating = false;
+  @override
+  void initState() {
+    super.initState();
+    final s = widget.initialStop;
+    if (s == null) return;
+    _name.text = (s['name'] ?? '').toString();
+    _city.text = (s['city'] ?? '').toString();
+    _description.text = (s['description'] ?? '').toString();
+    final lat = s['latitude'], lon = s['longitude'];
+    if (lat is num && lon is num)
+      _pickedLocation = LatLng(lat.toDouble(), lon.toDouble());
+  }
+
   @override
   void dispose() {
     _mapController?.dispose();
@@ -127,6 +142,10 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       final result = await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('submitSpotSuggestion')
           .call({
+            if (widget.sourceRouteId != null)
+              'sourceRouteId': widget.sourceRouteId,
+            if (widget.initialStop != null)
+              'sourceStopId': widget.initialStop!['id'],
             'name': _name.text.trim(),
             'city': _city.text.trim(),
             'district': _district.text.trim(),
@@ -140,12 +159,15 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       final data = Map<String, dynamic>.from(result.data as Map);
       if (!mounted) return;
       final duplicate = data['duplicateWarning'] == true;
+      final existing = data['alreadySubmitted'] == true;
       await showTbtDialog<void>(
         context: context,
         builder: (context) => TbtDialog(
           title: const Text('Önerin alındı'),
           content: Text(
-            duplicate
+            existing
+                ? 'Bu durak için daha önce gönderdiğin öneri mevcut. Durumunu rota durağından takip edebilirsin.'
+                : duplicate
                 ? 'Yer önerin incelemeye gönderildi. Benzer bir kayıt bulunduğu için admin kontrolünde ayrıca karşılaştırılacak.'
                 : 'Yer önerin incelemeye gönderildi. Onaylandıktan sonra Gezilecek Yerler ve haritada görünecek.',
           ),
@@ -330,7 +352,7 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
                 SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    'Gönderdiğin yer hemen yayınlanmaz. Admin incelemesinden sonra onaylanır; mükerrer veya uygun olmayan öneriler reddedilir.',
+                    'Önerin yönetici incelemesine gider. Onaylanan yeni yer Gezi’ye eklenir ve sana 30 Kaşif puanı kazandırır. Mükerrer veya reddedilen öneriler puan kazandırmaz.',
                     style: TextStyle(
                       color: Colors.white60,
                       fontSize: 12,

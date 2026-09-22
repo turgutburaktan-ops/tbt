@@ -73,3 +73,17 @@ test('only one person can claim the final place with concurrent transactions',as
  const result=await Promise.allSettled([attempt('one'),attempt('two')]);
  require('node:assert/strict').equal(result.filter(x=>x.status==='fulfilled').length,1);
 });
+
+test('only an owner can publish and discovery publication requires public visibility',async()=>{
+ await assertFails(updateDoc(doc(db('follower'),'travel_plans/r'),{discoverPublished:true}));
+ await assertSucceeds(updateDoc(doc(db('owner'),'travel_plans/r'),{discoverPublished:true}));
+ await assertFails(updateDoc(doc(db('owner'),'travel_plans/r'),{visibility:'private',isPublic:false,joinAudience:'private'}));
+ await assertSucceeds(updateDoc(doc(db('owner'),'travel_plans/r'),{visibility:'private',isPublic:false,joinAudience:'private',discoverPublished:false}));
+ await assertFails(getDoc(doc(db('outsider'),'travel_plans/r')));
+});
+test('bookmark does not grant route, album or chat access',async()=>{
+ await seed({visibility:'private',isPublic:false,joinAudience:'private'});
+ await assertSucceeds(setDoc(doc(db('outsider'),'users/outsider/saved_routes/r'),{routeId:'r',createdAt:serverTimestamp()}));
+ await assertFails(getDoc(doc(db('outsider'),'travel_plans/r')));
+ await assertFails(getDoc(doc(db('outsider'),'travel_plans/r/album/a')));
+});

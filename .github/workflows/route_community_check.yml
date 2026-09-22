@@ -1,0 +1,37 @@
+name: Route community and Gezi checks
+on:
+  push:
+    branches: [codex/route-community-20260922]
+permissions:
+  contents: read
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/models/route_access.dart lib/models/travel_plan.dart lib/widgets/route_access_settings.dart lib/screens/route_create_screen.dart lib/screens/route_sharing_screen.dart lib/screens/travel_plan_detail_screen.dart lib/services/travel_plan_service.dart test/route_access_test.dart lib/services/route_community.dart lib/widgets/route_publish_button.dart lib/widgets/route_bookmark_button.dart lib/widgets/route_stop_suggestion.dart lib/screens/spot_suggestion_screen.dart lib/screens/admin_spot_submissions_screen.dart lib/screens/routes_hub_screen.dart lib/screens/public_travel_plans_screen.dart test/route_community_test.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/route_community_test.dart test/route_access_test.dart test/route_create_test.dart test/route_terrain_test.dart test/route_geometry_test.dart test/route_link_test.dart test/restored_flows_test.dart
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix /tmp/access-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0 firebase-admin@13.0.0
+      - run: node --test functions/test/reputation_system.test.js
+      - run: /tmp/access-tests/node_modules/.bin/firebase emulators:exec --project demo-tbt-access --only firestore "node --test test/route_access_rules.cjs && node --test test/route_community_backend.cjs"
+        env:
+          NODE_PATH: /tmp/access-tests/node_modules

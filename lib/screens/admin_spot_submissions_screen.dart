@@ -146,6 +146,9 @@ class _AdminSpotSubmissionsScreenState
               final d = _items[index];
               final id = (d['id'] ?? '').toString();
               final image = (d['imageUrl'] ?? '').toString();
+              final sourceLabel = d['sourceType'] == 'route_stop'
+                  ? ' · Rota durağından önerildi'
+                  : '';
               final busy = _workingId == id;
               return Card(
                 margin: EdgeInsets.zero,
@@ -181,12 +184,17 @@ class _AdminSpotSubmissionsScreenState
                         ],
                       ),
                       Text(
-                        '${d['city'] ?? ''}${(d['district'] ?? '').toString().isEmpty ? '' : ' • ${d['district']}'}',
+                        '${d['city'] ?? ''}$sourceLabel${(d['district'] ?? '').toString().isEmpty ? '' : ' • ${d['district']}'}',
                         style: const TextStyle(
                           color: AppColors.cyan,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
+                      if ((d['duplicateCandidates'] as List? ?? []).isNotEmpty)
+                        Text(
+                          'Benzer kayıtlar: ${(d['duplicateCandidates'] as List).map((x) => (x as Map)['name'] ?? '').join(', ')}',
+                          style: const TextStyle(color: AppColors.textMuted),
+                        ),
                       const SizedBox(height: 8),
                       Text(
                         (d['description'] ?? '').toString(),

@@ -1,8 +1,12 @@
+import '../widgets/route_bookmark_button.dart';
+
 import 'package:geolocator/geolocator.dart';
+
 import '../services/route_draft_store.dart';
 import 'route_filters_screen.dart';
 import '../widgets/route_design/route_design.dart';
 import '../widgets/route_management_menu.dart';
+
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -44,7 +48,9 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
   String _city = '';
   RouteFilters _parkurFilters = const RouteFilters();
   late final _mine = TravelPlanService.instance.watchMine();
-  late final _public = TravelPlanService.instance.watchPublic();
+  late final _public = TravelPlanService.instance.watchPublic(
+    discoverOnly: true,
+  );
   final _followersPlans = <String, List<TravelPlan>>{};
   final _subscriptions =
       <String, StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>{};
@@ -79,9 +85,9 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                       (p) {
                         if (mounted)
                           setState(
-                            () =>
-                                _followersPlans[id] =
-                                    p.docs.map(TravelPlan.fromDoc).toList(),
+                            () => _followersPlans[id] = p.docs
+                                .map(TravelPlan.fromDoc)
+                                .toList(),
                           );
                       },
                       onError: (_) {
@@ -128,9 +134,8 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
       if (mounted) setState(() => _nearby = location);
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userFacingError(e))));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
     } finally {
       if (mounted) setState(() => _nearbyBusy = false);
     }
@@ -138,8 +143,9 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
 
   bool _isNearby(TravelPlan p) {
     if (_nearby == null) return true;
-    final point =
-        p.routeOrigin.isNotEmpty ? p.routeOrigin : p.stopSnapshots.firstOrNull;
+    final point = p.routeOrigin.isNotEmpty
+        ? p.routeOrigin
+        : p.stopSnapshots.firstOrNull;
     if (point == null ||
         point['latitude'] is! num ||
         point['longitude'] is! num)
@@ -181,12 +187,11 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                   )
                   .toList()
                 ..sort(
-                  (a, b) =>
-                      a.status == 'active' && b.status != 'active'
-                          ? -1
-                          : b.status == 'active' && a.status != 'active'
-                          ? 1
-                          : a.startAt.compareTo(b.startAt),
+                  (a, b) => a.status == 'active' && b.status != 'active'
+                      ? -1
+                      : b.status == 'active' && a.status != 'active'
+                      ? 1
+                      : a.startAt.compareTo(b.startAt),
                 );
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
@@ -196,22 +201,18 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                 action: IconButton(
                   tooltip: 'Kaydedilen rotalar',
                   icon: const Icon(Icons.bookmark_border),
-                  onPressed:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => Scaffold(
-                                appBar: AppBar(
-                                  title: const Text('Kaydedilen rotalar'),
-                                ),
-                                body: const SingleChildScrollView(
-                                  padding: EdgeInsets.all(16),
-                                  child: _SavedRoutes(),
-                                ),
-                              ),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(title: const Text('Kaydedilen rotalar')),
+                        body: const SingleChildScrollView(
+                          padding: EdgeInsets.all(16),
+                          child: _SavedRoutes(),
                         ),
                       ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -264,32 +265,26 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                 const SizedBox(height: 12),
                 if (_filter == 2)
                   FutureBuilder<Map<String, dynamic>?>(
-                    future:
-                        FirebaseAuth.instance.currentUser == null
-                            ? Future.value(null)
-                            : RouteDraftStore.read(
-                              FirebaseAuth.instance.currentUser!.uid,
+                    future: FirebaseAuth.instance.currentUser == null
+                        ? Future.value(null)
+                        : RouteDraftStore.read(
+                            FirebaseAuth.instance.currentUser!.uid,
+                          ),
+                    builder: (c, s) => s.data == null
+                        ? _message(
+                            'Henüz taslağın yok. Yeni rota oluşturarak başlayabilirsin.',
+                          )
+                        : RoutePanel(
+                            child: ListTile(
+                              leading: const Icon(Icons.edit_note),
+                              title: Text(
+                                (s.data!['title'] ?? 'Rota taslağı').toString(),
+                              ),
+                              subtitle: const Text('Kaldığın yerden devam et'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: _create,
                             ),
-                    builder:
-                        (c, s) =>
-                            s.data == null
-                                ? _message(
-                                  'Henüz taslağın yok. Yeni rota oluşturarak başlayabilirsin.',
-                                )
-                                : RoutePanel(
-                                  child: ListTile(
-                                    leading: const Icon(Icons.edit_note),
-                                    title: Text(
-                                      (s.data!['title'] ?? 'Rota taslağı')
-                                          .toString(),
-                                    ),
-                                    subtitle: const Text(
-                                      'Kaldığın yerden devam et',
-                                    ),
-                                    trailing: const Icon(Icons.chevron_right),
-                                    onTap: _create,
-                                  ),
-                                ),
+                          ),
                   )
                 else if (mine.hasError)
                   _message(userFacingError(mine.error!))
@@ -299,10 +294,9 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                   ..._list(
                     plans
                         .where(
-                          (p) =>
-                              _filter == 1
-                                  ? p.status == 'completed'
-                                  : p.status != 'completed',
+                          (p) => _filter == 1
+                              ? p.status == 'completed'
+                              : p.status != 'completed',
                         )
                         .toList(),
                   ),
@@ -321,14 +315,13 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                     if (s.hasError) return _message(userFacingError(s.error!));
                     if (!s.hasData)
                       return const Center(child: CircularProgressIndicator());
-                    final all =
-                        <String, TravelPlan>{
-                          for (final p in [
-                            ...s.data!,
-                            ..._followersPlans.values.expand((v) => v),
-                          ])
-                            p.id: p,
-                        }.values.toList();
+                    final all = <String, TravelPlan>{
+                      for (final p in [
+                        ...s.data!,
+                        ..._followersPlans.values.expand((v) => v),
+                      ])
+                        p.id: p,
+                    }.values.toList();
                     final cities =
                         all
                             .map((p) => p.city)
@@ -337,22 +330,21 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                             .toList()
                           ..sort();
                     final selectedCity = cities.contains(_city) ? _city : '';
-                    final filtered =
-                        all
-                            .where(
-                              (p) =>
-                                  _isNearby(p) &&
-                                  _parkurFilters.matches(
-                                    p,
-                                    _subscriptions.keys.toSet(),
-                                  ) &&
-                                  (selectedCity.isEmpty ||
-                                      p.city == selectedCity) &&
-                                  '${p.title} ${p.city} ${p.spotNames.join(' ')}'
-                                      .toLowerCase()
-                                      .contains(_search.toLowerCase()),
-                            )
-                            .toList();
+                    final filtered = all
+                        .where(
+                          (p) =>
+                              _isNearby(p) &&
+                              _parkurFilters.matches(
+                                p,
+                                _subscriptions.keys.toSet(),
+                              ) &&
+                              (selectedCity.isEmpty ||
+                                  p.city == selectedCity) &&
+                              '${p.title} ${p.city} ${p.spotNames.join(' ')}'
+                                  .toLowerCase()
+                                  .contains(_search.toLowerCase()),
+                        )
+                        .toList();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -387,32 +379,20 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                                         child: FilterChip(
                                           label: Text(mode),
                                           selected: _parkurFilters.mode == mode,
-                                          onSelected:
-                                              (v) => setState(
-                                                () =>
-                                                    _parkurFilters =
-                                                        RouteFilters(
-                                                          mode: v ? mode : '',
-                                                          city:
-                                                              _parkurFilters
-                                                                  .city,
-                                                          maxKm:
-                                                              _parkurFilters
-                                                                  .maxKm,
-                                                          duration:
-                                                              _parkurFilters
-                                                                  .duration,
-                                                          roundTrip:
-                                                              _parkurFilters
-                                                                  .roundTrip,
-                                                          following:
-                                                              _parkurFilters
-                                                                  .following,
-                                                          difficulties:
-                                                              _parkurFilters
-                                                                  .difficulties,
-                                                        ),
-                                              ),
+                                          onSelected: (v) => setState(
+                                            () => _parkurFilters = RouteFilters(
+                                              mode: v ? mode : '',
+                                              city: _parkurFilters.city,
+                                              maxKm: _parkurFilters.maxKm,
+                                              duration: _parkurFilters.duration,
+                                              roundTrip:
+                                                  _parkurFilters.roundTrip,
+                                              following:
+                                                  _parkurFilters.following,
+                                              difficulties:
+                                                  _parkurFilters.difficulties,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                   ],
@@ -427,11 +407,10 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                                     await Navigator.push<RouteFilters>(
                                       context,
                                       MaterialPageRoute(
-                                        builder:
-                                            (_) => RouteFiltersScreen(
-                                              value: _parkurFilters,
-                                              cities: cities,
-                                            ),
+                                        builder: (_) => RouteFiltersScreen(
+                                          value: _parkurFilters,
+                                          cities: cities,
+                                        ),
                                       ),
                                     );
                                 if (mounted && value != null)
@@ -461,25 +440,24 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
       style: const TextStyle(color: AppColors.textMuted),
     ),
   );
-  List<Widget> _list(List<TravelPlan> plans) =>
-      plans.isEmpty
-          ? [
-            _message(
-              _tab == 0
-                  ? 'Bu aramada rota bulunamadı.'
-                  : _filter == 1
-                  ? 'Tamamladığın geziler ve albümleri burada olacak.'
-                  : 'İlk rotanı oluştur, duraklarını seç ve arkadaşlarını davet et.',
-            ),
-          ]
-          : plans
-              .map(
-                (p) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: RoutePreviewCard(plan: p, featured: true),
-                ),
-              )
-              .toList();
+  List<Widget> _list(List<TravelPlan> plans) => plans.isEmpty
+      ? [
+          _message(
+            _tab == 0
+                ? 'Bu aramada rota bulunamadı.'
+                : _filter == 1
+                ? 'Tamamladığın geziler ve albümleri burada olacak.'
+                : 'İlk rotanı oluştur, duraklarını seç ve arkadaşlarını davet et.',
+          ),
+        ]
+      : plans
+            .map(
+              (p) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: RoutePreviewCard(plan: p, featured: true),
+              ),
+            )
+            .toList();
 }
 
 class RoutePreviewCard extends StatelessWidget {
@@ -502,19 +480,18 @@ class RoutePreviewCard extends StatelessWidget {
             .where((s) => s.isNotEmpty)
             .firstOrNull ??
         '';
-    final thumbnail =
-        image.isEmpty
-            ? const ColoredBox(
-              color: AppColors.surfaceAlt,
-              child: Center(
-                child: Icon(
-                  Icons.route_outlined,
-                  color: AppColors.cyan,
-                  size: 35,
-                ),
+    final thumbnail = image.isEmpty
+        ? const ColoredBox(
+            color: AppColors.surfaceAlt,
+            child: Center(
+              child: Icon(
+                Icons.route_outlined,
+                color: AppColors.cyan,
+                size: 35,
               ),
-            )
-            : FirebaseMediaImage(imageUrl: image, fit: BoxFit.cover);
+            ),
+          )
+        : FirebaseMediaImage(imageUrl: image, fit: BoxFit.cover);
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -535,6 +512,11 @@ class RoutePreviewCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
+        if (plan.ownerName.isNotEmpty)
+          Text(
+            plan.ownerName,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
         Text(
           routeDate(plan),
           style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
@@ -561,6 +543,13 @@ class RoutePreviewCard extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         RouteMemberRow(ids: plan.memberIds),
+        if (['Yürüyüş', 'Bisiklet'].contains(plan.transport) &&
+            (plan.dayPlan['difficulty'] ?? '').toString().isNotEmpty)
+          Text(
+            'Tahmini zorluk: ${plan.dayPlan['difficulty']}',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
+        RouteBookmarkButton(routeId: plan.id),
       ],
     );
     return Material(
@@ -574,54 +563,53 @@ class RoutePreviewCard extends StatelessWidget {
             border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(AppRadii.large),
           ),
-          child:
-              featured
-                  ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: 175, child: thumbnail),
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            summary,
-                            const SizedBox(height: 14),
-                            FilledButton.icon(
-                              onPressed: () => _open(context),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.selection,
-                                foregroundColor: Colors.white,
-                              ),
-                              label: const Text('Rotayı aç'),
-                              icon: const Icon(Icons.arrow_forward_rounded),
+          child: featured
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: 175, child: thumbnail),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          summary,
+                          const SizedBox(height: 14),
+                          FilledButton.icon(
+                            onPressed: () => _open(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.selection,
+                              foregroundColor: Colors.white,
                             ),
-                          ],
+                            label: const Text('Rotayı aç'),
+                            icon: const Icon(Icons.arrow_forward_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: SizedBox(
+                          width: 78,
+                          height: 92,
+                          child: thumbnail,
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(child: summary),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textMuted,
+                      ),
                     ],
-                  )
-                  : Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
-                            width: 78,
-                            height: 92,
-                            child: thumbnail,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: summary),
-                        const Icon(
-                          Icons.chevron_right,
-                          color: AppColors.textMuted,
-                        ),
-                      ],
-                    ),
                   ),
+                ),
         ),
       ),
     );
@@ -638,11 +626,10 @@ class RouteMemberRow extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 3),
           child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            stream:
-                FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(id)
-                    .snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(id)
+                .snapshots(),
             builder: (_, s) {
               final d = s.data?.data() ?? {};
               final url =
@@ -652,14 +639,13 @@ class RouteMemberRow extends StatelessWidget {
                 radius: 13,
                 backgroundColor: AppColors.surfaceStrong,
                 backgroundImage: url.isEmpty ? null : NetworkImage(url),
-                child:
-                    url.isEmpty
-                        ? const Icon(
-                          Icons.person_outline,
-                          size: 16,
-                          color: Colors.white70,
-                        )
-                        : null,
+                child: url.isEmpty
+                    ? const Icon(
+                        Icons.person_outline,
+                        size: 16,
+                        color: Colors.white70,
+                      )
+                    : null,
               );
             },
           ),
@@ -683,12 +669,11 @@ class _SavedRoutes extends StatelessWidget {
     if (uid == null)
       return const Text('Kaydettiğin rotaları görmek için giriş yap.');
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream:
-          FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .collection('saved_routes')
-              .snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('saved_routes')
+          .snapshots(),
       builder: (_, s) {
         if (s.hasError) return Text(userFacingError(s.error!));
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
@@ -698,36 +683,30 @@ class _SavedRoutes extends StatelessWidget {
             child: Text('Kaydettiğin rotalar burada görünecek.'),
           );
         return Column(
-          children:
-              s.data!.docs
-                  .map(
-                    (d) => FutureBuilder<TravelPlan>(
-                      future: TravelPlanService.instance.read(d.id),
-                      builder: (_, p) {
-                        if (p.hasError)
-                          return ListTile(
-                            title: const Text(
-                              'Bu rota artık erişilebilir değil',
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.bookmark_remove_outlined),
-                              onPressed:
-                                  () => TravelPlanService.instance.bookmark(
-                                    d.id,
-                                    false,
-                                  ),
-                            ),
-                          );
-                        return p.hasData
-                            ? Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: RoutePreviewCard(plan: p.data!),
-                            )
-                            : const LinearProgressIndicator();
-                      },
-                    ),
-                  )
-                  .toList(),
+          children: s.data!.docs
+              .map(
+                (d) => FutureBuilder<TravelPlan>(
+                  future: TravelPlanService.instance.read(d.id),
+                  builder: (_, p) {
+                    if (p.hasError)
+                      return ListTile(
+                        title: const Text('Bu rota artık erişilebilir değil'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.bookmark_remove_outlined),
+                          onPressed: () =>
+                              TravelPlanService.instance.bookmark(d.id, false),
+                        ),
+                      );
+                    return p.hasData
+                        ? Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: RoutePreviewCard(plan: p.data!),
+                          )
+                        : const LinearProgressIndicator();
+                  },
+                ),
+              )
+              .toList(),
         );
       },
     );
