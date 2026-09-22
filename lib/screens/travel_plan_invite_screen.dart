@@ -231,7 +231,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                           compact: true,
                           child: Text(
                             invited
-                                ? 'Zaten planda'
+                                ? 'Katılımcı veya davet gönderilmiş'
                                 : user.username.isEmpty
                                 ? 'Takip ediyorsun'
                                 : '@${user.username}',

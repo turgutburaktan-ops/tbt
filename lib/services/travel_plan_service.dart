@@ -323,7 +323,7 @@ class TravelPlanService {
     });
   }
 
-  Future<void> setAccess(String id, RouteAccess access, DateTime? start, {int? limit}) async {
+  Future<void> setAccess(String id, RouteAccess access, DateTime? start, {int? limit, Map<String,dynamic>? meetingPoint}) async {
     final error = access.validate(start);
     if (error != null) throw Exception(error);
     final uid = _requireUser().uid;
@@ -337,6 +337,7 @@ class TravelPlanService {
       tx.update(ref, {...access.fields, 'hasSchedule': start != null,
         if (start != null) 'startAt': Timestamp.fromDate(start),
         if (limit != null) 'participantLimit': limit,
+        if (meetingPoint != null) 'meetingPoint': meetingPoint,
         'updatedAt': FieldValue.serverTimestamp()});
     });
   }

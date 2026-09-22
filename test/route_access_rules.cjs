@@ -65,11 +65,11 @@ test('owner cannot save conflicting audiences or invalid approval values',async(
 });
 test('only one person can claim the final place with concurrent transactions',async()=>{
  await seed({joinAudience:'public',participantLimit:2});
- const attempt=uid=>runTransaction(db(uid),async tx=>{
-  const ref=doc(db(uid),'travel_plans/r');const d=(await tx.get(ref)).data();
+ const attempt=uid=>{const store=db(uid);return runTransaction(store,async tx=>{
+  const ref=doc(store,'travel_plans/r');const d=(await tx.get(ref)).data();
   if(d.memberIds.length>=d.participantLimit) throw Error('full');
   tx.update(ref,{memberIds:[...d.memberIds,uid],invitedIds:d.invitedIds.filter(x=>x!==uid),updatedAt:serverTimestamp()});
- });
+ });};
  const result=await Promise.allSettled([attempt('one'),attempt('two')]);
  require('node:assert/strict').equal(result.filter(x=>x.status==='fulfilled').length,1);
 });

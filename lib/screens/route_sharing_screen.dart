@@ -1,3 +1,4 @@
+import 'event_location_picker_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ class RouteSharingScreen extends StatefulWidget {
 class _RouteSharingScreenState extends State<RouteSharingScreen> {
   RouteAccess _access = const RouteAccess();
   DateTime? _start;
+  Map<String, dynamic> _meeting = {};
+  String _city = '';
   bool _loaded = false, _busy = false;
   String? _error;
   final _limit = TextEditingController();
@@ -30,6 +33,8 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
       if (!mounted) return;
       setState(() {
         _access = RouteAccess.fromMap(d);
+        _meeting = Map<String,dynamic>.from(d['meetingPoint'] as Map? ?? {});
+        _city = (d['city'] ?? '').toString();
         _start = d['hasSchedule'] == true || d['joinEnabled'] == true ? (d['startAt'] as Timestamp?)?.toDate() : null;
         _limit.text = (d['participantLimit'] ?? 60).toString();
         _loaded = true; _error = null;
@@ -57,7 +62,7 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
     try {
       final limit = int.tryParse(_limit.text.trim());
       if (limit == null) throw Exception('Geçerli bir kişi sınırı gir.');
-      await TravelPlanService.instance.setAccess(widget.routeId, _access, _start, limit: limit);
+      await TravelPlanService.instance.setAccess(widget.routeId, _access, _start, limit: limit, meetingPoint: _meeting);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ',''))));
@@ -85,6 +90,13 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
         }, child: const Text('Tarihi daha sonra belirle')),
         if (_access.enabled) TextField(controller: _limit, keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: 'Kişi sınırı',helperText: 'Sen dahil en fazla 60 kişi.')),
+        ListTile(title: const Text('Buluşma noktası'), subtitle: Text((_meeting['label'] ?? 'Daha sonra belirle').toString()),
+          onTap: _busy ? null : () async {
+            final p = await Navigator.push<EventLocationSelection>(context, MaterialPageRoute(builder: (_) =>
+              EventLocationPickerScreen(city:_city, title:'Buluşma noktası', addressLabel:'Buluşma noktası',
+                initialLatitude: (_meeting['latitude'] as num?)?.toDouble(), initialLongitude: (_meeting['longitude'] as num?)?.toDouble())));
+            if (p != null && mounted) setState(() => _meeting = {'label':p.label,'latitude':p.latitude,'longitude':p.longitude});
+          }),
         ListTile(title: const Text('Davetlileri seç'), trailing: const Icon(Icons.person_add_alt),
           onTap: _busy ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => TravelPlanInviteScreen(planId:widget.routeId,planTitle:widget.title)))),
         const SizedBox(height:16),
