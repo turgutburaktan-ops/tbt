@@ -1,3 +1,4 @@
+import '../widgets/use_ready_route_button.dart';
 import '../widgets/route_bookmark_button.dart';
 
 import 'package:geolocator/geolocator.dart';
@@ -420,7 +421,15 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        ..._list(filtered),
+                        if (filtered.any((p) => p.isCurated)) ...[
+                          const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text('TBT’den hazır rotalar', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
+                          ..._list(filtered.where((p) => p.isCurated).toList()),
+                        ],
+                        if (filtered.any((p) => !p.isCurated)) ...[
+                          const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text('Topluluktan rotalar', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
+                          ..._list(filtered.where((p) => !p.isCurated).toList()),
+                        ],
+                        if (filtered.isEmpty) ..._list(filtered),
                       ],
                     );
                   },
@@ -514,11 +523,11 @@ class RoutePreviewCard extends StatelessWidget {
         const SizedBox(height: 6),
         if (plan.ownerName.isNotEmpty)
           Text(
-            plan.ownerName,
+            plan.isCurated ? 'TBT · Hazır rota' : plan.ownerName,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
         Text(
-          routeDate(plan),
+          plan.isCurated ? 'İstediğin gün kullan · Yaklaşık ${plan.durationHours} saat gezi' : routeDate(plan),
           style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
         const SizedBox(height: 6),
@@ -550,6 +559,7 @@ class RoutePreviewCard extends StatelessWidget {
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
         RouteBookmarkButton(routeId: plan.id),
+        if (plan.isCurated) UseReadyRouteButton(plan: plan),
       ],
     );
     return Material(

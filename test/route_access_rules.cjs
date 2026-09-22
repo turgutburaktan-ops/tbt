@@ -87,3 +87,9 @@ test('bookmark does not grant route, album or chat access',async()=>{
  await assertFails(getDoc(doc(db('outsider'),'travel_plans/r')));
  await assertFails(getDoc(doc(db('outsider'),'travel_plans/r/album/a')));
 });
+
+test('editorial IDs are reserved while personal copies remain allowed',async()=>{
+ const data={...base(),visibility:'private',isPublic:false,joinEnabled:false,joinAudience:'private',hasSchedule:false,invitedIds:[]};
+ await assertFails(setDoc(doc(db('owner'),'travel_plans/tbt_ready_fake'),data));
+ await assertSucceeds(setDoc(doc(db('owner'),'travel_plans/personal_copy'),data));
+});
