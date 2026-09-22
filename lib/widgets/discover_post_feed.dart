@@ -9,9 +9,11 @@ class DiscoverPostFeed extends StatelessWidget {
     required this.itemCount,
     required this.initialIndex,
     required this.itemBuilder,
+    this.title = 'Keşfet',
   }) : assert(itemCount >= 0),
        assert(itemCount == 0 || (initialIndex >= 0 && initialIndex < itemCount));
 
+  final String title;
   final int itemCount;
   final int initialIndex;
   final IndexedWidgetBuilder itemBuilder;
@@ -22,7 +24,7 @@ class DiscoverPostFeed extends StatelessWidget {
     appBar: AppBar(
       backgroundColor: AppColors.background,
       foregroundColor: Colors.white,
-      title: const Text('Keşfet'),
+      title: Text(title),
     ),
     body: itemCount == 0
         ? const Center(child: Text('Gösterilecek paylaşım yok.'))

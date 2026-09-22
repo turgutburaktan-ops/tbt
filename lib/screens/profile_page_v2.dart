@@ -1,3 +1,4 @@
+import '../widgets/profile_post_feed.dart';
 import '../widgets/route_management_menu.dart';
 import '../services/user_facing_error.dart';
 import '../services/user_facing_error.dart';
@@ -36,8 +37,6 @@ import 'event_deep_link_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
-import 'post_detail_screen.dart';
-import 'fullscreen_video_post_screen.dart';
 import 'smart_plan_screen.dart';
 import 'travel_plan_detail_screen.dart';
 import 'user_statistics_screen.dart';
@@ -311,13 +310,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 : Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => isVideo
-                                          ? FullscreenVideoPostScreen(
-                                              post: {...data, 'id': doc.id},
-                                            )
-                                          : PostDetailScreen(
-                                              post: {...data, 'id': doc.id},
-                                            ),
+                                      builder: (_) => ProfilePostFeed(
+                                        postIds: posts.map((p) => p.id).toList(),
+                                        initialIndex: index,
+                                      ),
                                     ),
                                   ),
                           );

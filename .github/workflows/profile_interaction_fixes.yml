@@ -1,0 +1,21 @@
+name: Verify profile and chat interaction fixes
+on:
+  push:
+    branches: [codex/profile-chat-fixes-20260922]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Check changed Dart code
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/user_profile_screen.dart lib/screens/profile_page_v2.dart lib/screens/content_likes_screen.dart lib/widgets/profile_post_feed.dart lib/widgets/shared_post_card.dart lib/widgets/profile_photo_card.dart lib/widgets/profile_photo_viewer.dart lib/widgets/content_engagement_bar.dart lib/services/notification_reply_service.dart lib/services/chat_notification_identity.dart test/profile_interaction_fixes_test.dart
+      - name: Verify interactions and regressions
+        run: flutter test test/profile_interaction_fixes_test.dart test/profile_content_navigation_test.dart test/chat_layout_test.dart test/chat_appearance_test.dart test/restored_flows_test.dart

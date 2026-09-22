@@ -1,3 +1,4 @@
+import '../screens/content_likes_screen.dart';
 import '../theme/app_theme.dart';
 import 'profile_name_link.dart';
 // Shared engagement controls for posts and social events.
@@ -476,9 +477,13 @@ class ContentEngagementBar extends StatelessWidget {
                   if (count > 0)
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 180),
-                      child: Padding(
+                      child: InkWell(
                         key: ValueKey<int>(count),
-                        padding: const EdgeInsets.only(right: 4),
+                        onTap: () => Navigator.push(context, MaterialPageRoute<void>(
+                          builder: (_) => ContentLikesScreen(collection: collection, contentId: contentId),
+                        )),
+                        child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                         child: liked
                             ? ShaderMask(
                                 blendMode: BlendMode.srcIn,
@@ -501,6 +506,7 @@ class ContentEngagementBar extends StatelessWidget {
                                   color: Colors.white,
                                 ),
                               ),
+                      ),
                       ),
                     ),
                 ],

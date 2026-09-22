@@ -1,3 +1,4 @@
+import 'feed_post_card.dart';
 import '../theme/app_theme.dart';
 import 'content_engagement_bar.dart';
 import 'profile_name_link.dart';
@@ -24,6 +25,7 @@ class SharedPostCard extends StatefulWidget {
     this.repostId,
     this.storyId,
     this.compact = false,
+    this.feedPresentation = false,
     this.onOpen,
     this.storyPresentation = false,
     this.active = true,
@@ -37,6 +39,7 @@ class SharedPostCard extends StatefulWidget {
   final String? repostId;
   final String? storyId;
   final bool compact;
+  final bool feedPresentation;
   final bool storyPresentation, active;
   final String note;
   final ValueChanged<Duration>? onStoryReady;
@@ -388,6 +391,9 @@ class _SharedPostCardState extends State<SharedPostCard> {
                 ),
         ),
       );
+    if (widget.feedPresentation && post['mediaType'] != 'route') {
+      return FeedPostCard.fromPost(postId: widget.postId, data: post);
+    }
     if (widget.repostId != null && !widget.storyPresentation)
       return _repost(post);
     final videoUrl = (post['videoUrl'] ?? '').toString();
