@@ -1,3 +1,4 @@
+import 'route_terrain_summary.dart';
 import '../services/route_geometry.dart';
 import '../services/route_draft_store.dart';
 import 'dart:async';
@@ -18,11 +19,12 @@ class RouteMapPreview extends StatefulWidget {
     this.origin = const {},
     this.height = 170,
     this.interactive = false,
+    this.showTerrain = true,
   });
   final List<Map<String, dynamic>> stops;
   final String transport;
   final double height;
-  final bool interactive;
+  final bool interactive, showTerrain;
   final Map<String, dynamic> dayPlan, origin;
   final VoidCallback onOpen;
   @override
@@ -32,6 +34,7 @@ class RouteMapPreview extends StatefulWidget {
 class _RouteMapPreviewState extends State<RouteMapPreview> {
   late Future<RouteItinerary?> _route;
   bool _showMap = false;
+  MapType _mapType = MapType.normal;
   Timer? _mapDelay;
   @override
   void dispose() {
@@ -125,7 +128,7 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
           children: [
             SizedBox(
               height: widget.height,
-              child:
+              child: Stack(fit: StackFit.expand, children: [
                   !_showMap
                       ? const ColoredBox(
                         color: AppColors.surfaceAlt,
@@ -138,8 +141,8 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
                           target: points.first,
                           zoom: 11,
                         ),
-                        style:
-                            '[{"elementType":"geometry","stylers":[{"color":"#17212b"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#bac8d4"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#17212b"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c151f"}]}]',
+                        mapType: _mapType,
+                        style: _mapType == MapType.normal ? '[]' : null,
                         zoomControlsEnabled: false,
                         myLocationButtonEnabled: false,
                         mapToolbarEnabled: false,
@@ -193,6 +196,14 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
                             ),
                         },
                       ),
+                if (_showMap) Positioned(left: 8, top: 8,
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => setState(() => _mapType = _mapType == MapType.normal ? MapType.hybrid : MapType.normal),
+                    icon: const Icon(Icons.layers_outlined, size: 18),
+                    label: Text(_mapType == MapType.normal ? 'Uydu' : 'Harita'),
+                  ),
+                ),
+              ]),
             ),
             Container(
               color: const Color(0xFF12151C),
@@ -208,6 +219,9 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
                 style: const TextStyle(fontSize: 12),
               ),
             ),
+            if (widget.showTerrain && s.connectionState == ConnectionState.done)
+              RouteTerrainSummary(route: s.data, mode: widget.transport,
+                manual: widget.dayPlan['manual'] == true),
           ],
         ),
       );

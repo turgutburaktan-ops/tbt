@@ -271,6 +271,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                       ),
                       Expanded(
                         child: RouteEditorMap(
+              city: widget.city,
                           stops: widget.stops,
                           itinerary: widget.itinerary,
                           center: _center,

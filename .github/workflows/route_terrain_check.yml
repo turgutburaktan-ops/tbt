@@ -1,0 +1,23 @@
+name: Route map and terrain checks
+on:
+  push:
+    branches: [codex/route-terrain-20260922]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format changed Dart files
+        run: dart format lib/services/route_terrain_service.dart lib/widgets/route_terrain_summary.dart lib/widgets/route_editor_map.dart lib/widgets/route_map_preview.dart lib/widgets/route_stops_step.dart lib/screens/route_create_screen.dart lib/screens/route_path_editor_screen.dart lib/screens/travel_plan_detail_screen.dart test/route_terrain_test.dart
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Route regression tests
+        run: flutter test test/route_terrain_test.dart test/route_create_test.dart test/route_geometry_test.dart test/route_itinerary_test.dart test/route_map_candidates_test.dart test/route_design_preview_test.dart

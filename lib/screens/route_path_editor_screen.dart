@@ -1,3 +1,4 @@
+import '../widgets/route_terrain_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/photo_spot.dart';
@@ -185,6 +186,7 @@ class _RoutePathEditorScreenState extends State<RoutePathEditorScreen> {
         ),
         Expanded(
           child: RouteEditorMap(
+              city: widget.city,
             stops: _stops,
             itinerary: _route,
             center: widget.origin,
@@ -256,6 +258,7 @@ class _RoutePathEditorScreenState extends State<RoutePathEditorScreen> {
                           : '${(_route!.meters / 1000).toStringAsFixed(1)} km${_manual ? ' · Elle çizilmiş' : ' · ${(_route!.seconds / 60).ceil()} dk'}',
                     ),
                   ),
+                  RouteTerrainSummary(route: _route, mode: widget.mode, manual: _manual),
                   RouteAction(
                     label: 'Güzergâhı kullan',
                     onPressed:
