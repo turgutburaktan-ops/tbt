@@ -1,274 +1,107 @@
+import 'event_location_picker_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import '../models/route_access.dart';
+import '../widgets/route_access_settings.dart';
 import '../services/travel_plan_service.dart';
-import '../theme/app_theme.dart';
-import 'event_location_picker_screen.dart';
 import 'travel_plan_invite_screen.dart';
 
 class RouteSharingScreen extends StatefulWidget {
-  final String routeId;
-  final String title;
+  const RouteSharingScreen({super.key, required this.routeId, required this.title, this.inviteFriends = false});
+  final String routeId, title;
   final bool inviteFriends;
-  const RouteSharingScreen({
-    super.key,
-    required this.routeId,
-    required this.title,
-    this.inviteFriends = false,
-  });
   @override
   State<RouteSharingScreen> createState() => _RouteSharingScreenState();
 }
-
 class _RouteSharingScreenState extends State<RouteSharingScreen> {
-  String _visibility = 'Sadece ben', _kind = 'Rotayı paylaş';
+  RouteAccess _access = const RouteAccess();
   DateTime? _start;
-  EventLocationSelection? _point;
+  Map<String, dynamic> _meeting = {};
+  String _city = '';
+  bool _loaded = false, _busy = false;
+  String? _error;
   final _limit = TextEditingController();
-  final _meetingName = TextEditingController(text: 'Buluşma noktası');
-  bool _busy = false, _loaded = false;
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
+  void initState() { super.initState(); _load(); }
+  @override
+  void dispose() { _limit.dispose(); super.dispose(); }
   Future<void> _load() async {
     try {
-      final d =
-          (await FirebaseFirestore.instance
-                  .collection('travel_plans')
-                  .doc(widget.routeId)
-                  .get())
-              .data()!;
+      final d = (await FirebaseFirestore.instance.collection('travel_plans').doc(widget.routeId).get()).data();
+      if (d == null) throw Exception('Rota bulunamadı.');
       if (!mounted) return;
       setState(() {
-        _visibility = d['isPublic'] == true
-            ? 'Herkese açık'
-            : widget.inviteFriends || (d['memberIds'] as List? ?? []).length > 1
-            ? 'Arkadaşlarım'
-            : 'Sadece ben';
-        _kind = d['joinEnabled'] == true ? 'Birlikte gidelim' : 'Rotayı paylaş';
-        _start = (d['startAt'] as Timestamp?)?.toDate();
-        final p = d['meetingPoint'];
-        if (p is Map)
-          _meetingName.text = p['label']?.toString() ?? 'Buluşma noktası';
-        if (p is Map)
-          _point = EventLocationSelection(
-            latitude: (p['latitude'] as num).toDouble(),
-            longitude: (p['longitude'] as num).toDouble(),
-            label: p['label'].toString(),
-          );
-        if (d['participantLimit'] is num)
-          _limit.text = d['participantLimit'].toString();
-        _loaded = true;
+        _access = RouteAccess.fromMap(d);
+        _meeting = Map<String,dynamic>.from(d['meetingPoint'] as Map? ?? {});
+        _city = (d['city'] ?? '').toString();
+        _start = d['hasSchedule'] == true || d['joinEnabled'] == true ? (d['startAt'] as Timestamp?)?.toDate() : null;
+        _limit.text = (d['participantLimit'] ?? 60).toString();
+        _loaded = true; _error = null;
       });
-    } catch (_) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Rota yüklenemedi. Tekrar açmayı dene.'),
-          ),
-        );
-    }
+    } catch (_) { if (mounted) setState(() => _error = 'Ayarlar yüklenemedi. Tekrar dene.'); }
   }
-
-  @override
-  void dispose() {
-    _limit.dispose();
-    _meetingName.dispose();
-    super.dispose();
-  }
-
-  Future<void> _date() async {
+  Future<DateTime?> _date() async {
     final now = DateTime.now();
-    final d = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
-    );
-    if (d == null || !mounted) return;
-    final t = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (t != null && mounted)
-      setState(
-        () => _start = DateTime(d.year, d.month, d.day, t.hour, t.minute),
-      );
+    final date = await showDatePicker(context: context, initialDate: _start != null && _start!.isAfter(now) ? _start! : now,
+      firstDate: now, lastDate: now.add(const Duration(days: 730)));
+    if (date == null || !mounted) return null;
+    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_start ?? now.add(const Duration(hours:1))));
+    if (time == null || !mounted) return null;
+    final next = DateTime(date.year,date.month,date.day,time.hour,time.minute);
+    if (!next.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('İleri bir tarih ve saat seç.')));
+      return null;
+    }
+    setState(() => _start = next);
+    return next;
   }
-
   Future<void> _save() async {
     if (_busy) return;
-    final together =
-        _visibility == 'Herkese açık' && _kind == 'Birlikte gidelim';
-    final limit = _limit.text.trim().isEmpty
-        ? null
-        : int.tryParse(_limit.text.trim());
-    if (together &&
-        (_start == null ||
-            !_start!.isAfter(DateTime.now()) ||
-            _point == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gelecekte bir tarih, saat ve buluşma noktası seç.'),
-        ),
-      );
-      return;
-    }
-    if (together &&
-        _limit.text.trim().isNotEmpty &&
-        (limit == null || limit < 2 || limit > 60)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kişi sınırı, sen dahil 2–60 arasında olmalı.'),
-        ),
-      );
-      return;
-    }
     setState(() => _busy = true);
     try {
-      await TravelPlanService.instance.configureSharing(
-        widget.routeId,
-        isPublic: _visibility == 'Herkese açık',
-        together: together,
-        privateOnly: _visibility == 'Sadece ben',
-        start: _start,
-        meetingPoint: _point == null
-            ? null
-            : {
-                'label': _meetingName.text.trim().isEmpty
-                    ? _point!.label
-                    : _meetingName.text.trim(),
-                'latitude': _point!.latitude,
-                'longitude': _point!.longitude,
-              },
-        limit: limit,
-      );
-      if (!mounted) return;
-      if (_visibility == 'Arkadaşlarım')
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TravelPlanInviteScreen(
-              planId: widget.routeId,
-              planTitle: widget.title,
-            ),
-          ),
-        );
+      final limit = int.tryParse(_limit.text.trim());
+      if (limit == null) throw Exception('Geçerli bir kişi sınırı gir.');
+      await TravelPlanService.instance.setAccess(widget.routeId, _access, _start, limit: limit, meetingPoint: _meeting);
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-        );
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ',''))));
+    } finally { if (mounted) setState(() => _busy = false); }
   }
-
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.background,
-    appBar: AppBar(title: const Text('Rotayı paylaş')),
-    body: !_loaded
-        ? const Center(child: CircularProgressIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: _visibility,
-                decoration: const InputDecoration(labelText: 'Kim görebilsin?'),
-                items: ['Sadece ben', 'Arkadaşlarım', 'Herkese açık']
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                    .toList(),
-                onChanged: _busy
-                    ? null
-                    : (v) => setState(() => _visibility = v!),
-              ),
-              if (_visibility == 'Sadece ben')
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    'Rota kişisel kalır. Daha önce davet ettiğin kişiler varsa erişimleri kaldırılır.',
-                  ),
-                ),
-              if (_visibility == 'Herkese açık') ...[
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _kind,
-                  items: ['Rotayı paylaş', 'Birlikte gidelim']
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _kind = v!),
-                ),
-                if (_kind == 'Rotayı paylaş')
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'Diğer kullanıcılar bu hazır rotayı keşfedip kaydedebilir.',
-                    ),
-                  ),
-                if (_kind == 'Birlikte gidelim') ...[
-                  ListTile(
-                    title: const Text('Tarih ve buluşma saati'),
-                    subtitle: Text(
-                      _start == null
-                          ? 'Seç'
-                          : '${_start!.day}.${_start!.month}.${_start!.year} · ${TimeOfDay.fromDateTime(_start!).format(context)}',
-                    ),
-                    onTap: _date,
-                  ),
-                  TextField(
-                    controller: _meetingName,
-                    maxLength: 160,
-                    decoration: const InputDecoration(
-                      labelText: 'Buluşma yerinin adı',
-                    ),
-                  ),
-                  ListTile(
-                    title: const Text('Buluşma noktası'),
-                    subtitle: Text(_point?.label ?? 'Haritadan seç'),
-                    onTap: () async {
-                      final p = await Navigator.push<EventLocationSelection>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EventLocationPickerScreen(
-                            city: '',
-                            addressLabel: _meetingName.text.trim().isEmpty
-                                ? 'Buluşma noktası'
-                                : _meetingName.text.trim(),
-                            title: 'Buluşma noktası',
-                            instruction: 'Buluşacağınız noktayı haritadan seç.',
-                          ),
-                        ),
-                      );
-                      if (p != null && mounted) setState(() => _point = p);
-                    },
-                  ),
-                  TextField(
-                    controller: _limit,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Kişi sınırı (isteğe bağlı)',
-                      helperText: 'Sen dahil. Boş bırakırsan uygulama sınırı 60 kişidir.',
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text('Katılım isteklerini sen onaylayacaksın.'),
-                  ),
-                ],
-              ],
-              const SizedBox(height: 20),
-              FilledButton(
-                onPressed: _busy ? null : _save,
-                child: Text(_busy ? 'Kaydediliyor…' : 'Kaydet'),
-              ),
-            ],
-          ),
+    appBar: AppBar(title: const Text('Görünürlük ve katılım')),
+    body: _error != null ? Center(child: TextButton(onPressed: _load, child: Text(_error!)))
+      : !_loaded ? const Center(child: CircularProgressIndicator()) : ListView(padding: const EdgeInsets.all(16), children: [
+        RouteAccessSettings(value: _access, startAt: _start, pickDate: _date, busy: _busy,
+          onChanged: (v) => setState(() => _access = v)),
+        ListTile(title: const Text('Tarih ve saat'),
+          subtitle: Text(_start == null ? 'Daha sonra belirle' : '${_start!.day}.${_start!.month}.${_start!.year} · ${TimeOfDay.fromDateTime(_start!).format(context)}'),
+          onTap: _busy ? null : _date),
+        if (_start != null) TextButton(onPressed: _busy ? null : () async {
+          if (_access.enabled) {
+            final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+              title: const Text('Tarihi kaldır'), content: const Text('Tarihi kaldırırsan katılım da kapanır.'),
+              actions: [TextButton(onPressed: () => Navigator.pop(c,false),child: const Text('Vazgeç')),
+                FilledButton(onPressed: () => Navigator.pop(c,true), child: const Text('Tarihi kaldır ve katılımı kapat'))]));
+            if (ok != true || !mounted) return;
+          }
+          setState(() { _start = null; _access = RouteAccess(visibility:_access.visibility, audience:_access.audience, approval:_access.approval); });
+        }, child: const Text('Tarihi daha sonra belirle')),
+        if (_access.enabled) TextField(controller: _limit, keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Kişi sınırı',helperText: 'Sen dahil en fazla 60 kişi.')),
+        ListTile(title: const Text('Buluşma noktası'), subtitle: Text((_meeting['label'] ?? 'Daha sonra belirle').toString()),
+          onTap: _busy ? null : () async {
+            final p = await Navigator.push<EventLocationSelection>(context, MaterialPageRoute(builder: (_) =>
+              EventLocationPickerScreen(city:_city, title:'Buluşma noktası', addressLabel:'Buluşma noktası',
+                initialLatitude: (_meeting['latitude'] as num?)?.toDouble(), initialLongitude: (_meeting['longitude'] as num?)?.toDouble())));
+            if (p != null && mounted) setState(() => _meeting = {'label':p.label,'latitude':p.latitude,'longitude':p.longitude});
+          }),
+        ListTile(title: const Text('Davetlileri seç'), trailing: const Icon(Icons.person_add_alt),
+          onTap: _busy ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => TravelPlanInviteScreen(planId:widget.routeId,planTitle:widget.title)))),
+        const SizedBox(height:16),
+        FilledButton(onPressed: _busy ? null : _save, child: Text(_busy ? 'Kaydediliyor…' : 'Kaydet')),
+      ]),
   );
 }
 
@@ -287,7 +120,8 @@ class RouteParticipation extends StatelessWidget {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final owner = uid == data['ownerId'];
     final enabled = data['joinEnabled'] == true;
-    if (!owner && !enabled) return const SizedBox.shrink();
+    final invited = (data['invitedIds'] as List? ?? []).contains(uid);
+    if (!owner && !enabled) return ListTile(title: Text(invited ? 'Bu rotaya davetlisin. Katılım henüz açık değil.' : 'Katılım kapalı'));
     final ref = FirebaseFirestore.instance
         .collection('travel_plans')
         .doc(routeId)
@@ -364,22 +198,27 @@ class RouteParticipation extends StatelessWidget {
       return const ListTile(title: Text('Bu rotaya katılıyorsun'));
     if (uid == null)
       return const ListTile(title: Text('Katılım isteği için giriş yap.'));
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: ref.doc(uid).snapshots(),
-      builder: (_, s) {
-        final status = s.data?.data()?['status'];
-        return FilledButton(
-          onPressed: status == 'pending'
-              ? null
-              : () =>
-                    act(() => TravelPlanService.instance.requestJoin(routeId)),
-          child: Text(
-            status == 'pending'
-                ? 'Katılım isteği gönderildi'
-                : 'Katılım isteği gönder',
-          ),
-        );
-      },
+    final access = RouteAccess.fromMap(data);
+    final start = (data['startAt'] as Timestamp?)?.toDate();
+    if (start == null || !start.isAfter(DateTime.now())) return const ListTile(title: Text('Bu rotaya katılım sona erdi.'));
+    if ((data['memberIds'] as List? ?? []).length >= (data['participantLimit'] as num? ?? 60)) return const ListTile(title: Text('Rota dolu.'));
+    Widget action() {
+      if (invited) return Wrap(spacing: 8, children: [
+        FilledButton(onPressed: () => act(() => TravelPlanService.instance.requestJoin(routeId)), child: const Text('Daveti kabul et')),
+        TextButton(onPressed: () => act(() => TravelPlanService.instance.declineInvite(routeId)), child: const Text('Daveti reddet')),
+      ]);
+      if (!access.approval) return FilledButton(onPressed: () => act(() => TravelPlanService.instance.requestJoin(routeId)), child: const Text('Katıl'));
+      return StreamBuilder<DocumentSnapshot<Map<String,dynamic>>>(stream: ref.doc(uid).snapshots(), builder: (_,s) {
+        final pending = s.data?.data()?['status'] == 'pending';
+        return FilledButton(onPressed: pending ? null : () => act(() => TravelPlanService.instance.requestJoin(routeId)),
+          child: Text(pending ? 'Katılım isteği gönderildi' : 'Katılım isteği gönder'));
+      });
+    }
+    if (invited || access.audience == 'public') return action();
+    if (access.audience == 'private') return const ListTile(title: Text('Katılım yalnızca davetlilere açık.'));
+    return StreamBuilder<DocumentSnapshot<Map<String,dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('users').doc(data['ownerId'] as String).collection('followers').doc(uid).snapshots(),
+      builder: (_,s) => s.data?.exists == true ? action() : const ListTile(title: Text('Katılım yalnızca takipçilere açık.')),
     );
   }
 }

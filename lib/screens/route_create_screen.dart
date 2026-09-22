@@ -1,3 +1,5 @@
+import '../models/route_access.dart';
+import '../widgets/route_access_settings.dart';
 import '../services/route_terrain_service.dart';
 import '../widgets/route_terrain_summary.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -72,6 +74,9 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   String _transport = 'Araç';
   String _difficulty = '';
   bool _allowJoin = false;
+  String _joinAudience = 'private';
+  bool _joinApproval = true;
+  RouteAccess get _access => RouteAccess(visibility: _visibility, enabled: _allowJoin, audience: _joinAudience, approval: _joinApproval);
   String _visibility = 'private';
   bool _busy = false;
   DateTime? _startAt;
@@ -103,6 +108,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       _difficulty = (p.dayPlan['difficulty'] ?? '').toString();
       _startAt = p.hasSchedule ? p.startAt : null;
       _allowJoin = p.joinEnabled;
+      _joinAudience = p.joinAudience;
+      _joinApproval = p.joinRequiresApproval;
       if (p.routeOrigin['latitude'] is num &&
           p.routeOrigin['longitude'] is num) {
         _origin = LatLng(
@@ -157,6 +164,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       'roundTrip': _roundTrip,
       'difficulty': _difficulty,
       'allowJoin': _allowJoin,
+      'joinAudience': _joinAudience,
+      'joinApproval': _joinApproval,
       'origin':
           _origin == null
               ? null
@@ -208,6 +217,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         _description.text = draft['description'] ?? '';
         _difficulty = (draft['difficulty'] ?? '').toString();
         _allowJoin = draft['allowJoin'] == true;
+        _joinAudience = (draft['joinAudience'] ?? (_allowJoin ? (draft['visibility'] ?? 'private') : 'private')).toString();
+        _joinApproval = draft['joinApproval'] != false;
         _manual = draft['manual'] == true;
         _roundTrip = draft['roundTrip'] == true;
         final origin = draft['origin'];
@@ -290,6 +301,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       _description.clear();
       _difficulty = '';
       _allowJoin = false;
+      _joinAudience = 'private';
+      _joinApproval = true;
       _city.clear();
       _meetingNote.clear();
       _stops.clear();
@@ -551,11 +564,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         _city.text.trim().isEmpty ? _stops.first.city : _city.text.trim();
     if (_startAt != null && !_startAt!.isAfter(DateTime.now()))
       throw Exception('İleri bir tarih ve saat seç.');
-    if (_allowJoin && (_visibility == 'private' || _startAt == null)) {
-      throw Exception(
-        'Onayla katılım için bir tarih ve takipçilere ya da herkese açık görünürlük seç.',
-      );
-    }
+    final accessError = _access.validate(_startAt);
+    if (accessError != null) throw Exception(accessError);
     if (widget.existingPlan != null) {
       final old = widget.existingPlan!;
       await TravelPlanService.instance.updateDesignedRoute(old.id, {
@@ -596,8 +606,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         'travelMinutes': ((_itinerary?.seconds ?? 0) / 60).ceil(),
         'visibility': _visibility,
         'isPublic': _visibility == 'public',
-        'joinEnabled':
-            _allowJoin && _visibility != 'private' && _startAt != null,
+        ..._access.fields,
         'hasSchedule': _startAt != null,
         'startAt': Timestamp.fromDate(_startAt ?? old.startAt),
         if (_meeting != null)
@@ -659,6 +668,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                   },
           visibility: _visibility,
           allowJoinRequests: _allowJoin,
+          joinAudience: _joinAudience,
+          joinRequiresApproval: _joinApproval,
           startAt: _startAt,
           meetingPoint:
               _meeting == null
@@ -721,57 +732,6 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       setState(() => _difficulty = terrain?.difficulty(mode) ?? '');
       _scheduleDraft();
     }
-  }
-
-  Future<void> _visibilitySheet() async {
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder:
-          (context) => Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const ListTile(
-                  title: Text(
-                    'Kimler katılabilir?',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                for (final option in const [
-                  ('private', 'Davetliler', 'Yalnızca davet ettiğin kişiler.'),
-                  (
-                    'followers',
-                    'Takipçilerim',
-                    'Takipçilerin katılım isteği gönderebilir.',
-                  ),
-                  (
-                    'public',
-                    'Herkes',
-                    'Tarih eklediğinde Etkinlikler’de de görünür.',
-                  ),
-                ])
-                  ListTile(
-                    title: Text(option.$2),
-                    subtitle: Text(option.$3),
-                    trailing: Icon(
-                      _visibility == option.$1
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color:
-                          _visibility == option.$1
-                              ? AppColors.cyan
-                              : AppColors.textMuted,
-                    ),
-                    onTap: () => Navigator.pop(context, option.$1),
-                  ),
-              ],
-            ),
-          ),
-    );
-    if (mounted && result != null) setState(() => _visibility = result);
   }
 
   Future<void> _meetingSheet() async {
@@ -904,32 +864,6 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     }
     if (_step == 1 && _stops.isEmpty) return;
     setState(() => _step++);
-  }
-
-  Future<void> _joinSheet() async {
-    final value = await showModalBottomSheet<bool>(
-      context: context,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder:
-          (c) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('Davet ettiklerim'),
-                onTap: () => Navigator.pop(c, false),
-              ),
-              ListTile(
-                title: const Text('Onayla katılım'),
-                subtitle: const Text(
-                  'Takipçilere veya herkese açık, tarihli rotalarda.',
-                ),
-                onTap: () => Navigator.pop(c, true),
-              ),
-            ],
-          ),
-    );
-    if (mounted && value != null) setState(() => _allowJoin = value);
   }
 
   Future<void> _chooseOrigin() async {
@@ -1489,18 +1423,13 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                   : '${_startAt!.day}.${_startAt!.month}.${_startAt!.year} · ${TimeOfDay.fromDateTime(_startAt!).format(context)}',
               _pickDate,
             ),
-            _detail(
-              Icons.public,
-              'Rotayı kimler görebilir?',
-              _audience,
-              _visibilitySheet,
-            ),
-            _detail(
-              Icons.people_outline,
-              'Kimler katılabilir?',
-              _allowJoin ? 'Onayla katılım' : 'Davet ettiklerim',
-              _joinSheet,
-            ),
+            RouteAccessSettings(value: _access, startAt: _startAt, busy: _busy,
+              pickDate: () async { await _pickDate(); return _startAt; },
+              onChanged: (v) => setState(() {
+                _visibility = v.visibility; _allowJoin = v.enabled;
+                _joinAudience = v.audience; _joinApproval = v.approval;
+                _scheduleDraft();
+              })),
             _detail(
               Icons.place_outlined,
               'Buluşma noktası',
@@ -1512,7 +1441,16 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       ),
       if (_startAt != null)
         TextButton(
-          onPressed: () => setState(() => _startAt = null),
+          onPressed: () async {
+            if (_allowJoin) {
+              final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+                title: const Text('Tarihi kaldır'), content: const Text('Tarihi kaldırırsan katılım da kapanır. Devam edilsin mi?'),
+                actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')),
+                  FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Tarihi kaldır ve katılımı kapat'))]));
+              if (ok != true || !mounted) return;
+            }
+            setState(() { _startAt = null; _allowJoin = false; });
+          },
           child: const Text('Tarihi daha sonra belirle'),
         ),
       _detail(

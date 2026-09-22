@@ -490,9 +490,36 @@ service cloud.firestore {
       function member() { return signedIn() && resource.data.memberIds.hasAny([request.auth.uid]); }
       function routeVisible(d) {
         return d.get('isPublic', false) == true || (signedIn() &&
-          (d.memberIds.hasAny([request.auth.uid]) ||
+          (d.memberIds.hasAny([request.auth.uid]) || d.get('invitedIds',[]).hasAny([request.auth.uid]) ||
            (d.get('visibility', 'private') == 'followers' &&
             exists(/databases/$(database)/documents/users/$(d.ownerId)/followers/$(request.auth.uid)))));
+      }
+      function audience(d) { return d.get('joinAudience', d.get('visibility', d.get('isPublic',false) ? 'public' : 'private')); }
+      function eligible(d, uid) {
+        return d.get('invitedIds',[]).hasAny([uid]) || audience(d) == 'public' ||
+          (audience(d) == 'followers' && exists(/databases/$(database)/documents/users/$(d.ownerId)/followers/$(uid)));
+      }
+      function openForJoining(d) {
+        return d.get('joinEnabled',false) && d.startAt is timestamp && d.startAt > request.time &&
+          d.memberIds.size() < d.get('participantLimit',60);
+      }
+      function selfJoin() {
+        let old = resource.data;
+        let next = request.resource.data;
+        return routeVisible(old) && openForJoining(old) && eligible(old, request.auth.uid) &&
+          (!old.get('joinRequiresApproval',true) || old.get('invitedIds',[]).hasAny([request.auth.uid])) &&
+          !old.memberIds.hasAny([request.auth.uid]) &&
+          next.diff(old).affectedKeys().hasOnly(['memberIds','invitedIds','updatedAt']) &&
+          next.updatedAt == request.time &&
+          next.memberIds.toSet() == old.memberIds.toSet().union([request.auth.uid].toSet()) &&
+          next.memberIds.size() == old.memberIds.size() + 1 &&
+          next.get('invitedIds',[]).toSet() == old.get('invitedIds',[]).toSet().difference([request.auth.uid].toSet());
+      }
+      function declineInvitation() {
+        return resource.data.get('invitedIds',[]).hasAny([request.auth.uid]) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['invitedIds','updatedAt']) &&
+          request.resource.data.updatedAt == request.time &&
+          request.resource.data.invitedIds.toSet() == resource.data.invitedIds.toSet().difference([request.auth.uid].toSet());
       }
       function validSharing() {
         let d = request.resource.data;
@@ -500,8 +527,13 @@ service cloud.firestore {
           d.get('participantLimit',60) is int && d.get('participantLimit',60) >= 1 && d.get('participantLimit',60) <= 60 &&
           d.get('visibility', 'private') in ['private','followers','public'] &&
           d.get('status','planned') in ['planned','active','completed'] &&
-          (d.get('joinEnabled',false) == false ||
-           ((d.get('isPublic',false) == true || d.get('visibility','private') == 'followers') && d.startAt is timestamp));
+          d.get('invitedIds',[]) is list && d.get('invitedIds',[]).size() <= 200 &&
+          d.get('joinRequiresApproval',true) is bool &&
+          audience(d) in ['private','followers','public'] &&
+          (d.get('accessVersion',1) < 2 || d.get('isPublic',false) == (d.get('visibility','private') == 'public')) &&
+          (d.get('joinEnabled',false) == false || (d.startAt is timestamp &&
+            (audience(d) == 'private' || d.get('visibility','private') == 'public' ||
+             (audience(d) == 'followers' && d.get('visibility','private') == 'followers'))));
       }
       allow read: if routeVisible(resource.data);
       allow create: if signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&
@@ -511,7 +543,7 @@ service cloud.firestore {
         request.resource.data.spotIds.size() <= 12 &&
         request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
         request.resource.data.title.size() <= 80;
-      allow update: if signedIn() && validSharing() && (
+      allow update: if signedIn() && validSharing() && (selfJoin() || declineInvitation() ||
         (member() && resource.data.get('allowMemberEdits', false) == true &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['spotIds','spotNames','stopSnapshots','updatedAt']) &&
           request.resource.data.spotIds is list && request.resource.data.spotIds.size() >= 1 && request.resource.data.spotIds.size() <= 12 &&
@@ -590,7 +622,8 @@ service cloud.firestore {
         function route() { return get(/databases/$(database)/documents/travel_plans/$(planId)).data; }
         allow read: if signedIn() && (request.auth.uid == uid || route().ownerId == request.auth.uid);
         allow create, update: if signedIn() && request.auth.uid == uid &&
-          routeVisible(route()) && route().get('joinEnabled', false) &&
+          routeVisible(route()) && eligible(route(), uid) && route().get('joinRequiresApproval',true) &&
+          route().get('joinEnabled', false) &&
           route().startAt > request.time && !route().memberIds.hasAny([uid]) &&
           route().memberIds.size() < route().get('participantLimit', 60) &&
           request.resource.data.keys().hasOnly(['userId','name','status','updatedAt']) &&

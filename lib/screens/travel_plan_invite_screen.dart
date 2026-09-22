@@ -80,7 +80,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
               )
               .toList()
             ..sort((a, b) => a.name.compareTo(b.name));
-      final members = (plan?.data()?['memberIds'] as List<dynamic>? ?? const [])
+      final members = <dynamic>[...(plan?.data()?['memberIds'] as List<dynamic>? ?? const []), ...(plan?.data()?['invitedIds'] as List<dynamic>? ?? const [])]
           .map((id) => id.toString())
           .toSet();
       if (!mounted) return;
@@ -231,7 +231,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                           compact: true,
                           child: Text(
                             invited
-                                ? 'Zaten planda'
+                                ? 'Katılımcı veya davet gönderilmiş'
                                 : user.username.isEmpty
                                 ? 'Takip ediyorsun'
                                 : '@${user.username}',
