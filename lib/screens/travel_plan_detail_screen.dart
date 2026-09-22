@@ -62,19 +62,21 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
         .then((spots) {
           if (!mounted || _legacyKey != key) return;
           setState(
-            () => _legacyStops = spots
-                .map(
-                  (s) => <String, dynamic>{
-                    'id': s.id,
-                    'name': s.name,
-                    'city': s.city,
-                    'latitude': s.latitude,
-                    'longitude': s.longitude,
-                    'imageUrl': s.imageUrl,
-                    'category': s.category,
-                  },
-                )
-                .toList(),
+            () =>
+                _legacyStops =
+                    spots
+                        .map(
+                          (s) => <String, dynamic>{
+                            'id': s.id,
+                            'name': s.name,
+                            'city': s.city,
+                            'latitude': s.latitude,
+                            'longitude': s.longitude,
+                            'imageUrl': s.imageUrl,
+                            'category': s.category,
+                          },
+                        )
+                        .toList(),
           );
         })
         .catchError((Object e) {
@@ -84,10 +86,11 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   }
 
   TravelPlan get plan => _current ?? widget.plan;
-  late final _stream = FirebaseFirestore.instance
-      .collection('travel_plans')
-      .doc(widget.plan.id)
-      .snapshots();
+  late final _stream =
+      FirebaseFirestore.instance
+          .collection('travel_plans')
+          .doc(widget.plan.id)
+          .snapshots();
   bool get _owned => FirebaseAuth.instance.currentUser?.uid == plan.ownerId;
 
   Future<void> _changeStart(DateTime current) async {
@@ -128,9 +131,10 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => BusinessProfileScreen(
-            venue: NearbyVenue.fromJson(Map<String, dynamic>.from(venue)),
-          ),
+          builder:
+              (_) => BusinessProfileScreen(
+                venue: NearbyVenue.fromJson(Map<String, dynamic>.from(venue)),
+              ),
         ),
       );
   }
@@ -140,26 +144,27 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     final controller = TextEditingController(text: _title);
     final value = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => TbtDialog(
-        title: const Text('Rota adını değiştir'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 80,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(labelText: 'Rota adı'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Vazgeç'),
+      builder:
+          (dialogContext) => TbtDialog(
+            title: const Text('Rota adını değiştir'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 80,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Rota adı'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Vazgeç'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, controller.text),
+                child: const Text('Kaydet'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
     );
     controller.dispose();
     if (value == null || value.trim().isEmpty || !mounted) return;
@@ -173,28 +178,29 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     );
     final continueToMap = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => TbtDialog(
-        title: const Text('Buluşma noktası'),
-        content: TextField(
-          controller: labelController,
-          autofocus: true,
-          maxLength: 160,
-          decoration: const InputDecoration(
-            labelText: 'Noktanın adı',
-            hintText: 'Örn. Ayasofya ana giriş',
+      builder:
+          (dialogContext) => TbtDialog(
+            title: const Text('Buluşma noktası'),
+            content: TextField(
+              controller: labelController,
+              autofocus: true,
+              maxLength: 160,
+              decoration: const InputDecoration(
+                labelText: 'Noktanın adı',
+                hintText: 'Örn. Ayasofya ana giriş',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Vazgeç'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Haritada seç'),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Haritada seç'),
-          ),
-        ],
-      ),
     );
     final label = labelController.text.trim();
     labelController.dispose();
@@ -202,14 +208,15 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     final selection = await Navigator.push<EventLocationSelection>(
       context,
       MaterialPageRoute(
-        builder: (_) => EventLocationPickerScreen(
-          city: plan.city,
-          addressLabel: label.isEmpty ? 'Buluşma noktası' : label,
-          initialLatitude: (current['latitude'] as num?)?.toDouble(),
-          initialLongitude: (current['longitude'] as num?)?.toDouble(),
-          title: 'Buluşma Noktasını Seç',
-          instruction: 'Grubun buluşacağı tam noktaya dokun.',
-        ),
+        builder:
+            (_) => EventLocationPickerScreen(
+              city: plan.city,
+              addressLabel: label.isEmpty ? 'Buluşma noktası' : label,
+              initialLatitude: (current['latitude'] as num?)?.toDouble(),
+              initialLongitude: (current['longitude'] as num?)?.toDouble(),
+              title: 'Buluşma Noktasını Seç',
+              instruction: 'Grubun buluşacağı tam noktaya dokun.',
+            ),
       ),
     );
     if (selection == null) return;
@@ -235,10 +242,11 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   }
 
   Future<void> _openRoute() async {
-    final latest = await FirebaseFirestore.instance
-        .collection('travel_plans')
-        .doc(plan.id)
-        .get();
+    final latest =
+        await FirebaseFirestore.instance
+            .collection('travel_plans')
+            .doc(plan.id)
+            .get();
     final current = TravelPlan.fromDoc(latest);
     final spots = await TravelPlanService.instance.resolveRouteSpots(current);
     if (!mounted) return;
@@ -248,12 +256,42 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       );
       return;
     }
-    if(current.ownerId == FirebaseAuth.instance.currentUser?.uid) {
-      final editable=await TravelPlanService.instance.resolveSpots(current);
-      if(!mounted)return;
-      await Navigator.push(context,MaterialPageRoute(builder:(_)=>RouteCreateScreen(existingPlan:current,initialStops:editable)));
+    if (current.ownerId == FirebaseAuth.instance.currentUser?.uid) {
+      final editable = await TravelPlanService.instance.resolveSpots(current);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => RouteCreateScreen(
+                existingPlan: current,
+                initialStops: editable,
+              ),
+        ),
+      );
     } else {
-      await Navigator.push(context,MaterialPageRoute(builder:(_)=>Scaffold(appBar:AppBar(title:Text(current.title)),body:RouteMapPreview(height:MediaQuery.sizeOf(context).height-MediaQuery.paddingOf(context).vertical-kToolbarHeight-60,interactive:true,stops:current.stopSnapshots,transport:current.transport,dayPlan:current.dayPlan,origin:current.routeOrigin,onOpen:(){}))));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => Scaffold(
+                appBar: AppBar(title: Text(current.title)),
+                body: RouteMapPreview(
+                  height:
+                      MediaQuery.sizeOf(context).height -
+                      MediaQuery.paddingOf(context).vertical -
+                      kToolbarHeight -
+                      60,
+                  interactive: true,
+                  stops: current.stopSnapshots,
+                  transport: current.transport,
+                  dayPlan: current.dayPlan,
+                  origin: current.routeOrigin,
+                  onOpen: () {},
+                ),
+              ),
+        ),
+      );
     }
   }
 
@@ -283,31 +321,32 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   Future<void> _showStop(Map<String, dynamic> stop) async {
     await showTbtDialog<void>(
       context: context,
-      builder: (c) => TbtDialog(
-        title: Text(stop['name']?.toString() ?? 'Durak'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if ((stop['imageUrl'] ?? '').toString().isNotEmpty)
-                Image.network(
-                  stop['imageUrl'].toString(),
-                  height: 220,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      const Text('Fotoğraf yüklenemedi.'),
-                ),
-              Text((stop['description'] ?? '').toString()),
+      builder:
+          (c) => TbtDialog(
+            title: Text(stop['name']?.toString() ?? 'Durak'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if ((stop['imageUrl'] ?? '').toString().isNotEmpty)
+                    Image.network(
+                      stop['imageUrl'].toString(),
+                      height: 220,
+                      fit: BoxFit.cover,
+                      errorBuilder:
+                          (_, __, ___) => const Text('Fotoğraf yüklenemedi.'),
+                    ),
+                  Text((stop['description'] ?? '').toString()),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c),
+                child: const Text('Kapat'),
+              ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Kapat'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -316,8 +355,9 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       await task();
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userFacingError(e))));
     }
   }
 
@@ -328,8 +368,8 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) =>
-          RouteStopPicker(city: plan.city, stops: spots, multiple: true),
+      builder:
+          (_) => RouteStopPicker(city: plan.city, stops: spots, multiple: true),
     );
     if (selected == null || selected.isEmpty) return;
     if (_owned || plan.allowMemberEdits) {
@@ -356,81 +396,90 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (c) => StatefulBuilder(
-        builder: (c, refresh) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Rota ayarları',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('Rota adını değiştir'),
-                onTap: () {
-                  Navigator.pop(c);
-                  _act(_renamePlan);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.calendar_month_outlined),
-                title: Text(plan.hasSchedule ? routeDate(plan) : 'Tarih ekle'),
-                onTap: () {
-                  Navigator.pop(c);
-                  _act(() => _changeStart(plan.startAt));
-                },
-              ),
-              const Text(
-                'Kimler katılabilir?',
-                style: TextStyle(color: AppColors.textMuted),
-              ),
-              for (final v in [
-                ('private', 'Davetliler'),
-                ('followers', 'Takipçilerim'),
-                ('public', 'Herkes'),
-              ])
-                RadioListTile<String>(
-                  value: v.$1,
-                  groupValue: plan.visibility,
-                  title: Text(v.$2),
-                  onChanged: (_) async {
-                    Navigator.pop(c);
-                    await _act(
-                      () => TravelPlanService.instance.setOptions(
-                        plan.id,
-                        visibility: v.$1,
+      builder:
+          (c) => StatefulBuilder(
+            builder:
+                (c, refresh) => Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Rota ayarları',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    );
-                  },
+                      ListTile(
+                        leading: const Icon(Icons.edit_outlined),
+                        title: const Text('Rota adını değiştir'),
+                        onTap: () {
+                          Navigator.pop(c);
+                          _act(_renamePlan);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.calendar_month_outlined),
+                        title: Text(
+                          plan.hasSchedule ? routeDate(plan) : 'Tarih ekle',
+                        ),
+                        onTap: () {
+                          Navigator.pop(c);
+                          _act(() => _changeStart(plan.startAt));
+                        },
+                      ),
+                      const Text(
+                        'Kimler katılabilir?',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
+                      for (final v in [
+                        ('private', 'Davetliler'),
+                        ('followers', 'Takipçilerim'),
+                        ('public', 'Herkes'),
+                      ])
+                        RadioListTile<String>(
+                          value: v.$1,
+                          groupValue: plan.visibility,
+                          title: Text(v.$2),
+                          onChanged: (_) async {
+                            Navigator.pop(c);
+                            await _act(
+                              () => TravelPlanService.instance.setOptions(
+                                plan.id,
+                                visibility: v.$1,
+                              ),
+                            );
+                          },
+                        ),
+                      SwitchListTile(
+                        title: const Text(
+                          'Katılımcılar durakları düzenleyebilir',
+                        ),
+                        value: plan.allowMemberEdits,
+                        onChanged: (v) async {
+                          Navigator.pop(c);
+                          await _act(
+                            () => TravelPlanService.instance.setOptions(
+                              plan.id,
+                              allowMemberEdits: v,
+                            ),
+                          );
+                        },
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(c);
+                          _act(_saveOffline);
+                        },
+                        icon: const Icon(Icons.offline_pin_outlined),
+                        label: const Text('Çevrimdışı kullanım için indir'),
+                      ),
+                    ],
+                  ),
                 ),
-              SwitchListTile(
-                title: const Text('Katılımcılar durakları düzenleyebilir'),
-                value: plan.allowMemberEdits,
-                onChanged: (v) async {
-                  Navigator.pop(c);
-                  await _act(
-                    () => TravelPlanService.instance.setOptions(
-                      plan.id,
-                      allowMemberEdits: v,
-                    ),
-                  );
-                },
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.pop(c);
-                  _act(_saveOffline);
-                },
-                icon: const Icon(Icons.offline_pin_outlined),
-                label: const Text('Çevrimdışı kullanım için indir'),
-              ),
-            ],
           ),
-        ),
-      ),
     );
   }
 
@@ -464,9 +513,10 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       );
       if (plan.stopSnapshots.isEmpty && plan.spotIds.isNotEmpty)
         _resolveLegacy();
-      final stops = plan.stopSnapshots.isNotEmpty
-          ? plan.stopSnapshots
-          : _legacyStops ?? <Map<String, dynamic>>[];
+      final stops =
+          plan.stopSnapshots.isNotEmpty
+              ? plan.stopSnapshots
+              : _legacyStops ?? <Map<String, dynamic>>[];
       final point = Map<String, dynamic>.from(
         data['meetingPoint'] as Map? ?? {},
       );
@@ -499,28 +549,32 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                TravelPlanDetailScreen(plan: copied),
+                            builder:
+                                (_) => TravelPlanDetailScreen(plan: copied),
                           ),
                         );
                     });
                 },
-                itemBuilder: (_) => [
-                  if (_owned)
-                    const PopupMenuItem(
-                      value: 'settings',
-                      child: Text('Rota ayarları'),
-                    ),
-                  const PopupMenuItem(
-                    value: 'save',
-                    child: Text('Rotayı kaydet'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'copy',
-                    child: Text('Kendi planıma kopyala'),
-                  ),
-                  const PopupMenuItem(value: 'share', child: Text('Paylaş')),
-                ],
+                itemBuilder:
+                    (_) => [
+                      if (_owned)
+                        const PopupMenuItem(
+                          value: 'settings',
+                          child: Text('Rota ayarları'),
+                        ),
+                      const PopupMenuItem(
+                        value: 'save',
+                        child: Text('Rotayı kaydet'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'copy',
+                        child: Text('Kendi planıma kopyala'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'share',
+                        child: Text('Paylaş'),
+                      ),
+                    ],
               ),
             ],
           ),
@@ -533,28 +587,139 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                     ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        if(stops.any((s)=>(s['imageUrl']??'').toString().isNotEmpty))
-                          ClipRRect(borderRadius:BorderRadius.circular(16),child:SizedBox(height:180,child:FirebaseMediaImage(imageUrl:stops.firstWhere((s)=>(s['imageUrl']??'').toString().isNotEmpty)['imageUrl'].toString(),fit:BoxFit.cover))),
-                        const SizedBox(height:16),Text(plan.title,style:const TextStyle(fontSize:25,fontWeight:FontWeight.w800)),
-                        const SizedBox(height:8),Row(children:[Icon(routeTransportIcon(plan.transport),color:AppColors.cyan,size:18),const SizedBox(width:8),Expanded(child:Text('${plan.transport}${plan.distanceKm>0?' · ${plan.distanceKm.toStringAsFixed(1)} km':''}${plan.travelMinutes>0?' · ${plan.travelMinutes} dk':''}',style:const TextStyle(color:AppColors.textMuted)))]),
-                        if((plan.dayPlan['description']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:10),child:Text(plan.dayPlan['description'].toString())),
-                        ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.calendar_today_outlined,size:20),title:Text(plan.hasSchedule?routeDate(plan):'Tarih belirlenmedi'),onTap:_owned?()=>_act(()=>_changeStart(plan.startAt)):null),
-                        if(point.isNotEmpty || _owned)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.place_outlined),title:Text((point['label']??'Buluşma noktası ekle').toString()),onTap:_owned?()=>_act(()=>_pickMeetingPoint(point)):()=>_act(()=>_openMeetingPoint(point))),
-                        RouteMapPreview(stops:stops,transport:plan.transport,dayPlan:plan.dayPlan,origin:plan.routeOrigin,onOpen:()=>_act(_openRoute)),
-                        const SizedBox(height:14),InkWell(onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>RouteParticipantsScreen(plan:plan))),child:Padding(padding:const EdgeInsets.symmetric(vertical:10),child:Row(children:[Expanded(child:RouteMemberRow(ids:plan.memberIds)),const Text('Tümünü gör',style:TextStyle(color:AppColors.cyan)),const Icon(Icons.chevron_right)]))),
+                        if (stops.any(
+                          (s) => (s['imageUrl'] ?? '').toString().isNotEmpty,
+                        ))
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: SizedBox(
+                              height: 180,
+                              child: FirebaseMediaImage(
+                                imageUrl:
+                                    stops
+                                        .firstWhere(
+                                          (s) =>
+                                              (s['imageUrl'] ?? '')
+                                                  .toString()
+                                                  .isNotEmpty,
+                                        )['imageUrl']
+                                        .toString(),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        Text(
+                          plan.title,
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              routeTransportIcon(plan.transport),
+                              color: AppColors.cyan,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${plan.transport}${plan.distanceKm > 0 ? ' · ${plan.distanceKm.toStringAsFixed(1)} km' : ''}${plan.travelMinutes > 0 ? ' · ${plan.travelMinutes} dk' : ''}',
+                                style: const TextStyle(
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if ((plan.dayPlan['description'] ?? '')
+                            .toString()
+                            .isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(plan.dayPlan['description'].toString()),
+                          ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 20,
+                          ),
+                          title: Text(
+                            plan.hasSchedule
+                                ? routeDate(plan)
+                                : 'Tarih belirlenmedi',
+                          ),
+                          onTap:
+                              _owned
+                                  ? () => _act(() => _changeStart(plan.startAt))
+                                  : null,
+                        ),
+                        if (point.isNotEmpty || _owned)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.place_outlined),
+                            title: Text(
+                              (point['label'] ?? 'Buluşma noktası ekle')
+                                  .toString(),
+                            ),
+                            onTap:
+                                _owned
+                                    ? () => _act(() => _pickMeetingPoint(point))
+                                    : () =>
+                                        _act(() => _openMeetingPoint(point)),
+                          ),
+                        RouteMapPreview(
+                          stops: stops,
+                          transport: plan.transport,
+                          dayPlan: plan.dayPlan,
+                          origin: plan.routeOrigin,
+                          onOpen: () => _act(_openRoute),
+                        ),
+                        const SizedBox(height: 14),
+                        InkWell(
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) =>
+                                          RouteParticipantsScreen(plan: plan),
+                                ),
+                              ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: RouteMemberRow(ids: plan.memberIds),
+                                ),
+                                const Text(
+                                  'Tümünü gör',
+                                  style: TextStyle(color: AppColors.cyan),
+                                ),
+                                const Icon(Icons.chevron_right),
+                              ],
+                            ),
+                          ),
+                        ),
                         if (plan.stopSnapshots.isEmpty && _legacyStops == null)
                           _legacyError == null
                               ? const LinearProgressIndicator()
                               : TextButton(
-                                  onPressed: () =>
-                                      setState(() => _legacyKey = ''),
-                                  child: Text(_legacyError!),
-                                ),
-                        if (!_owned) RouteParticipation(
-                          routeId: plan.id,
-                          data: data,
-                          showSettings: false,
-                        ),
+                                onPressed:
+                                    () => setState(() => _legacyKey = ''),
+                                child: Text(_legacyError!),
+                              ),
+                        if (!_owned)
+                          RouteParticipation(
+                            routeId: plan.id,
+                            data: data,
+                            showSettings: false,
+                          ),
 
                         ReorderableListView.builder(
                           shrinkWrap: true,
@@ -574,80 +739,101 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                               ),
                             );
                           },
-                          itemBuilder: (_, i) => Card(
-                            key: ValueKey('${stops[i]['id']}_$i'),
-                            color: AppColors.surface,
-                            child: ListTile(
-                              leading: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: AppColors.onPrimary,
-                                    child: Text(
-                                      '${i + 1}',
-                                      style: const TextStyle(fontSize: 11),
-                                    ),
-                                  ),
-                                  if ((stops[i]['imageUrl'] ?? '').toString().isNotEmpty) ...[
-                                  const SizedBox(width: 8),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: SizedBox(
-                                      width: 44,
-                                      height: 48,
-                                      child: FirebaseMediaImage(
-                                        imageUrl: (stops[i]['imageUrl'] ?? '')
-                                            .toString(),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                  ],
-                                ],
-                              ),
-                              title: Text('${stops[i]['name']}', maxLines: 2, overflow: TextOverflow.ellipsis),
-                              subtitle: Text(
-                                '${stops[i]['category'] ?? 'Durak'}',
-                              ),
-                              onTap: () => stops[i]['venue'] is Map
-                                  ? _openVenueStop(stops[i])
-                                  : _showStop(stops[i]),
-                              trailing:
-                                  member && (_owned || plan.allowMemberEdits)
-                                  ? Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          tooltip: 'Durağı kaldır',
-                                          onPressed: stops.length > 1
-                                              ? () => _act(
-                                                  () => TravelPlanService
-                                                      .instance
-                                                      .updateStops(
-                                                        plan.id,
-                                                        [...stops]..removeAt(i),
-                                                      ),
-                                                )
-                                              : null,
-                                          icon: const Icon(
-                                            Icons.close,
-                                            size: 18,
-                                          ),
+                          itemBuilder:
+                              (_, i) => Card(
+                                key: ValueKey('${stops[i]['id']}_$i'),
+                                color: AppColors.surface,
+                                child: ListTile(
+                                  leading: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: AppColors.onPrimary,
+                                        child: Text(
+                                          '${i + 1}',
+                                          style: const TextStyle(fontSize: 11),
                                         ),
-                                        ReorderableDragStartListener(
-                                          index: i,
-                                          child: const Padding(
-                                            padding: EdgeInsets.all(8),
-                                            child: Icon(Icons.drag_handle),
+                                      ),
+                                      if ((stops[i]['imageUrl'] ?? '')
+                                          .toString()
+                                          .isNotEmpty) ...[
+                                        const SizedBox(width: 8),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: SizedBox(
+                                            width: 44,
+                                            height: 48,
+                                            child: FirebaseMediaImage(
+                                              imageUrl:
+                                                  (stops[i]['imageUrl'] ?? '')
+                                                      .toString(),
+                                              fit: BoxFit.cover,
+                                            ),
                                           ),
                                         ),
                                       ],
-                                    )
-                                  : null,
-                            ),
-                          ),
+                                    ],
+                                  ),
+                                  title: Text(
+                                    '${stops[i]['name']}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    '${stops[i]['category'] ?? 'Durak'}',
+                                  ),
+                                  onTap:
+                                      () =>
+                                          stops[i]['venue'] is Map
+                                              ? _openVenueStop(stops[i])
+                                              : _showStop(stops[i]),
+                                  trailing:
+                                      member &&
+                                              (_owned || plan.allowMemberEdits)
+                                          ? Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                tooltip: 'Durağı kaldır',
+                                                onPressed:
+                                                    stops.length > 1
+                                                        ? () => _act(
+                                                          () =>
+                                                              TravelPlanService
+                                                                  .instance
+                                                                  .updateStops(
+                                                                    plan.id,
+                                                                    [
+                                                                      ...stops,
+                                                                    ]..removeAt(
+                                                                      i,
+                                                                    ),
+                                                                  ),
+                                                        )
+                                                        : null,
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                              ReorderableDragStartListener(
+                                                index: i,
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(8),
+                                                  child: Icon(
+                                                    Icons.drag_handle,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                          : null,
+                                ),
+                              ),
                         ),
                         if (member)
                           OutlinedButton.icon(
@@ -666,14 +852,16 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                               backgroundColor: AppColors.primary,
                               foregroundColor: AppColors.onPrimary,
                             ),
-                            onPressed: () => _act(
-                              () => TravelPlanService.instance.setOptions(
-                                plan.id,
-                                status: plan.status == 'active'
-                                    ? 'completed'
-                                    : 'active',
-                              ),
-                            ),
+                            onPressed:
+                                () => _act(
+                                  () => TravelPlanService.instance.setOptions(
+                                    plan.id,
+                                    status:
+                                        plan.status == 'active'
+                                            ? 'completed'
+                                            : 'active',
+                                  ),
+                                ),
                             icon: Icon(
                               plan.status == 'active'
                                   ? Icons.check
@@ -701,12 +889,13 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                         ),
                         if (member)
                           TextButton(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => _LiveTripScreen(plan: plan),
-                              ),
-                            ),
+                            onPressed:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => _LiveTripScreen(plan: plan),
+                                  ),
+                                ),
                             child: const Text('Gezi durumunu paylaş'),
                           ),
                       ],
@@ -756,11 +945,7 @@ class _RouteTabBar extends StatelessWidget {
     color: AppColors.background,
     child: TabBar(
       onTap: (_) => FocusScope.of(context).unfocus(),
-      tabs: const [
-        Tab(text: 'Plan'),
-        Tab(text: 'Sohbet'),
-        Tab(text: 'Albüm'),
-      ],
+      tabs: const [Tab(text: 'Plan'), Tab(text: 'Sohbet'), Tab(text: 'Albüm')],
     ),
   );
 }
@@ -855,38 +1040,45 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
                 builder: (_, snapshot) {
                   final docs = snapshot.data?.docs ?? const [];
                   return ListView(
-                    children: docs.map((doc) {
-                      final data = doc.data();
-                      final latitude = (data['latitude'] as num?)?.toDouble();
-                      final longitude = (data['longitude'] as num?)?.toDouble();
-                      return ListTile(
-                        leading: Icon(
-                          data['active'] == true
-                              ? Icons.location_on_rounded
-                              : Icons.location_off_outlined,
-                        ),
-                        title: ProfileNameLink(
-                          userId: doc.id,
-                          compact: true,
-                          child: Text(
-                            (data['userName'] ?? 'TBT kullanıcısı').toString(),
-                          ),
-                        ),
-                        subtitle: Text((data['stopName'] ?? '').toString()),
-                        trailing: latitude == null || longitude == null
-                            ? null
-                            : IconButton(
-                                tooltip: 'Haritada gör',
-                                onPressed: () => launchUrl(
-                                  Uri.parse(
-                                    'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
-                                  ),
-                                  mode: LaunchMode.externalApplication,
-                                ),
-                                icon: const Icon(Icons.map_outlined),
+                    children:
+                        docs.map((doc) {
+                          final data = doc.data();
+                          final latitude =
+                              (data['latitude'] as num?)?.toDouble();
+                          final longitude =
+                              (data['longitude'] as num?)?.toDouble();
+                          return ListTile(
+                            leading: Icon(
+                              data['active'] == true
+                                  ? Icons.location_on_rounded
+                                  : Icons.location_off_outlined,
+                            ),
+                            title: ProfileNameLink(
+                              userId: doc.id,
+                              compact: true,
+                              child: Text(
+                                (data['userName'] ?? 'TBT kullanıcısı')
+                                    .toString(),
                               ),
-                      );
-                    }).toList(),
+                            ),
+                            subtitle: Text((data['stopName'] ?? '').toString()),
+                            trailing:
+                                latitude == null || longitude == null
+                                    ? null
+                                    : IconButton(
+                                      tooltip: 'Haritada gör',
+                                      onPressed:
+                                          () => launchUrl(
+                                            Uri.parse(
+                                              'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+                                            ),
+                                            mode:
+                                                LaunchMode.externalApplication,
+                                          ),
+                                      icon: const Icon(Icons.map_outlined),
+                                    ),
+                          );
+                        }).toList(),
                   );
                 },
               ),

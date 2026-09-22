@@ -67,9 +67,10 @@ class TravelPlanService {
     final reference = _firestore.collection('travel_plans').doc();
     await reference.set({
       'ownerId': user.uid,
-      'ownerName': (user.displayName ?? '').trim().isEmpty
-          ? 'TBT kullanıcısı'
-          : user.displayName!.trim(),
+      'ownerName':
+          (user.displayName ?? '').trim().isEmpty
+              ? 'TBT kullanıcısı'
+              : user.displayName!.trim(),
       'title': title.trim().isEmpty ? '$city rotası' : title.trim(),
       'city': city,
       'area': area,
@@ -105,7 +106,10 @@ class TravelPlanService {
           .toList(growable: false),
       'memberIds': [user.uid],
       if (meetingPoint.isNotEmpty) 'meetingPoint': meetingPoint,
-      'joinEnabled': audience != 'private' && startAt != null && (allowJoinRequests ?? true),
+      'joinEnabled':
+          audience != 'private' &&
+          startAt != null &&
+          (allowJoinRequests ?? true),
       'startAt': Timestamp.fromDate(startAt ?? DateTime.now()),
       'hasSchedule': startAt != null,
       'status': 'planned',
@@ -202,15 +206,37 @@ class TravelPlanService {
     );
   }
 
-  Future<void> updateDesignedRoute(String id, Map<String,dynamic> changes) async {
+  Future<void> updateDesignedRoute(
+    String id,
+    Map<String, dynamic> changes,
+  ) async {
     final uid = _requireUser().uid;
     final ref = _firestore.collection('travel_plans').doc(id);
     await _firestore.runTransaction((tx) async {
       final old = (await tx.get(ref)).data();
-      if(old == null || old['ownerId'] != uid) throw Exception('Bu rotayı yalnızca sahibi düzenleyebilir.');
-      const allowed = {'title','city','transport','spotIds','spotNames','stopSnapshots','dayPlan','routeOrigin','distanceKm','travelMinutes','visibility','isPublic','joinEnabled','hasSchedule','startAt','meetingPoint'};
-      if(changes.keys.any((k)=>!allowed.contains(k))) throw ArgumentError('Invalid route fields');
-      tx.update(ref,{...changes,'updatedAt':FieldValue.serverTimestamp()});
+      if (old == null || old['ownerId'] != uid)
+        throw Exception('Bu rotayı yalnızca sahibi düzenleyebilir.');
+      const allowed = {
+        'title',
+        'city',
+        'transport',
+        'spotIds',
+        'spotNames',
+        'stopSnapshots',
+        'dayPlan',
+        'routeOrigin',
+        'distanceKm',
+        'travelMinutes',
+        'visibility',
+        'isPublic',
+        'joinEnabled',
+        'hasSchedule',
+        'startAt',
+        'meetingPoint',
+      };
+      if (changes.keys.any((k) => !allowed.contains(k)))
+        throw ArgumentError('Invalid route fields');
+      tx.update(ref, {...changes, 'updatedAt': FieldValue.serverTimestamp()});
     });
   }
 
@@ -356,11 +382,12 @@ class TravelPlanService {
       });
     });
     for (final id in ids) {
-      final notification = _firestore
-          .collection('users')
-          .doc(id)
-          .collection('notifications')
-          .doc();
+      final notification =
+          _firestore
+              .collection('users')
+              .doc(id)
+              .collection('notifications')
+              .doc();
       batch.set(notification, {
         'type': 'travel_plan_invite',
         'title': 'Rotaya davet edildin',
@@ -380,7 +407,8 @@ class TravelPlanService {
     await _firestore.runTransaction((tx) async {
       final snap = await tx.get(ref);
       if (!snap.exists) return;
-      if (snap.data()?['ownerId'] != user.uid) throw Exception('Yalnız rota sahibi silebilir.');
+      if (snap.data()?['ownerId'] != user.uid)
+        throw Exception('Yalnız rota sahibi silebilir.');
       tx.delete(ref);
     });
   }
@@ -424,9 +452,8 @@ class TravelPlanService {
         .toList(growable: false);
     await _firestore.collection('travel_plans').doc(planId).update({
       'spotIds': normalized.map((s) => (s['id'] ?? '').toString()).toList(),
-      'spotNames': normalized
-          .map((s) => (s['name'] ?? 'Durak').toString())
-          .toList(),
+      'spotNames':
+          normalized.map((s) => (s['name'] ?? 'Durak').toString()).toList(),
       'stopSnapshots': normalized,
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -451,17 +478,19 @@ class TravelPlanService {
   Future<void> addStops(String planId, List<PhotoSpot> additions) async {
     _requireUser();
     final initial = await read(planId);
-    final legacy = initial.stopSnapshots.isEmpty
-        ? await resolveSpots(initial)
-        : <PhotoSpot>[];
+    final legacy =
+        initial.stopSnapshots.isEmpty
+            ? await resolveSpots(initial)
+            : <PhotoSpot>[];
     final ref = _firestore.collection('travel_plans').doc(planId);
     await _firestore.runTransaction((tx) async {
       final data = (await tx.get(ref)).data();
       if (data == null) throw Exception('Rota bulunamadı.');
-      final stops = (data['stopSnapshots'] as List? ?? [])
-          .whereType<Map>()
-          .map((s) => Map<String, dynamic>.from(s))
-          .toList();
+      final stops =
+          (data['stopSnapshots'] as List? ?? [])
+              .whereType<Map>()
+              .map((s) => Map<String, dynamic>.from(s))
+              .toList();
       if (stops.isEmpty) {
         for (final id in List<String>.from(data['spotIds'] ?? [])) {
           final old = legacy.where((s) => s.id == id).firstOrNull;
@@ -518,9 +547,8 @@ class TravelPlanService {
     String city = '',
   }) async {
     _requireUser();
-    final cleanName = name.trim().isEmpty
-        ? 'Haritadan seçilen durak'
-        : name.trim();
+    final cleanName =
+        name.trim().isEmpty ? 'Haritadan seçilen durak' : name.trim();
     final id =
         'custom_${latitude.toStringAsFixed(6)}_${longitude.toStringAsFixed(6)}';
     await _firestore.collection('travel_plans').doc(planId).update({
@@ -595,9 +623,10 @@ class TravelPlanService {
   }
 
   Future<List<PhotoSpot>> resolveSpots(TravelPlan plan) async {
-    final all = plan.stopSnapshots.isNotEmpty
-        ? <PhotoSpot>[]
-        : await SpotRepository.instance.loadSpots();
+    final all =
+        plan.stopSnapshots.isNotEmpty
+            ? <PhotoSpot>[]
+            : await SpotRepository.instance.loadSpots();
     final byId = {for (final spot in all) spot.id: spot};
     final snapshots = {
       for (final item in plan.stopSnapshots)
@@ -627,4 +656,3 @@ class TravelPlanService {
         .toList(growable: false);
   }
 }
-

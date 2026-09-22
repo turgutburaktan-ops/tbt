@@ -29,11 +29,21 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(MaterialApp(theme: AppTheme.dark,
-      home: RouteCreateScreen(initialStops: const [stop], loadCatalog: catalog)));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: RouteCreateScreen(
+          initialStops: const [stop],
+          loadCatalog: catalog,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
   }
-  testWidgets('four stages preserve transport and selected stops', (tester) async {
+
+  testWidgets('four stages preserve transport and selected stops', (
+    tester,
+  ) async {
     await open(tester);
     expect(find.text('Yeni rota'), findsOneWidget);
     await tester.tap(find.text('Bisiklet'));
@@ -47,16 +57,24 @@ void main() {
     await tester.tap(find.text('Devam'));
     await tester.pumpAndSettle();
     expect(find.text('Elazığ gezisi'), findsOneWidget);
-    await tester.enterText(find.widgetWithText(TextField, 'Elazığ gezisi'), 'Sabah bisikleti');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Elazığ gezisi'),
+      'Sabah bisikleti',
+    );
     await tester.tap(find.byIcon(Icons.arrow_back).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Rotayı düzenle'));
     await tester.pumpAndSettle();
     expect(find.text('1 durak'), findsOneWidget);
-    expect(tester.widget<RouteModePicker>(find.byType(RouteModePicker)).value, 'Bisiklet');
+    expect(
+      tester.widget<RouteModePicker>(find.byType(RouteModePicker)).value,
+      'Bisiklet',
+    );
     expect(tester.takeException(), isNull);
   });
-  testWidgets('removal disables review and undo restores the stop once', (tester) async {
+  testWidgets('removal disables review and undo restores the stop once', (
+    tester,
+  ) async {
     await open(tester);
     await tester.tap(find.text('Rotanı oluşturmaya başla'));
     await tester.pumpAndSettle();
@@ -64,13 +82,22 @@ void main() {
     await tester.tap(find.byTooltip('Durağı kaldır'));
     await tester.pumpAndSettle();
     expect(find.text('0 durak'), findsOneWidget);
-    expect(tester.widget<RouteAction>(find.widgetWithText(RouteAction, 'Rotayı incele')).onPressed, isNull);
+    expect(
+      tester
+          .widget<RouteAction>(
+            find.widgetWithText(RouteAction, 'Rotayı incele'),
+          )
+          .onPressed,
+      isNull,
+    );
     await tester.tap(find.text('Geri al'));
     await tester.pumpAndSettle();
     expect(find.text('1 durak'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('320px screen keeps the start action visible without overflow', (tester) async {
+  testWidgets('320px screen keeps the start action visible without overflow', (
+    tester,
+  ) async {
     await open(tester, width: 320);
     expect(find.text('Rotanı oluşturmaya başla').hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);

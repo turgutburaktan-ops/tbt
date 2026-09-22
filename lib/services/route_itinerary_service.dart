@@ -45,11 +45,12 @@ class RouteItineraryService {
           1100 - DateTime.now().difference(_lastRequest).inMilliseconds;
       if (wait > 0) await Future<void>.delayed(Duration(milliseconds: wait));
       _lastRequest = DateTime.now();
-      final graph = mode == 'Yürüyüş'
-          ? 'foot'
-          : mode == 'Bisiklet'
-          ? 'bike'
-          : 'car';
+      final graph =
+          mode == 'Yürüyüş'
+              ? 'foot'
+              : mode == 'Bisiklet'
+              ? 'bike'
+              : 'car';
       // Landmark pins can sit inside a site (Harput is 103 m off-road).
       // Snap within a bounded 250 m; never fabricate a route beyond it.
       try {

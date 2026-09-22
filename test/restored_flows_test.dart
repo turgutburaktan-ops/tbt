@@ -39,38 +39,44 @@ const second = PhotoSpot(
 );
 
 void main() {
-  test('offline, unavailable, permission and timeout have distinct Turkish messages', () {
-    expect(
-      userFacingError(
-        FirebaseException(
-          plugin: 'cloud_firestore',
-          code: 'unavailable',
-          message: 'Failed to get document because the client is offline.',
+  test(
+    'offline, unavailable, permission and timeout have distinct Turkish messages',
+    () {
+      expect(
+        userFacingError(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'unavailable',
+            message: 'Failed to get document because the client is offline.',
+          ),
         ),
-      ),
-      'İnternet bağlantısı yok. Bağlantını kontrol edip tekrar dene.',
-    );
-    expect(
-      userFacingError(
-        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
-      ),
-      contains('Hizmete şu an ulaşılamıyor'),
-    );
-    expect(
-      userFacingError(
-        FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'),
-      ),
-      contains('erişim iznin'),
-    );
-    expect(
-      userFacingError(TimeoutException('secret diagnostic')),
-      contains('zaman aşımına'),
-    );
-    expect(
-      userFacingError(Exception('Raw backend details')),
-      isNot(contains('Raw')),
-    );
-  });
+        'İnternet bağlantısı yok. Bağlantını kontrol edip tekrar dene.',
+      );
+      expect(
+        userFacingError(
+          FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+        ),
+        contains('Hizmete şu an ulaşılamıyor'),
+      );
+      expect(
+        userFacingError(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'permission-denied',
+          ),
+        ),
+        contains('erişim iznin'),
+      );
+      expect(
+        userFacingError(TimeoutException('secret diagnostic')),
+        contains('zaman aşımına'),
+      );
+      expect(
+        userFacingError(Exception('Raw backend details')),
+        isNot(contains('Raw')),
+      );
+    },
+  );
 
   testWidgets(
     'selected places open unified route draft with intact stops and no repeated city question',
@@ -99,8 +105,18 @@ void main() {
       expect(find.text('Şehir veya bölge ara'), findsNothing);
       await tester.tap(find.text('Rotanı oluşturmaya başla'));
       await tester.pumpAndSettle();
-      expect(tester.widget<RouteEditorMap>(find.byType(RouteEditorMap)).stops.map((s) => s.id), ['a', 'b']);
-      await tester.scrollUntilVisible(find.byTooltip('Durağı kaldır').first, 180, scrollable: find.byType(Scrollable).first);
+      expect(
+        tester
+            .widget<RouteEditorMap>(find.byType(RouteEditorMap))
+            .stops
+            .map((s) => s.id),
+        ['a', 'b'],
+      );
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('a')),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byType(ReorderableDragStartListener), findsWidgets);
       await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);
