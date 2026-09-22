@@ -38,8 +38,8 @@ void main() {
   test('ascent/descent and mode-specific estimated difficulty', () {
     final terrain = RouteTerrain([
       TerrainSample(path.first, 0, 100),
-      TerrainSample(path[1], 4000, 400),
-      TerrainSample(path.last, 8000, 200),
+      TerrainSample(path[1], 6000, 400),
+      TerrainSample(path.last, 12000, 200),
     ]);
     expect(terrain.gainLoss, (300.0, 200.0));
     expect(terrain.difficulty('Yürüyüş'), 'Orta');
