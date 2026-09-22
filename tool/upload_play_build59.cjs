@@ -45,7 +45,9 @@ const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applicat
    await req(url+':validate','POST');
    // Server functions are blocked on deployment permissions. Keep this build
    // as a non-distributed draft and do not interrupt an existing review.
-   await req(url+':commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW','POST');
+   // Play rejects changesNotSentForReview for this app; draft status itself
+   // prevents distribution. Retain ERROR_IF_IN_REVIEW to preserve other reviews.
+   await req(url+':commit?changesInReviewBehavior=ERROR_IF_IN_REVIEW','POST');
    const review='DRAFT_BACKEND_DEPLOYMENT_REQUIRED';
    committed=true;
    const check=await req(base,'POST',{}),checkUrl=base+'/'+encodeURIComponent(check.id);
