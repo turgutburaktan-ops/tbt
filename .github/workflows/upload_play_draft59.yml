@@ -1,0 +1,32 @@
+name: Commit verified TBT Android 59 draft
+on:
+  push:
+    branches: [codex/ios-logo-release-20260922]
+    paths: ['.github/workflows/upload_play_draft59.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-play-release
+  cancel-in-progress: false
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-play-release-1.0.31-code59
+          run-id: 35750882881
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/app/outputs/bundle/release
+      - name: Verify the original signed bundle
+        run: jarsigner -verify build/app/outputs/bundle/release/app-release.aab
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Upload the same verified bundle as an alpha draft
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/upload_play_build59.cjs
