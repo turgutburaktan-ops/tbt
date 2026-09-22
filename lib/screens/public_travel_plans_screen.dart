@@ -70,27 +70,10 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
       return;
     }
     try {
-      final spots = await TravelPlanService.instance.resolveSpots(plan);
-      await TravelPlanService.instance.create(
-        title: '${plan.title} • Kopyam',
-        city: plan.city,
-        durationHours: plan.durationHours,
-        budget: plan.budget,
-        transport: plan.transport,
-        interests: plan.interests,
-        spots: spots,
-        startAt: plan.startAt,
-        distanceKm: plan.distanceKm,
-        travelMinutes: plan.travelMinutes,
-        estimatedBudget: plan.estimatedBudget,
-        dayPlan: plan.dayPlan,
-        routeOrigin: plan.routeOrigin,
-        stopDetails: plan.stopSnapshots,
-        weatherSummary: plan.weatherSummary,
-      );
+      await TravelPlanService.instance.bookmark(plan.id, true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rota Rotalarım bölümüne kaydedildi.')),
+          const SnackBar(content: Text('Rota Kaydedilenler bölümüne eklendi.')),
         );
       }
     } catch (_) {
@@ -133,7 +116,9 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
           ),
           Expanded(
             child: StreamBuilder<List<TravelPlan>>(
-              stream: TravelPlanService.instance.watchPublic(),
+              stream: TravelPlanService.instance.watchPublic(
+                discoverOnly: true,
+              ),
               builder: (_, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

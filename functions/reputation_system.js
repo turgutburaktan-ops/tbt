@@ -254,12 +254,22 @@ exports.awardApprovedSpotReputation = onDocumentUpdated({region: REGION, documen
 
 exports.awardPublishedRouteReputation = onDocumentCreated({region: REGION, document: 'travel_plans/{planId}'}, async (event) => {
   const data = event.data?.data() || {};
-  if (data.isPublic !== true) return;
+  if (data.isPublic !== true || data.discoverPublished === false) return;
   await awardReputation({
     userId: String(data.ownerId || ''), role: 'explorer', points: 10,
     action: 'route_publish', sourceId: event.params.planId,
     label: 'Herkese açık rota yayınladı', stat: 'explorerRoutes', city: data.city,
   });
+});
+
+// Uses the same ledger key as creation; unpublish/republish cannot award twice.
+exports.awardDiscoveredRouteReputation = onDocumentUpdated({region: REGION, document: 'travel_plans/{planId}'}, async event => {
+  const before = event.data?.before?.data() || {};
+  const after = event.data?.after?.data() || {};
+  if (after.isPublic !== true || after.discoverPublished !== true || before.discoverPublished === true) return;
+  await awardReputation({userId:String(after.ownerId || ''), role:'explorer', points:10,
+    action:'route_publish', sourceId:event.params.planId,
+    label:'Herkese açık rota yayınladı', stat:'explorerRoutes', city:after.city});
 });
 
 exports.awardVerifiedEventAttendance = onDocumentUpdated({region: REGION, document: 'event_tickets/{ticketId}'}, async (event) => {

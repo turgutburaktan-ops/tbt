@@ -528,6 +528,8 @@ service cloud.firestore {
           d.get('visibility', 'private') in ['private','followers','public'] &&
           d.get('status','planned') in ['planned','active','completed'] &&
           d.get('invitedIds',[]) is list && d.get('invitedIds',[]).size() <= 200 &&
+          d.get('discoverPublished',false) is bool &&
+          (!d.get('discoverPublished',false) || (d.get('isPublic',false) && d.get('visibility','private') == 'public')) &&
           d.get('joinRequiresApproval',true) is bool &&
           audience(d) in ['private','followers','public'] &&
           (d.get('accessVersion',1) < 2 || d.get('isPublic',false) == (d.get('visibility','private') == 'public')) &&

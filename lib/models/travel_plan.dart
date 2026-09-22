@@ -1,9 +1,12 @@
 import 'route_access.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TravelPlan {
   final String id;
   final String ownerId;
+  final String ownerName;
+  final bool discoverPublished;
   final String title;
   final String city;
   final String area;
@@ -38,6 +41,8 @@ class TravelPlan {
   const TravelPlan({
     required this.id,
     required this.ownerId,
+    this.ownerName = '',
+    this.discoverPublished = false,
     required this.title,
     required this.city,
     this.area = '',
@@ -86,6 +91,9 @@ class TravelPlan {
     return TravelPlan(
       id: document.id,
       ownerId: (data['ownerId'] ?? '').toString(),
+      ownerName: (data['ownerName'] ?? '').toString(),
+      discoverPublished:
+          data['isPublic'] == true && data['discoverPublished'] != false,
       title: (data['title'] ?? 'Gezi planı').toString(),
       city: (data['city'] ?? '').toString(),
       area: (data['area'] ?? '').toString(),
