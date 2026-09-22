@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'firebase_media_image.dart';
+import 'profile_photo_viewer.dart';
 
 Future<void> showProfilePhotoCard(BuildContext context, {
   required String userId, required String photoUrl, required String name,
@@ -12,12 +13,21 @@ Future<void> showProfilePhotoCard(BuildContext context, {
     child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Stack(children: [
-        AspectRatio(aspectRatio: 1, child: FirebaseMediaImage(
+        AspectRatio(aspectRatio: 1, child: GestureDetector(
+          onTap: () => Navigator.of(dialogContext).push(MaterialPageRoute<void>(
+            builder: (_) => ProfilePhotoViewer(name: name, child: FirebaseMediaImage(
+              imageUrl: photoUrl,
+              fallbackStoragePaths: FirebaseMediaImage.avatarPaths(userId),
+              fit: BoxFit.contain,
+              errorWidget: const Center(child: Icon(Icons.person_outline, size: 96)),
+            )),
+          )),
+          child: FirebaseMediaImage(
           imageUrl: photoUrl,
           fallbackStoragePaths: FirebaseMediaImage.avatarPaths(userId),
           fit: BoxFit.contain,
           errorWidget: const Center(child: Icon(Icons.person_outline, size: 96)),
-        )),
+        ))),
         Positioned(top: 8, right: 8, child: IconButton.filledTonal(
           tooltip: 'Kapat', onPressed: () => Navigator.pop(dialogContext),
           icon: const Icon(Icons.close),

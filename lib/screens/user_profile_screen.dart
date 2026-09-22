@@ -1,17 +1,16 @@
+import '../widgets/profile_post_feed.dart';
 import '../theme/app_theme.dart';
 import 'follow_list_screen.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/profile_photo_card.dart';
 import '../models/profile_identity.dart';
 import '../widgets/profile_sharing_section.dart';
-import 'post_deep_link_screen.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/app_story.dart';
-import '../services/chat_service.dart';
 import '../services/invite_link_service.dart';
 import '../services/social_service.dart';
 import '../services/story_service.dart';
@@ -24,10 +23,19 @@ import '../widgets/user_safety_actions.dart';
 import 'chat_screen.dart';
 import 'event_deep_link_screen.dart';
 
-class UserProfileScreen extends StatelessWidget {
+class UserProfileScreen extends StatefulWidget {
   final String userId;
 
   const UserProfileScreen({super.key, required this.userId});
+
+  @override
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  String get userId => widget.userId;
+  bool _openingChat = false;
+  String _displayName = 'Kullanıcı';
 
   Future<void> _shareProfile(String displayName) async {
     await InviteLinkService.instance.shareProfile(
@@ -37,20 +45,16 @@ class UserProfileScreen extends StatelessWidget {
   }
 
   Future<void> _openChat(BuildContext context, String? displayName) async {
+    if (_openingChat) return;
+    setState(() => _openingChat = true);
     try {
-      final name =
-          displayName ??
-          (await SocialService.instance.userProfile(userId).first)
-              .data()?['displayName']
-              ?.toString() ??
-          'Kullanıcı';
-      await ChatService.instance.ensureDirectThread(userId);
-      if (!context.mounted) return;
-      Navigator.push(
+      await Navigator.push<void>(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              ChatScreen(otherUserId: userId, otherDisplayName: name),
+          builder: (_) => ChatScreen(
+            otherUserId: userId,
+            otherDisplayName: displayName ?? _displayName,
+          ),
         ),
       );
     } catch (e) {
@@ -64,6 +68,8 @@ class UserProfileScreen extends StatelessWidget {
           ),
         ),
       );
+    } finally {
+      if (mounted) setState(() => _openingChat = false);
     }
   }
 
@@ -91,8 +97,8 @@ class UserProfileScreen extends StatelessWidget {
           if (!isOwnProfile && currentUser != null)
             IconButton(
               tooltip: 'Mesaj at',
-              onPressed: () => _openChat(context, null),
-              icon: const Icon(Icons.chat_bubble_outline_rounded),
+              onPressed: _openingChat ? null : () => _openChat(context, null),
+              icon: _openingChat ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.chat_bubble_outline_rounded),
             ),
           IconButton(
             tooltip: 'Profili paylaş',
@@ -132,6 +138,7 @@ class UserProfileScreen extends StatelessWidget {
             );
           }
           final displayName = (data['displayName'] ?? 'Fotoğrafçı').toString();
+          _displayName = displayName;
           final username = (data['username'] ?? displayName).toString();
           final photoUrl = (data['photoUrl'] ?? '').toString();
           final bio = (data['bio'] ?? '').toString().trim();
@@ -400,13 +407,13 @@ class UserProfileScreen extends StatelessWidget {
                                     child: SizedBox(
                                       height: 44,
                                       child: OutlinedButton.icon(
-                                        onPressed: () =>
+                                        onPressed: _openingChat ? null : () =>
                                             _openChat(context, displayName),
                                         icon: const Icon(
                                           Icons.chat_bubble_outline_rounded,
                                           size: 19,
                                         ),
-                                        label: const Text('Mesaj At'),
+                                        label: Text(_openingChat ? 'Açılıyor…' : 'Mesaj At'),
                                       ),
                                     ),
                                   ),
@@ -474,7 +481,7 @@ class UserProfileScreen extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    PostDeepLinkScreen(postId: doc.id),
+                                    ProfilePostFeed(postIds: docs.map((p) => p.id).toList(), initialIndex: index),
                               ),
                             ),
                             child: Container(

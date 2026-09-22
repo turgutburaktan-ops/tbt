@@ -7,9 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../firebase_options.dart';
+import 'chat_notification_identity.dart';
 
 @pragma('vm:entry-point')
 Future<void> notificationReplyBackground(NotificationResponse response) async {
@@ -101,7 +103,15 @@ class NotificationReplyService {
     }
   }
 
-  static Future<void> show(
+  static Future<void> _showQueue = Future<void>.value();
+
+  static Future<void> show(Map<String, dynamic> data, {String? status, bool sent = false}) {
+    final task = _showQueue.then((_) => _show(data, status: status, sent: sent));
+    _showQueue = task.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return task;
+  }
+
+  static Future<void> _show(
     Map<String, dynamic> data, {
     String? status,
     bool sent = false,
@@ -117,8 +127,29 @@ class NotificationReplyService {
         await auth.authStateChanges().first.timeout(const Duration(seconds: 5));
     if (user == null || user.uid != data['recipientId']) return;
     await initialize();
+    final android = defaultTargetPlatform == TargetPlatform.android;
+    final tag = chatNotificationIdentity(data);
+    final id = android ? notificationNumber(tag) : notificationNumber('${data['notificationId']}');
+    MessagingStyleInformation? history;
+    final preferences = SharedPreferencesAsync();
+    final latestKey = 'notification.latest.$tag';
+    if (android) {
+      history = await _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.getActiveNotificationMessagingStyle(id, tag: tag);
+      final previousId = await preferences.getString(latestKey);
+      // A delayed reply must never replace a newer incoming message's action.
+      if (status != null && previousId != null && previousId != data['notificationId']) return;
+      if (status == null && history != null && previousId == data['notificationId']) return;
+    }
+    final messages = <Message>[
+      ...?history?.messages,
+      if (status == null) Message('${data['body'] ?? ''}', DateTime.now(), Person(
+        key: '${data['actorId'] ?? ''}',
+        name: '${data['title'] ?? 'Kullanıcı'}'.replaceFirst(RegExp(r' sana mesaj gönderdi$'), ''),
+      )),
+    ];
     await _plugin.show(
-      notificationNumber('${data['notificationId']}'),
+      id,
       '${data['title'] ?? 'TBT'}',
       status ?? '${data['body'] ?? ''}',
       NotificationDetails(
@@ -128,12 +159,18 @@ class NotificationReplyService {
           channelDescription: 'Sohbet mesajları ve hızlı yanıtlar',
           importance: Importance.high,
           priority: Priority.high,
-          groupKey: '${data['sourceId']}',
+          tag: tag,
+          groupKey: 'tbt_chats_${data['recipientId']}',
           onlyAlertOnce: status != null,
           actions: sent ? [] : [_action],
-          styleInformation: BigTextStyleInformation(
-            status ?? '${data['body'] ?? ''}',
-          ),
+          styleInformation: status != null
+              ? BigTextStyleInformation(status)
+              : MessagingStyleInformation(
+                  Person(name: 'Sen', key: '${data['recipientId']}'),
+                  conversationTitle: data['type'] == 'group_message' ? '${data['title'] ?? 'Grup'}' : null,
+                  groupConversation: data['type'] == 'group_message',
+                  messages: messages.length > 10 ? messages.sublist(messages.length - 10) : messages,
+                ),
         ),
         iOS: DarwinNotificationDetails(
           categoryIdentifier: sent ? null : 'TBT_CHAT',
@@ -142,6 +179,9 @@ class NotificationReplyService {
       ),
       payload: jsonEncode(data),
     );
+    if (android && status == null) {
+      await preferences.setString(latestKey, '${data['notificationId']}');
+    }
   }
 
   static Future<void> reply(NotificationResponse response) async {
