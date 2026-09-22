@@ -122,7 +122,8 @@ void main() {
       await tester.tap(find.byTooltip('Durağı kaldır').first);
       await tester.pumpAndSettle();
       expect(find.text('Harput'), findsNothing);
-      expect(find.text('Keban'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const ValueKey('b')), matching: find.text('Keban')), findsOneWidget);
+      expect(tester.widget<RouteEditorMap>(find.byType(RouteEditorMap)).stops.map((s) => s.id), ['b']);
       expect(tester.takeException(), isNull);
     },
   );
