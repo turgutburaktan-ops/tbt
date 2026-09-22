@@ -70,7 +70,8 @@ jobs:
           rm -f test/widget_test.dart
           cp /tmp/tbt-manifest.xml android/app/src/main/AndroidManifest.xml
           echo '7d90b462ca3510c8fd1aec7bc4d650353e0755a75220ee9d6ee34ed03373349b  assets/spot_thumbnails/tbt_app_icon_1024.png' | sha256sum --check
-          dart run flutter_launcher_icons
+          printf '%s\n' 'flutter_launcher_icons:' '  android: true' '  ios: false' '  image_path: assets/spot_thumbnails/tbt_app_icon_1024.png' '  min_sdk_android: 26' > /tmp/tbt-android-icons.yaml
+          dart run flutter_launcher_icons -f /tmp/tbt-android-icons.yaml
           printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-upload.p12
           keytool -importkeystore -noprompt \
             -srckeystore android/app/tbt-upload.p12 \
