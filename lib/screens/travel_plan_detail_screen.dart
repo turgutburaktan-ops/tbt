@@ -283,6 +283,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                       kToolbarHeight -
                       60,
                   interactive: true,
+                  showTerrain: false,
                   stops: current.stopSnapshots,
                   transport: current.transport,
                   dayPlan: current.dayPlan,

@@ -1,4 +1,5 @@
 import 'place_marker_card.dart';
+import '../services/nearby_venue_service.dart';
 
 import 'dart:ui' as ui;
 
@@ -18,6 +19,7 @@ class RouteEditorMap extends StatefulWidget {
     this.itinerary,
     this.interactive = false,
     this.center,
+    this.city = '',
     this.padding = EdgeInsets.zero,
     this.candidates = const [],
     this.onPlaceTap,
@@ -27,6 +29,7 @@ class RouteEditorMap extends StatefulWidget {
   final RouteItinerary? itinerary;
   final bool interactive;
   final LatLng? center;
+  final String city;
   final EdgeInsets padding;
   final List<PhotoSpot> candidates;
   final ValueChanged<PhotoSpot>? onPlaceTap;
@@ -37,6 +40,29 @@ class RouteEditorMap extends StatefulWidget {
 
 class _RouteEditorMapState extends State<RouteEditorMap> {
   GoogleMapController? _controller;
+  MapType _mapType = MapType.normal;
+  LatLng? _cityCenter;
+  int _cityRequest = 0;
+  LatLng? get _center => _cityCenter ?? widget.center;
+
+  Future<void> _resolveCity({bool focus = false}) async {
+    final request = ++_cityRequest;
+    final city = widget.city.trim();
+    if (city.isEmpty) return;
+    final area = await NearbyVenueService.instance.findCity(city);
+    if (!mounted || request != _cityRequest || area == null) return;
+    setState(() => _cityCenter = LatLng(area.latitude, area.longitude));
+    // Resolve the selected city before fitting an empty editor.
+    if (focus || _points.isEmpty) await _focusCity();
+  }
+
+  Future<void> _focusCity() async {
+    if (_center == null || _controller == null) return;
+    try {
+      await _controller!.moveCamera(CameraUpdate.newLatLngZoom(_center!, 12));
+    } catch (_) { /* The platform view may have detached. */ }
+  }
+
   final _icons = <int, BitmapDescriptor>{};
   int _iconGeneration = 0;
   int _cardGeneration = 0;
@@ -45,7 +71,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   LatLngBounds? _visibleBounds;
   LatLng? _cameraTarget;
   List<PhotoSpot> get _visibleCandidates {
-    final center = _cameraTarget ?? widget.center ?? const LatLng(39, 35);
+    final center = _cameraTarget ?? _center ?? const LatLng(39, 35);
     return routeMapCandidates(
       widget.candidates,
       latitude: center.latitude,
@@ -107,6 +133,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
     super.initState();
     _makeIcons();
     _makeCards();
+    _resolveCity();
   }
 
   @override
@@ -114,7 +141,15 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
     super.didUpdateWidget(oldWidget);
     _makeCards();
     if (widget.stops.length > _icons.length) _makeIcons();
-    // Parent lists are mutable; fit from current coordinates after every update.
+    if (oldWidget.city != widget.city) {
+      _cityCenter = null;
+      _cameraTarget = null;
+      _visibleBounds = null;
+      _resolveCity(focus: true);
+    }
+    if (oldWidget.center != widget.center && _points.isEmpty) _focusCity();
+    // Interactive editors preserve the viewport while points are added/removed.
+    if (widget.interactive) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _fitKey != _lastFit) _fit();
     });
@@ -174,10 +209,10 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
     if (controller == null) return;
     _lastFit = _fitKey;
     if (_points.isEmpty) {
-      if (widget.center != null) {
+      if (_center != null) {
         try {
           await controller.moveCamera(
-            CameraUpdate.newLatLngZoom(widget.center!, 12),
+            CameraUpdate.newLatLngZoom(_center!, 12),
           );
         } catch (_) {}
       }
@@ -208,16 +243,19 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   }
 
   @override
-  Widget build(BuildContext context) => GoogleMap(
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [GoogleMap(
     initialCameraPosition: CameraPosition(
       target:
           _points.isEmpty
-              ? (widget.center ?? const LatLng(39, 35))
+              ? (_center ?? const LatLng(39, 35))
               : _points.first,
-      zoom: 13,
+      zoom: _points.isEmpty && _center == null ? 5.5 : 13,
     ),
-    style:
-        '[{"elementType":"geometry","stylers":[{"color":"#171c24"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab4c2"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#171c24"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b4a"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c1723"}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]}]',
+    mapType: _mapType,
+    // Explicit light styling keeps the map readable in the app's dark theme.
+    style: _mapType == MapType.normal ? '[]' : null,
     padding: widget.padding,
     zoomControlsEnabled: false,
     myLocationButtonEnabled: false,
@@ -271,5 +309,23 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
           width: 5,
         ),
     },
-  );
+  ),
+    Positioned(
+      left: 8, top: 8,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        FilledButton.tonalIcon(
+          onPressed: () => setState(() => _mapType =
+              _mapType == MapType.normal ? MapType.hybrid : MapType.normal),
+          icon: const Icon(Icons.layers_outlined, size: 18),
+          label: Text(_mapType == MapType.normal ? 'Uydu' : 'Harita'),
+        ),
+        if (widget.interactive && _points.isNotEmpty)
+          FilledButton.tonalIcon(
+            onPressed: _fit,
+            icon: const Icon(Icons.fit_screen, size: 18),
+            label: const Text('Rotayı göster'),
+          ),
+      ]),
+    ),
+  ]);
 }

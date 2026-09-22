@@ -1,3 +1,5 @@
+import '../services/route_terrain_service.dart';
+import '../widgets/route_terrain_summary.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/travel_plan.dart';
 import 'package:geolocator/geolocator.dart';
@@ -577,7 +579,10 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
             roundTrip: _roundTrip,
           ),
           'description': _description.text.trim(),
-          if (_difficulty.isNotEmpty) 'difficulty': _difficulty,
+          if (RouteTerrainService.supports(_transport) && _difficulty.isNotEmpty) ...{
+            'difficulty': _difficulty,
+            'difficultyEstimated': true,
+          },
         },
         'routeOrigin':
             _origin == null
@@ -639,7 +644,10 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
               roundTrip: _roundTrip,
             ),
             'description': _description.text.trim(),
-            if (_difficulty.isNotEmpty) 'difficulty': _difficulty,
+            if (RouteTerrainService.supports(_transport) && _difficulty.isNotEmpty) ...{
+            'difficulty': _difficulty,
+            'difficultyEstimated': true,
+          },
           },
           routeOrigin:
               _origin == null
@@ -686,6 +694,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   Future<void> _refreshRoute() async {
     final request = ++_routeRequest;
     _itinerary = null;
+    _difficulty = '';
     final points = RouteGeometry.waypoints(
       _stops,
       origin: _origin,
@@ -705,6 +714,13 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       _itinerary = route;
       _routing = false;
     });
+    if (route != null && RouteTerrainService.supports(_transport)) {
+      final mode = _transport;
+      final terrain = await RouteTerrainService.instance.load(route.points, mode);
+      if (!mounted || request != _routeRequest) return;
+      setState(() => _difficulty = terrain?.difficulty(mode) ?? '');
+      _scheduleDraft();
+    }
   }
 
   Future<void> _visibilitySheet() async {
@@ -1135,6 +1151,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         children: [
           Positioned.fill(
             child: RouteEditorMap(
+              city: _city.text.trim(),
               stops: _stops,
               itinerary: _itinerary,
               center: _origin,
@@ -1404,6 +1421,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         ),
       ),
       const SizedBox(height: 16),
+      RouteTerrainSummary(route: _itinerary, mode: _transport, manual: _manual),
       if (_manual)
         const RoutePanel(
           child: Text(
@@ -1504,18 +1522,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         _pickInvitees,
       ),
       const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        initialValue: _difficulty,
-        decoration: const InputDecoration(labelText: 'Zorluk (isteğe bağlı)'),
-        items: [
-          for (final d in ['', 'Kolay', 'Orta', 'Zor'])
-            DropdownMenuItem(
-              value: d,
-              child: Text(d.isEmpty ? 'Belirtilmedi' : d),
-            ),
-        ],
-        onChanged: (v) => setState(() => _difficulty = v ?? ''),
-      ),
+      RouteTerrainSummary(route: _itinerary, mode: _transport, manual: _manual),
       const Padding(
         padding: EdgeInsets.only(top: 16),
         child: Text(
