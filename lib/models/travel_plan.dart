@@ -1,3 +1,4 @@
+import 'route_access.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TravelPlan {
@@ -27,6 +28,9 @@ class TravelPlan {
   final bool allowMemberEdits;
   final bool isPublic;
   final bool joinEnabled;
+  final String joinAudience;
+  final bool joinRequiresApproval;
+  final List<String> invitedIds;
   final Map<String, dynamic> routeOrigin;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -58,6 +62,9 @@ class TravelPlan {
     this.allowMemberEdits = false,
     this.isPublic = false,
     this.joinEnabled = false,
+    this.joinAudience = 'private',
+    this.joinRequiresApproval = true,
+    this.invitedIds = const [],
     this.routeOrigin = const {},
     required this.createdAt,
     required this.updatedAt,
@@ -112,6 +119,9 @@ class TravelPlan {
       allowMemberEdits: data['allowMemberEdits'] == true,
       isPublic: data['isPublic'] == true,
       joinEnabled: data['joinEnabled'] == true,
+      joinAudience: RouteAccess.fromMap(data).audience,
+      joinRequiresApproval: RouteAccess.fromMap(data).approval,
+      invitedIds: strings('invitedIds'),
       routeOrigin: Map<String, dynamic>.from(data['routeOrigin'] as Map? ?? {}),
       createdAt: readDate('createdAt'),
       updatedAt: readDate('updatedAt'),

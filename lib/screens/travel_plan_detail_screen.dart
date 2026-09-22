@@ -431,29 +431,11 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                           _act(() => _changeStart(plan.startAt));
                         },
                       ),
-                      const Text(
-                        'Kimler katılabilir?',
-                        style: TextStyle(color: AppColors.textMuted),
-                      ),
-                      for (final v in [
-                        ('private', 'Davetliler'),
-                        ('followers', 'Takipçilerim'),
-                        ('public', 'Herkes'),
-                      ])
-                        RadioListTile<String>(
-                          value: v.$1,
-                          groupValue: plan.visibility,
-                          title: Text(v.$2),
-                          onChanged: (_) async {
-                            Navigator.pop(c);
-                            await _act(
-                              () => TravelPlanService.instance.setOptions(
-                                plan.id,
-                                visibility: v.$1,
-                              ),
-                            );
-                          },
-                        ),
+                      ListTile(title: const Text('Görünürlük ve katılım'),
+                        trailing: const Icon(Icons.chevron_right), onTap: () {
+                          Navigator.pop(c);
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => RouteSharingScreen(routeId:plan.id,title:plan.title)));
+                        }),
                       SwitchListTile(
                         title: const Text(
                           'Katılımcılar durakları düzenleyebilir',
