@@ -1,3 +1,4 @@
+import 'spot_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -57,7 +58,6 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
   void initState() {
     super.initState();
     _load(0);
-
   }
 
   @override
@@ -108,68 +108,71 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
       context: context,
       useSafeArea: true,
       showDragHandle: true,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              spot.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+      builder:
+          (context) => Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  spot.name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text('${spot.city} · ${spot.category}'),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _toggle(spot);
+                  },
+                  icon: Icon(
+                    selected ? Icons.remove_circle_outline : Icons.add,
+                  ),
+                  label: Text(selected ? 'Rotadan kaldır' : 'Rotaya ekle'),
+                ),
+              ],
             ),
-            Text('${spot.city} · ${spot.category}'),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                _toggle(spot);
-              },
-              icon: Icon(selected ? Icons.remove_circle_outline : Icons.add),
-              label: Text(selected ? 'Rotadan kaldır' : 'Rotaya ekle'),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final places = [for (final c in _categories) ...?_items[c]]
-        .where(
-          (s) =>
-              foldPlaceText('${s.name} ${s.category}')
-                  .contains(foldPlaceText(_query)),
-        )
-        .toList();
+    final places =
+        [for (final c in _categories) ...?_items[c]]
+            .where(
+              (s) => foldPlaceText(
+                '${s.name} ${s.category}',
+              ).contains(foldPlaceText(_query)),
+            )
+            .toList();
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              Expanded(child: _tab('Yer ekle', false)),
-              Expanded(child: _tab('Duraklarım (${widget.stops.length})', true)),
-              PopupMenuButton<String>(
-                tooltip: 'Rota seçenekleri',
-                enabled: !widget.busy,
-                onSelected: (value) {
-                  if (value == 'suggest') widget.onSuggest();
-                  if (value == 'search') widget.onSearch();
-                  if (value == 'sort') widget.onSort();
-                },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'suggest', child: Text('Bana rota öner')),
-                  const PopupMenuItem(value: 'search', child: Text('Çoklu seçim')),
-                  PopupMenuItem(
-                    value: 'sort',
-                    enabled: widget.stops.length >= 3,
-                    child: const Text('Akıllı sırala'),
-                  ),
-                ],
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: false,
+                label: Text('Yer ara'),
+                icon: Icon(Icons.search),
+              ),
+              ButtonSegment(
+                value: true,
+                label: Text('Haritadan seç'),
+                icon: Icon(Icons.map_outlined),
               ),
             ],
+            selected: {_showMap},
+            onSelectionChanged: (v) {
+              FocusScope.of(context).unfocus();
+              setState(() => _showMap = v.first);
+              if (_showMap && _center == null) unawaited(_locate());
+            },
           ),
         ),
         if (!_showStops) ...[
@@ -180,14 +183,17 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
               decoration: InputDecoration(
                 hintText: 'Mekân veya yer ara',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isEmpty ? null : IconButton(
-                  tooltip: 'Aramayı temizle',
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    _search.clear();
-                    setState(() => _query = '');
-                  },
-                ),
+                suffixIcon:
+                    _query.isEmpty
+                        ? null
+                        : IconButton(
+                          tooltip: 'Aramayı temizle',
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            _search.clear();
+                            setState(() => _query = '');
+                          },
+                        ),
               ),
               onChanged: (v) => setState(() => _query = v),
             ),
@@ -198,20 +204,30 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                for (final item in const [(0, 'Gezi'), (1, 'Lezzet'), (2, 'Kafeler'), (3, 'Oteller')])
+                for (final item in const [
+                  (0, 'Gezi'),
+                  (1, 'Lezzet'),
+                  (2, 'Kafeler'),
+                  (3, 'Oteller'),
+                ])
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilterChip(
                       label: Text(item.$2),
                       selected: _categories.contains(item.$1),
-                      onSelected: widget.busy ? null : (selected) {
-                        setState(() {
-                          selected ? _categories.add(item.$1) : _categories.remove(item.$1);
-                        });
-                        if (selected && !_items.containsKey(item.$1)) {
-                          unawaited(_load(item.$1));
-                        }
-                      },
+                      onSelected:
+                          widget.busy
+                              ? null
+                              : (selected) {
+                                setState(() {
+                                  selected
+                                      ? _categories.add(item.$1)
+                                      : _categories.remove(item.$1);
+                                });
+                                if (selected && !_items.containsKey(item.$1)) {
+                                  unawaited(_load(item.$1));
+                                }
+                              },
                     ),
                   ),
               ],
@@ -227,17 +243,11 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                   _showStops
                       ? 'Sürükleyerek sırala, × ile kaldır.'
                       : '${places.length} yer · Eklemek için dokun',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
                 ),
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  setState(() => _showMap = !_showMap);
-                  if (_showMap && _center == null) unawaited(_locate());
-                },
-                icon: Icon(_showMap ? Icons.list : Icons.map_outlined, size: 18),
-                label: Text(_showMap ? 'Liste' : 'Harita'),
               ),
             ],
           ),
@@ -245,30 +255,34 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
         if (!_showStops && _categories.any(_loading.contains))
           const LinearProgressIndicator(minHeight: 2),
         Expanded(
-          child: _showMap
-              ? Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Text(
-                        'Bir yere dokunarak ekle veya kaldır. Boş bir noktaya dokunarak yeni durak ekle.',
-                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+          child:
+              _showMap
+                  ? Column(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: Text(
+                          'Bir yere dokunarak ekle veya kaldır. Boş bir noktaya dokunarak yeni durak ekle.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: RouteEditorMap(
-                        stops: widget.stops,
-                        itinerary: widget.itinerary,
-                        center: _center,
-                        interactive: true,
-                        candidates: _showStops ? widget.stops : places,
-                        onPlaceTap: widget.busy ? null : _selectPlace,
-                        onMapTap: widget.busy ? null : widget.onMapTap,
+                      Expanded(
+                        child: RouteEditorMap(
+                          stops: widget.stops,
+                          itinerary: widget.itinerary,
+                          center: _center,
+                          interactive: true,
+                          candidates: _showStops ? widget.stops : places,
+                          onPlaceTap: widget.busy ? null : _selectPlace,
+                          onMapTap: widget.busy ? null : widget.onMapTap,
+                        ),
                       ),
-                    ),
-                  ],
-                )
-              : _list(places),
+                    ],
+                  )
+                  : _list(places),
         ),
       ],
     );
@@ -283,7 +297,8 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
       });
     },
     style: TextButton.styleFrom(
-      foregroundColor: _showStops == selectedTab ? AppColors.cyan : AppColors.textMuted,
+      foregroundColor:
+          _showStops == selectedTab ? AppColors.cyan : AppColors.textMuted,
       backgroundColor: _showStops == selectedTab ? AppColors.surface : null,
     ),
     child: Text(label),
@@ -298,23 +313,32 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
             if (_showStops && widget.stops.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('Henüz durak eklemedin. Yer ekle bölümünden başlayabilirsin.'),
+                child: Text(
+                  'Henüz durak eklemedin. Yer ekle bölümünden başlayabilirsin.',
+                ),
               ),
             if (!_showStops && _categories.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(16),
                 child: Text('Görmek istediğin kategorileri seç.'),
               ),
-            if (!_showStops && places.isEmpty && _categories.isNotEmpty &&
+            if (!_showStops &&
+                places.isEmpty &&
+                _categories.isNotEmpty &&
                 !_categories.any(_loading.contains))
               const Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('Yer bulunamadı. Aramanı değiştir veya Harita üzerinden durak ekle.'),
+                child: Text(
+                  'Yer bulunamadı. Aramanı değiştir veya Harita üzerinden durak ekle.',
+                ),
               ),
             if (!_showStops)
               for (final category in _categories.where(_errors.containsKey))
                 ListTile(
-                  title: Text(_errors[category]!, style: const TextStyle(fontSize: 12)),
+                  title: Text(
+                    _errors[category]!,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   trailing: TextButton(
                     onPressed: () => _load(category),
                     child: const Text('Tekrar dene'),
@@ -342,19 +366,32 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
               key: ValueKey('place-${spot.id}'),
               selected: selected,
               selectedTileColor: AppColors.surface,
-              title: Text(spot.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: SpotImage(spot: spot, width: 56, height: 56),
+                ),
+              ),
+              title: Text(
+                spot.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               subtitle: Text(spot.category),
-              trailing: selected
-                  ? TextButton.icon(
-                      onPressed: widget.busy ? null : () => _toggle(spot),
-                      icon: const Icon(Icons.remove_circle_outline, size: 18),
-                      label: const Text('Kaldır'),
-                    )
-                  : IconButton(
-                      tooltip: 'Rotaya ekle',
-                      onPressed: widget.busy ? null : () => _toggle(spot),
-                      icon: const Icon(Icons.add_circle_outline),
-                    ),
+              trailing:
+                  selected
+                      ? TextButton.icon(
+                        onPressed: widget.busy ? null : () => _toggle(spot),
+                        icon: const Icon(Icons.remove_circle_outline, size: 18),
+                        label: const Text('Kaldır'),
+                      )
+                      : IconButton(
+                        tooltip: 'Rotaya ekle',
+                        onPressed: widget.busy ? null : () => _toggle(spot),
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
               onTap: widget.busy ? null : () => _toggle(spot),
             );
           },

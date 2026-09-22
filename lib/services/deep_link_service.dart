@@ -1,3 +1,4 @@
+import '../screens/route_deep_link_screen.dart';
 import '../screens/creator_welcome_screen.dart';
 import '../screens/role_invite_screen.dart';
 
@@ -84,6 +85,9 @@ class DeepLinkService {
       if (navigator == null) return;
 
       switch (target.type) {
+        case 'route':
+          await navigator.push(MaterialPageRoute(builder: (_) => RouteDeepLinkScreen(routeId: target.id)));
+          break;
         case 'role-invite':
           await navigator.push(
             MaterialPageRoute(

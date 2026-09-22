@@ -1,4 +1,4 @@
-import '../lib/widgets/route_stops_step.dart';
+import '../lib/widgets/route_editor_map.dart';
 
 import 'dart:async';
 
@@ -39,38 +39,44 @@ const second = PhotoSpot(
 );
 
 void main() {
-  test('offline, unavailable, permission and timeout have distinct Turkish messages', () {
-    expect(
-      userFacingError(
-        FirebaseException(
-          plugin: 'cloud_firestore',
-          code: 'unavailable',
-          message: 'Failed to get document because the client is offline.',
+  test(
+    'offline, unavailable, permission and timeout have distinct Turkish messages',
+    () {
+      expect(
+        userFacingError(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'unavailable',
+            message: 'Failed to get document because the client is offline.',
+          ),
         ),
-      ),
-      'İnternet bağlantısı yok. Bağlantını kontrol edip tekrar dene.',
-    );
-    expect(
-      userFacingError(
-        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
-      ),
-      contains('Hizmete şu an ulaşılamıyor'),
-    );
-    expect(
-      userFacingError(
-        FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'),
-      ),
-      contains('erişim iznin'),
-    );
-    expect(
-      userFacingError(TimeoutException('secret diagnostic')),
-      contains('zaman aşımına'),
-    );
-    expect(
-      userFacingError(Exception('Raw backend details')),
-      isNot(contains('Raw')),
-    );
-  });
+        'İnternet bağlantısı yok. Bağlantını kontrol edip tekrar dene.',
+      );
+      expect(
+        userFacingError(
+          FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+        ),
+        contains('Hizmete şu an ulaşılamıyor'),
+      );
+      expect(
+        userFacingError(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'permission-denied',
+          ),
+        ),
+        contains('erişim iznin'),
+      );
+      expect(
+        userFacingError(TimeoutException('secret diagnostic')),
+        contains('zaman aşımına'),
+      );
+      expect(
+        userFacingError(Exception('Raw backend details')),
+        isNot(contains('Raw')),
+      );
+    },
+  );
 
   testWidgets(
     'selected places open unified route draft with intact stops and no repeated city question',
@@ -97,29 +103,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(RouteCreateScreen), findsOneWidget);
       expect(find.text('Şehir veya bölge ara'), findsNothing);
-      await tester.tap(find.text('Devam'));
+      await tester.tap(find.text('Rotanı oluşturmaya başla'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Duraklarım (2)'));
-      await tester.pumpAndSettle();
-      expect(find.text('Harput'), findsOneWidget);
       expect(
         tester
-            .widget<RouteStopsStep>(find.byType(RouteStopsStep))
+            .widget<RouteEditorMap>(find.byType(RouteEditorMap))
             .stops
             .map((s) => s.id),
         ['a', 'b'],
       );
-      await tester.tap(find.byTooltip('Rota seçenekleri'));
-      await tester.pumpAndSettle();
-      expect(find.text('Çoklu seçim'), findsOneWidget);
-      await tester.tapAt(const Offset(10, 10));
-      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('a')),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.byType(ReorderableDragStartListener), findsWidgets);
       await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);
       await tester.pumpAndSettle();
       expect(find.text('Harput'), findsNothing);
-      expect(find.text('Keban'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const ValueKey('b')), matching: find.text('Keban')), findsOneWidget);
+      expect(tester.widget<RouteEditorMap>(find.byType(RouteEditorMap)).stops.map((s) => s.id), ['b']);
       expect(tester.takeException(), isNull);
     },
   );

@@ -129,7 +129,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
       canvas.drawCircle(
         const Offset(36, 36),
         32,
-        Paint()..color = AppColors.blue,
+        Paint()..color = AppColors.cyan,
       );
       canvas.drawCircle(
         const Offset(36, 36),
@@ -210,12 +210,14 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   @override
   Widget build(BuildContext context) => GoogleMap(
     initialCameraPosition: CameraPosition(
-      target: _points.isEmpty
-          ? (widget.center ?? const LatLng(39, 35))
-          : _points.first,
+      target:
+          _points.isEmpty
+              ? (widget.center ?? const LatLng(39, 35))
+              : _points.first,
       zoom: 13,
     ),
-    style: '[{"elementType":"geometry","stylers":[{"color":"#171c24"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab4c2"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#171c24"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b4a"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c1723"}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]}]',
+    style:
+        '[{"elementType":"geometry","stylers":[{"color":"#171c24"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab4c2"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#171c24"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b4a"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c1723"}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]}]',
     padding: widget.padding,
     zoomControlsEnabled: false,
     myLocationButtonEnabled: false,
@@ -247,8 +249,10 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
       for (var i = 0; i < widget.stops.length; i++)
         Marker(
           markerId: MarkerId(widget.stops[i].id),
-          onTap: widget.onPlaceTap == null
-              ? null : () => widget.onPlaceTap!(widget.stops[i]),
+          onTap:
+              widget.onPlaceTap == null
+                  ? null
+                  : () => widget.onPlaceTap!(widget.stops[i]),
           zIndex: 10,
           position: _points[i],
           icon:
@@ -263,7 +267,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
         Polyline(
           polylineId: const PolylineId('itinerary'),
           points: widget.itinerary!.points,
-          color: AppColors.blue,
+          color: AppColors.cyan,
           width: 5,
         ),
     },

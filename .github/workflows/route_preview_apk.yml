@@ -2,7 +2,7 @@ name: TBT route preview APK
 
 on:
   push:
-    branches: [codex/test-apk-routes-20260921]
+    branches: [codex/route-design-20260921]
 
 permissions:
   contents: read
@@ -26,6 +26,8 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Verify route changes
+        run: flutter test test/route_create_test.dart test/restored_flows_test.dart test/route_geometry_test.dart test/route_link_test.dart test/route_itinerary_test.dart
       - name: Verify runtime secrets
         shell: bash
         env:
@@ -121,7 +123,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: TBT-21-Eylul-Test-APK
+          name: TBT-22-Eylul-Rota-APK
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7

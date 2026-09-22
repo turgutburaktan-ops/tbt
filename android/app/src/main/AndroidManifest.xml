@@ -54,6 +54,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tbt" android:host="event" />
+                <data android:scheme="tbt" android:host="route" />
                 <data android:scheme="tbt" android:host="community" />
                 <data android:scheme="tbt" android:host="group" />
                 <data android:scheme="tbt" android:host="profile" />

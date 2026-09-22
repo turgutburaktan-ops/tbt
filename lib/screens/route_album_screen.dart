@@ -1,3 +1,4 @@
+import '../widgets/route_design/route_design.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -30,13 +31,14 @@ class RouteAlbumScreen extends StatefulWidget {
 class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
   bool _uploading = false;
   String _progress = '';
+  DocumentReference<Map<String, dynamic>>? _selected;
+  bool _selectedVideo = false, _selectedAllowed = false;
   late final _album = FirebaseFirestore.instance
       .collection('travel_plans')
       .doc(widget.plan.id)
       .collection('album');
-  late final _stream = _album
-      .orderBy('createdAt', descending: true)
-      .snapshots();
+  late final _stream =
+      _album.orderBy('createdAt', descending: true).snapshots();
   Future<void> _upload() async {
     if (_uploading) return;
     var stage = 'Fotoğraf ve video seçimi';
@@ -52,22 +54,23 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
       if (allowed == null) {
         allowed = await showDialog<bool>(
           context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Albüm paylaşımı'),
-            content: const Text(
-              'Katılımcılar yüklediğin fotoğraf ve videoları indirip story, gönderi veya Reels olarak paylaşabilsin mi? Bu tercihi yüklediğin içerikten değiştirebilirsin.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(c, false),
-                child: const Text('Yalnızca görüntülesin'),
+          builder:
+              (c) => AlertDialog(
+                title: const Text('Albüm paylaşımı'),
+                content: const Text(
+                  'Katılımcılar yüklediğin fotoğraf ve videoları indirip story, gönderi veya Reels olarak paylaşabilsin mi? Bu tercihi yüklediğin içerikten değiştirebilirsin.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(c, false),
+                    child: const Text('Yalnızca görüntülesin'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(c, true),
+                    child: const Text('İzin ver'),
+                  ),
+                ],
               ),
-              FilledButton(
-                onPressed: () => Navigator.pop(c, true),
-                child: const Text('İzin ver'),
-              ),
-            ],
-          ),
         );
         if (allowed == null || !mounted) return;
         await prefs.setBool(key, allowed);
@@ -90,21 +93,27 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
                 : 'Fotoğraf 15 MB sınırını aşıyor.',
           );
         final doc = _album.doc();
-        final extension = video
-            ? 'mp4'
-            : ['png', 'webp', 'heic', 'heif'].contains(ext)
-            ? ext
-            : 'jpg';
-        final mime = video
-            ? (extension == 'mov' ? 'video/quicktime' : 'video/mp4')
-            : 'image/${extension == 'jpg' ? 'jpeg' : extension}';
+        final extension =
+            video
+                ? 'mp4'
+                : ['png', 'webp', 'heic', 'heif'].contains(ext)
+                ? ext
+                : 'jpg';
+        final mime =
+            video
+                ? (extension == 'mov' ? 'video/quicktime' : 'video/mp4')
+                : 'image/${extension == 'jpg' ? 'jpeg' : extension}';
         final base = 'route_albums/${widget.plan.id}/$uid/${doc.id}';
         final ref = FirebaseStorage.instance.ref('$base/media.$extension');
         final thumb = FirebaseStorage.instance.ref('$base/thumb.jpg');
         stage = 'Video hazırlanıyor';
-        final prepared = video
-            ? await VideoMediaService.instance.prepare(File(file.path), maxDuration: null)
-            : null;
+        final prepared =
+            video
+                ? await VideoMediaService.instance.prepare(
+                  File(file.path),
+                  maxDuration: null,
+                )
+                : null;
         bool mediaDone = false, thumbDone = false;
         try {
           stage = 'Albüm dosyasının yüklenmesi';
@@ -165,24 +174,36 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      const Padding(
+        padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
         child: Row(
           children: [
-            const Expanded(
-              child: Text(
-                'Yalnızca katılımcılar görebilir',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: _uploading ? null : _upload,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Fotoğraf / video ekle'),
+            Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted),
+            SizedBox(width: 6),
+            Text(
+              'Yalnızca katılımcılar görebilir',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ],
         ),
       ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+        child: RouteAction(
+          label: 'Fotoğraf veya video ekle',
+          icon: Icons.add,
+          outlined: true,
+          onPressed: _uploading ? null : _upload,
+        ),
+      ),
+      if (_selected == null)
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Text(
+            'Paylaşmak için bir içeriğe uzun bas.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
+        ),
       if (_uploading) ...[
         const LinearProgressIndicator(),
         Padding(padding: const EdgeInsets.all(8), child: Text(_progress)),
@@ -206,28 +227,60 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
                 ),
               );
             return GridView.builder(
-              padding: const EdgeInsets.all(3),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
               ),
               itemCount: s.data!.docs.length,
               itemBuilder: (_, i) {
                 final doc = s.data!.docs[i], d = doc.data();
                 return InkWell(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => _AlbumViewer(reference: doc.reference),
-                    ),
-                  ),
+                  onLongPress:
+                      () => setState(() {
+                        _selected = doc.reference;
+                        _selectedVideo = d['kind'] == 'video';
+                        _selectedAllowed =
+                            d['ownerId'] ==
+                                FirebaseAuth.instance.currentUser?.uid ||
+                            d['allowExport'] == true;
+                      }),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => _AlbumViewer(reference: doc.reference),
+                        ),
+                      ),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       _PrivateThumbnail(
                         path: (d['thumbnailPath'] ?? '').toString(),
                       ),
+                      if (_selected?.id == doc.id)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.cyan,
+                                width: 3,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      if (_selected?.id == doc.id)
+                        const Positioned(
+                          top: 6,
+                          left: 6,
+                          child: Icon(
+                            Icons.check_circle,
+                            color: AppColors.cyan,
+                          ),
+                        ),
                       if (d['kind'] == 'video')
                         const Positioned(
                           top: 5,
@@ -257,6 +310,71 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
           },
         ),
       ),
+      if (_selected != null)
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: RoutePanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(child: Text('1 içerik seçildi')),
+                      IconButton(
+                        tooltip: 'Seçimi kaldır',
+                        onPressed: () => setState(() => _selected = null),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    _selectedAllowed
+                        ? 'Paylaşmadan önce düzenleyebilirsin.'
+                        : 'Yükleyen kişi dışarıya paylaşmayı kapattı.',
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      for (final a in [
+                        ('download', 'İndir', Icons.download),
+                        ('story', 'Story', Icons.add_circle_outline),
+                        (
+                          'post',
+                          _selectedVideo ? 'Reels' : 'Gönderi',
+                          Icons.send_outlined,
+                        ),
+                      ])
+                        Expanded(
+                          child: TextButton(
+                            onPressed:
+                                !_selectedAllowed
+                                    ? null
+                                    : () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => _AlbumViewer(
+                                              reference: _selected!,
+                                              initialAction: a.$1,
+                                            ),
+                                      ),
+                                    ),
+                            child: Column(children: [Icon(a.$3), Text(a.$2)]),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
     ],
   );
 }
@@ -269,25 +387,32 @@ class _PrivateThumbnail extends StatefulWidget {
 }
 
 class _PrivateThumbnailState extends State<_PrivateThumbnail> {
-  late final Future<Uint8List?> _bytes = widget.path.isEmpty
-      ? Future.value(null)
-      : FirebaseStorage.instance.ref(widget.path).getData(3 * 1024 * 1024);
+  late final Future<Uint8List?> _bytes =
+      widget.path.isEmpty
+          ? Future.value(null)
+          : FirebaseStorage.instance.ref(widget.path).getData(3 * 1024 * 1024);
   @override
   Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
     future: _bytes,
-    builder: (_, s) => s.data != null
-        ? Image.memory(s.data!, fit: BoxFit.cover)
-        : const ColoredBox(
-            color: AppColors.surfaceAlt,
-            child: Center(
-              child: Icon(Icons.photo_library_outlined, color: Colors.white38),
-            ),
-          ),
+    builder:
+        (_, s) =>
+            s.data != null
+                ? Image.memory(s.data!, fit: BoxFit.cover)
+                : const ColoredBox(
+                  color: AppColors.surfaceAlt,
+                  child: Center(
+                    child: Icon(
+                      Icons.photo_library_outlined,
+                      color: Colors.white38,
+                    ),
+                  ),
+                ),
   );
 }
 
 class _AlbumViewer extends StatefulWidget {
-  const _AlbumViewer({required this.reference});
+  const _AlbumViewer({required this.reference, this.initialAction});
+  final String? initialAction;
   final DocumentReference<Map<String, dynamic>> reference;
   @override
   State<_AlbumViewer> createState() => _AlbumViewerState();
@@ -321,7 +446,10 @@ class _AlbumViewerState extends State<_AlbumViewer> {
       }
       _file = file;
       _isVideo = d['kind'] == 'video';
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        if (widget.initialAction != null) await _action(widget.initialAction!);
+      }
     } catch (e) {
       if (mounted) setState(() => _error = userFacingError(e));
     }
@@ -345,20 +473,21 @@ class _AlbumViewerState extends State<_AlbumViewer> {
       if (action == 'delete' && owned) {
         final yes = await showDialog<bool>(
           context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Albümden kaldır?'),
-            content: const Text('Bu içerik ortak albümden kaldırılacak.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(c, false),
-                child: const Text('Vazgeç'),
+          builder:
+              (c) => AlertDialog(
+                title: const Text('Albümden kaldır?'),
+                content: const Text('Bu içerik ortak albümden kaldırılacak.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(c, false),
+                    child: const Text('Vazgeç'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(c, true),
+                    child: const Text('Kaldır'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(c, true),
-                child: const Text('Kaldır'),
-              ),
-            ],
-          ),
         );
         if (yes != true) return;
         await FirebaseStorage.instance.ref(d['storagePath'] as String).delete();
@@ -388,14 +517,15 @@ class _AlbumViewerState extends State<_AlbumViewer> {
           ).showSnackBar(const SnackBar(content: Text('Galeriye kaydedildi.')));
       } else if (mounted) {
         final isVideo = d['kind'] == 'video';
-        final Widget screen = action == 'story'
-            ? (isVideo
-                  ? StoryVideoEditorScreen(video: _file!)
-                  : StoryPhotoEditorScreen(photo: _file!))
-            : CreatePostScreen(
-                initialImagePath: isVideo ? null : _file!.path,
-                initialVideoPath: isVideo ? _file!.path : null,
-              );
+        final Widget screen =
+            action == 'story'
+                ? (isVideo
+                    ? StoryVideoEditorScreen(video: _file!)
+                    : StoryPhotoEditorScreen(photo: _file!))
+                : CreatePostScreen(
+                  initialImagePath: isVideo ? null : _file!.path,
+                  initialVideoPath: isVideo ? _file!.path : null,
+                );
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => screen),
@@ -403,57 +533,69 @@ class _AlbumViewerState extends State<_AlbumViewer> {
       }
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userFacingError(e))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) =>
-      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: _stream,
-        builder: (_, s) {
-          final d = s.data?.data();
-          final denied = s.hasError || (s.hasData && d == null);
-          final owned = d?['ownerId'] == FirebaseAuth.instance.currentUser?.uid;
-          final allowed = owned || d?['allowExport'] == true;
-          return Scaffold(
-            backgroundColor: Colors.black,
-            appBar: AppBar(
-              title: Text(d?['ownerName']?.toString() ?? 'Albüm'),
-              actions: [
-                if (owned)
-                  IconButton(
-                    tooltip: 'İndirme ve paylaşma izni',
-                    onPressed: _busy ? null : () => _action('permission'),
-                    icon: Icon(
-                      d?['allowExport'] == true
-                          ? Icons.lock_open
-                          : Icons.lock_outline,
-                    ),
-                  ),
-              ],
-            ),
-            body: denied
+  Widget build(
+    BuildContext context,
+  ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+    stream: _stream,
+    builder: (_, s) {
+      final d = s.data?.data();
+      final denied = s.hasError || (s.hasData && d == null);
+      final owned = d?['ownerId'] == FirebaseAuth.instance.currentUser?.uid;
+      final allowed = owned || d?['allowExport'] == true;
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: Text(d?['ownerName']?.toString() ?? 'Albüm'),
+          actions: [
+            if (owned)
+              IconButton(
+                tooltip: 'İndirme ve paylaşma izni',
+                onPressed: _busy ? null : () => _action('permission'),
+                icon: Icon(
+                  d?['allowExport'] == true
+                      ? Icons.lock_open
+                      : Icons.lock_outline,
+                ),
+              ),
+          ],
+        ),
+        body:
+            denied
                 ? const Center(child: Text('Bu içeriğe artık erişilemiyor.'))
                 : _error != null
                 ? Center(child: Text(_error!))
                 : _file == null
                 ? const Center(child: CircularProgressIndicator())
                 : Center(
-                    child: _isVideo
-                        ? AppVideoPlayer.file(file: _file!, autoplay: false, active: !_busy, muted: false, showMuteControl: false)
-                        : InteractiveViewer(child: Image.file(_file!)),
-                  ),
-            bottomNavigationBar: denied
+                  child:
+                      _isVideo
+                          ? AppVideoPlayer.file(
+                            file: _file!,
+                            autoplay: false,
+                            active: !_busy,
+                            muted: false,
+                            showMuteControl: false,
+                          )
+                          : InteractiveViewer(child: Image.file(_file!)),
+                ),
+        bottomNavigationBar:
+            denied
                 ? null
                 : SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: allowed
-                          ? Wrap(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child:
+                        allowed
+                            ? Wrap(
                               alignment: WrapAlignment.center,
                               spacing: 8,
                               children: [
@@ -467,22 +609,23 @@ class _AlbumViewerState extends State<_AlbumViewer> {
                                   ),
                                 ])
                                   OutlinedButton.icon(
-                                    onPressed: _busy || _file == null
-                                        ? null
-                                        : () => _action(a.$1),
+                                    onPressed:
+                                        _busy || _file == null
+                                            ? null
+                                            : () => _action(a.$1),
                                     icon: Icon(a.$3, size: 18),
                                     label: Text(a.$2),
                                   ),
                               ],
                             )
-                          : const Text(
+                            : const Text(
                               'Yükleyen kişi indirme ve paylaşmayı kapattı.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white60),
                             ),
-                    ),
                   ),
-          );
-        },
+                ),
       );
+    },
+  );
 }

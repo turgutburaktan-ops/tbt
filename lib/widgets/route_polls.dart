@@ -1,3 +1,4 @@
+import '../screens/route_poll_create_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -26,86 +27,31 @@ class RoutePolls extends StatelessWidget {
       await task();
     } catch (e) {
       if (c.mounted)
-        ScaffoldMessenger.of(c)
-            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+        ScaffoldMessenger.of(
+          c,
+        ).showSnackBar(SnackBar(content: Text(userFacingError(e))));
     }
   }
 
   Future<void> create(BuildContext context) async {
-    final question = TextEditingController();
-    final options = List.generate(4, (_) => TextEditingController());
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Oylama oluştur'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: question,
-                maxLength: 180,
-                decoration: const InputDecoration(
-                  hintText: 'Ne karar veriyoruz?',
-                ),
-              ),
-              for (var i = 0; i < 4; i++)
-                TextField(
-                  controller: options[i],
-                  maxLength: 80,
-                  decoration: InputDecoration(
-                    hintText:
-                        'Seçenek ${i + 1}${i > 1 ? ' (isteğe bağlı)' : ''}',
-                  ),
-                ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final values = options
-                  .map((t) => t.text.trim())
-                  .where((t) => t.isNotEmpty)
-                  .toSet();
-              if (question.text.trim().isNotEmpty && values.length >= 2) {
-                Navigator.pop(c, true);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Bir soru ve en az iki farklı seçenek yaz.'),
-                  ),
-                );
-              }
-            },
-            child: const Text('Oluştur'),
-          ),
-        ],
-      ),
+    final result = await Navigator.push<RoutePollDraft>(
+      context,
+      MaterialPageRoute(builder: (_) => const RoutePollCreateScreen()),
     );
-    if (result == true && context.mounted)
-      await _act(
-        context,
-        () => _polls.add({
-          'authorId': FirebaseAuth.instance.currentUser!.uid,
-          'question': question.text.trim(),
-          'options': options
-              .map((t) => t.text.trim())
-              .where((t) => t.isNotEmpty)
-              .toSet()
-              .toList(),
-          'closed': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        }),
-      );
-    question.dispose();
-    for (final c in options) {
-      c.dispose();
-    }
+    if (result == null || !context.mounted) return;
+    await _act(
+      context,
+      () => _polls.add({
+        'authorId': FirebaseAuth.instance.currentUser!.uid,
+        'question': result.question,
+        'options': result.options,
+        'allowMultiple': result.multiple,
+        if (result.closesAt != null)
+          'closesAt': Timestamp.fromDate(result.closesAt!),
+        'closed': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      }),
+    );
   }
 
   @override
@@ -130,104 +76,143 @@ class RoutePolls extends StatelessWidget {
         builder: (_, s) {
           if (s.hasError) return Text(userFacingError(s.error!));
           return Column(
-            children: (s.data?.docs ?? []).map((doc) {
-              final d = doc.data();
-              final choices = List<String>.from(d['options']);
-              final uid = FirebaseAuth.instance.currentUser?.uid;
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
+            children:
+                (s.data?.docs ?? []).map((doc) {
+                  final d = doc.data();
+                  final choices = List<String>.from(d['options']);
+                  final closed =
+                      d['closed'] == true ||
+                      (d['closesAt'] is Timestamp &&
+                          !(d['closesAt'] as Timestamp).toDate().isAfter(
+                            DateTime.now(),
+                          ));
+                  List<int> selections(Map<String, dynamic> vote) =>
+                      vote['choices'] is List
+                          ? List<int>.from(vote['choices'])
+                          : vote['choice'] is int
+                          ? [vote['choice']]
+                          : [];
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child: Text(
-                              '${d['question']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${d['question']}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (d['authorId'] == uid || ownerId == uid)
+                                IconButton(
+                                  tooltip:
+                                      d['closed'] == true
+                                          ? 'Oylamayı aç'
+                                          : 'Oylamayı bitir',
+                                  onPressed:
+                                      () => _act(
+                                        context,
+                                        () => doc.reference.update({
+                                          'closed': d['closed'] != true,
+                                        }),
+                                      ),
+                                  icon: Icon(
+                                    d['closed'] == true
+                                        ? Icons.lock
+                                        : Icons.lock_open,
+                                    size: 18,
+                                  ),
+                                ),
+                            ],
                           ),
-                          if (d['authorId'] == uid || ownerId == uid)
-                            IconButton(
-                              tooltip: d['closed'] == true
-                                  ? 'Oylamayı aç'
-                                  : 'Oylamayı bitir',
-                              onPressed: () => _act(
-                                context,
-                                () => doc.reference.update({
-                                  'closed': d['closed'] != true,
-                                }),
-                              ),
-                              icon: Icon(
-                                d['closed'] == true
-                                    ? Icons.lock
-                                    : Icons.lock_open,
-                                size: 18,
-                              ),
-                            ),
+                          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream:
+                                doc.reference.collection('votes').snapshots(),
+                            builder: (_, v) {
+                              if (v.hasError)
+                                return Text(userFacingError(v.error!));
+                              final votes = v.data?.docs ?? [];
+                              final mine = selections(
+                                votes
+                                        .where((v) => v.id == uid)
+                                        .firstOrNull
+                                        ?.data() ??
+                                    {},
+                              );
+                              return Column(
+                                children: [
+                                  for (var i = 0; i < choices.length; i++)
+                                    ListTile(
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: Icon(
+                                        mine.contains(i)
+                                            ? Icons.radio_button_checked
+                                            : Icons.radio_button_off,
+                                        color:
+                                            mine.contains(i)
+                                                ? AppColors.cyan
+                                                : AppColors.textMuted,
+                                      ),
+                                      title: Text(choices[i]),
+                                      trailing: Text(
+                                        '${votes.where((v) => selections(v.data()).contains(i)).length}',
+                                      ),
+                                      onTap:
+                                          closed || uid == null
+                                              ? null
+                                              : () => _act(
+                                                context,
+                                                () => doc.reference
+                                                    .collection('votes')
+                                                    .doc(uid)
+                                                    .set({
+                                                      if (d['allowMultiple'] ==
+                                                          true)
+                                                        'choices':
+                                                            (({
+                                                                      ...mine,
+                                                                    }.contains(
+                                                                      i,
+                                                                    )
+                                                                    ? ({...mine}
+                                                                      ..remove(
+                                                                        i,
+                                                                      ))
+                                                                    : ({...mine}
+                                                                      ..add(i)))
+                                                                .toList()
+                                                              ..sort()),
+                                                      if (d['allowMultiple'] !=
+                                                          true)
+                                                        'choice': i,
+                                                      'updatedAt':
+                                                          FieldValue.serverTimestamp(),
+                                                    }),
+                                              ),
+                                    ),
+                                  Text(
+                                    '${votes.length} oy${closed ? ' · Oylama bitti' : ''}',
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                         ],
                       ),
-                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: doc.reference.collection('votes').snapshots(),
-                        builder: (_, v) {
-                          if (v.hasError)
-                            return Text(userFacingError(v.error!));
-                          final votes = v.data?.docs ?? [];
-                          final mine = votes
-                              .where((v) => v.id == uid)
-                              .firstOrNull
-                              ?.data()['choice'];
-                          return Column(
-                            children: [
-                              for (var i = 0; i < choices.length; i++)
-                                ListTile(
-                                  dense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Icon(
-                                    mine == i
-                                        ? Icons.radio_button_checked
-                                        : Icons.radio_button_off,
-                                    color: mine == i
-                                        ? AppColors.cyan
-                                        : AppColors.textMuted,
-                                  ),
-                                  title: Text(choices[i]),
-                                  trailing: Text(
-                                    '${votes.where((v) => v.data()['choice'] == i).length}',
-                                  ),
-                                  onTap: d['closed'] == true || uid == null
-                                      ? null
-                                      : () => _act(
-                                          context,
-                                          () => doc.reference
-                                              .collection('votes')
-                                              .doc(uid)
-                                              .set({
-                                                'choice': i,
-                                                'updatedAt':
-                                                    FieldValue.serverTimestamp(),
-                                              }),
-                                        ),
-                                ),
-                              Text(
-                                '${votes.length} oy${d['closed'] == true ? ' · Oylama bitti' : ''}',
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                    ),
+                  );
+                }).toList(),
           );
         },
       ),

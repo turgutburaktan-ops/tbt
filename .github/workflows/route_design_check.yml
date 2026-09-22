@@ -1,0 +1,55 @@
+name: Route design verification
+on:
+  push:
+    branches: [codex/route-design-20260921]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: route-design-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/screens/route* lib/screens/travel_plan_detail_screen.dart lib/services/route* lib/services/travel_plan_service.dart lib/widgets/route* test/route*.dart test/restored_flows_test.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/route_itinerary_test.dart test/route_stop_selection_test.dart test/route_map_candidates_test.dart test/route_chat_test.dart test/route_geometry_test.dart test/route_link_test.dart test/route_create_test.dart test/restored_flows_test.dart test/route_design_preview_test.dart
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: route-formatted-source
+          path: |
+            lib/screens/route*.dart
+            lib/screens/travel_plan_detail_screen.dart
+            lib/services/route*.dart
+            lib/services/travel_plan_service.dart
+            lib/widgets/route*
+            test/route*.dart
+            test/restored_flows_test.dart
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: route-screen-previews
+          path: build/route_previews/*.png
+  poll-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix /tmp/route-rules @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - run: /tmp/route-rules/node_modules/.bin/firebase emulators:exec --project demo-tbt-route --only firestore "node --test test/route_poll_rules.cjs"
+        env:
+          NODE_PATH: /tmp/route-rules/node_modules
