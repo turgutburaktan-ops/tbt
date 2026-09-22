@@ -59,7 +59,7 @@ void main() {
         'status': 'OK',
         'results': [
           for (final s in samples)
-            {
+            <String, dynamic>{
               'elevation': 100,
               'location': {'lat': s.$1.latitude, 'lng': s.$1.longitude},
             },
@@ -70,7 +70,7 @@ void main() {
       missing['results'][1]['elevation'] = null;
       expect(RouteTerrainService.decode(missing, samples), isNull);
       final wrong = fixture();
-      wrong['results'][0]['location']['lat'] = 12;
+      wrong['results'][0]['location']['lat'] = 12.0;
       expect(RouteTerrainService.decode(wrong, samples), isNull);
       final partial = fixture();
       partial['results'].removeLast();
