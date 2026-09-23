@@ -15,8 +15,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/travel_plan_service.dart lib/models/travel_plan.dart lib/screens/routes_hub_screen.dart lib/widgets/use_ready_route_button.dart
-      - run: flutter test test/profile_interaction_fixes_test.dart test/profile_content_navigation_test.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/nearby_venue_service.dart lib/screens/route_filters_screen.dart lib/services/travel_plan_service.dart lib/models/travel_plan.dart lib/screens/routes_hub_screen.dart lib/widgets/use_ready_route_button.dart
+      - run: flutter test test/ready_route_city_test.dart test/profile_interaction_fixes_test.dart test/profile_content_navigation_test.dart
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

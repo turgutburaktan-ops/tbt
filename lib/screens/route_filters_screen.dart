@@ -18,6 +18,10 @@ class RouteFilters {
   final int duration;
   final bool roundTrip, following;
   final Set<String> difficulties;
+  RouteFilters withCity(String value) => RouteFilters(
+    mode: mode, city: value, maxKm: maxKm, duration: duration,
+    roundTrip: roundTrip, following: following, difficulties: difficulties,
+  );
   bool matches(TravelPlan p, Set<String> followed) {
     if (mode.isNotEmpty && p.transport != mode) return false;
     if (city.isNotEmpty && p.city != city) return false;

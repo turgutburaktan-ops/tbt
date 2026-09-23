@@ -1,4 +1,6 @@
 import '../widgets/use_ready_route_button.dart';
+import '../services/nearby_venue_service.dart';
+import '../data/turkey_selection_data.dart';
 import '../widgets/route_bookmark_button.dart';
 
 import 'package:geolocator/geolocator.dart';
@@ -46,7 +48,6 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
   String _search = '';
   Position? _nearby;
   bool _nearbyBusy = false;
-  String _city = '';
   RouteFilters _parkurFilters = const RouteFilters();
   late final _mine = TravelPlanService.instance.watchMine();
   late final _public = TravelPlanService.instance.watchPublic(
@@ -59,6 +60,10 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
   @override
   void initState() {
     super.initState();
+    final cityService = NearbyVenueService.instance;
+    _parkurFilters = _parkurFilters.withCity(cityService.selectedCityName ?? '');
+    cityService.selectedCityChanges.addListener(_onSelectedCityChanged);
+    unawaited(cityService.restoreSelectedCity().catchError((Object _) => null));
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       _following = FirebaseFirestore.instance
@@ -102,8 +107,16 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
     }
   }
 
+  void _onSelectedCityChanged() {
+    if (!mounted) return;
+    setState(() => _parkurFilters = _parkurFilters.withCity(
+      NearbyVenueService.instance.selectedCityName ?? '',
+    ));
+  }
+
   @override
   void dispose() {
+    NearbyVenueService.instance.selectedCityChanges.removeListener(_onSelectedCityChanged);
     _following?.cancel();
     for (final s in _subscriptions.values) {
       s.cancel();
@@ -323,14 +336,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                       ])
                         p.id: p,
                     }.values.toList();
-                    final cities =
-                        all
-                            .map((p) => p.city)
-                            .where((s) => s.isNotEmpty)
-                            .toSet()
-                            .toList()
-                          ..sort();
-                    final selectedCity = cities.contains(_city) ? _city : '';
+                    final cities = turkeyCities;
                     final filtered = all
                         .where(
                           (p) =>
@@ -339,8 +345,6 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                                 p,
                                 _subscriptions.keys.toSet(),
                               ) &&
-                              (selectedCity.isEmpty ||
-                                  p.city == selectedCity) &&
                               '${p.title} ${p.city} ${p.spotNames.join(' ')}'
                                   .toLowerCase()
                                   .contains(_search.toLowerCase()),
@@ -349,6 +353,19 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(_parkurFilters.city),
+                          initialValue: _parkurFilters.city,
+                          isExpanded: true,
+                          decoration: const InputDecoration(labelText: 'İl', prefixIcon: Icon(Icons.location_city)),
+                          items: [
+                            const DropdownMenuItem(value: '', child: Text('Tüm iller')),
+                            for (final city in cities)
+                              DropdownMenuItem(value: city, child: Text(city)),
+                          ],
+                          onChanged: (city) => setState(() => _parkurFilters = _parkurFilters.withCity(city ?? '')),
+                        ),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Expanded(
@@ -429,7 +446,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                           const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text('Topluluktan rotalar', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
                           ..._list(filtered.where((p) => !p.isCurated).toList()),
                         ],
-                        if (filtered.isEmpty) ..._list(filtered),
+                        if (filtered.isEmpty) _message(_parkurFilters.city.isEmpty ? 'Bu filtrelere uygun rota bulunamadı.' : '${_parkurFilters.city} için bu filtrelere uygun rota bulunamadı.'),
                       ],
                     );
                   },
