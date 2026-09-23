@@ -38,7 +38,10 @@ class TravelPlanService {
         )
         .snapshots()
         .map((snapshot) {
-          final plans = snapshot.docs.map(TravelPlan.fromDoc).toList();
+          final plans = snapshot.docs
+              .map(TravelPlan.fromDoc)
+              .where((plan) => !plan.isCurated)
+              .toList();
           plans.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           return plans;
         });
