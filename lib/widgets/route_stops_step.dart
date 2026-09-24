@@ -294,8 +294,8 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _tab('Yer ekle', false),
-            _tab('Seçilen duraklar · ${widget.stops.length}', true),
+            Expanded(child: _tab('Yer ekle', false)),
+            Expanded(flex: 2, child: _tab('Seçilen duraklar · ${widget.stops.length}', true)),
           ],
         ),
       ],
