@@ -1,3 +1,4 @@
+import '../services/password_policy.dart';
 import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,16 +25,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _loading = false;
   bool _hidePassword = true;
-  bool get _hasLength => _passwordController.text.length >= 10;
-  bool get _hasUpper =>
-      RegExp(r'[A-ZÇĞİÖŞÜ]').hasMatch(_passwordController.text);
-  bool get _hasLower =>
-      RegExp(r'[a-zçğıöşü]').hasMatch(_passwordController.text);
-  bool get _hasDigit => RegExp(r'\d').hasMatch(_passwordController.text);
-  bool get _hasSymbol =>
-      RegExp(r'[^A-Za-z0-9çÇğĞıİöÖşŞüÜ]').hasMatch(_passwordController.text);
-  bool get _passwordStrong =>
-      _hasLength && _hasUpper && _hasLower && _hasDigit && _hasSymbol;
+  bool get _hasLength => PasswordPolicy.hasLength(_passwordController.text);
+  bool get _hasUpper => PasswordPolicy.hasUpper(_passwordController.text);
+  bool get _hasLower => PasswordPolicy.hasLower(_passwordController.text);
+  bool get _hasDigit => PasswordPolicy.hasDigit(_passwordController.text);
+  bool get _hasSymbol => PasswordPolicy.hasSymbol(_passwordController.text);
+  bool get _passwordStrong => PasswordPolicy.accepts(_passwordController.text);
 
   @override
   void dispose() {
@@ -71,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     if (!_passwordStrong) {
-      _showMessage('Şifre güvenlik koşullarının tamamını karşılamalı.');
+      _showMessage(PasswordPolicy.message);
       return;
     }
     if (password != passwordAgain) {

@@ -1,3 +1,4 @@
+import '../services/password_policy.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -43,8 +44,8 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
       _message('Mevcut şifreni gir.');
       return;
     }
-    if (nextPassword.length < 6) {
-      _message('Yeni şifre en az 6 karakter olmalı.');
+    if (!PasswordPolicy.accepts(nextPassword)) {
+      _message(PasswordPolicy.message);
       return;
     }
     if (nextPassword != _confirm.text) {
@@ -84,7 +85,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
     } on FirebaseAuthException catch (e) {
       _message(switch (e.code) {
         'wrong-password' || 'invalid-credential' => 'Mevcut şifre yanlış.',
-        'weak-password' => 'Yeni şifre çok zayıf.',
+        'weak-password' || 'password-does-not-meet-requirements' => PasswordPolicy.message,
         'requires-recent-login' =>
           'Güvenlik için tekrar giriş yapıp yeniden dene.',
         'network-request-failed' =>
@@ -144,7 +145,8 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
               autofillHints: const [AutofillHints.newPassword],
               decoration: const InputDecoration(
                 labelText: 'Yeni şifre',
-                helperText: 'En az 6 karakter',
+                helperText: PasswordPolicy.hint,
+              helperMaxLines: 3,
               ),
             ),
             const SizedBox(height: 12),
