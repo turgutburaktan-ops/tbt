@@ -28,6 +28,7 @@ class RouteStopsStep extends StatefulWidget {
     required this.onSearch,
     this.itinerary,
     this.busy = false,
+    this.initialShowMap = false,
     this.loadItems,
   });
   final String city;
@@ -39,6 +40,7 @@ class RouteStopsStep extends StatefulWidget {
   final VoidCallback onSuggest, onSort, onSearch;
   final RouteItinerary? itinerary;
   final bool busy;
+  final bool initialShowMap;
   final Future<List<PhotoSpot>> Function(int)? loadItems;
   @override
   State<RouteStopsStep> createState() => _RouteStopsStepState();
@@ -52,12 +54,13 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
   final _errors = <int, String>{};
   String _query = '';
   bool _showStops = false;
-  bool _showMap = false;
+  late bool _showMap = widget.initialShowMap;
   LatLng? _center;
   @override
   void initState() {
     super.initState();
     _load(0);
+    if (_showMap) unawaited(_locate());
   }
 
   @override
@@ -158,7 +161,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
             segments: const [
               ButtonSegment(
                 value: false,
-                label: Text('Yer ara'),
+                label: Text('Listeden seç'),
                 icon: Icon(Icons.search),
               ),
               ButtonSegment(
@@ -170,7 +173,10 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
             selected: {_showMap},
             onSelectionChanged: (v) {
               FocusScope.of(context).unfocus();
-              setState(() => _showMap = v.first);
+              setState(() {
+                _showMap = v.first;
+                _showStops = false;
+              });
               if (_showMap && _center == null) unawaited(_locate());
             },
           ),
@@ -284,6 +290,13 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                     ],
                   )
                   : _list(places),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _tab('Yer ekle', false),
+            _tab('Seçilen duraklar · ${widget.stops.length}', true),
+          ],
         ),
       ],
     );

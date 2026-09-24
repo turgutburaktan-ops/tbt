@@ -1,0 +1,23 @@
+name: Verify unified map and list route selection
+on:
+  push:
+    branches: [codex/ready-routes-20260922]
+    paths:
+      - lib/screens/route_create_screen.dart
+      - lib/widgets/route_stops_step.dart
+      - test/route_selection_modes_test.dart
+      - .github/workflows/route_selection_modes.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/route_create_screen.dart lib/widgets/route_stops_step.dart test/route_selection_modes_test.dart
+      - run: flutter test test/route_selection_modes_test.dart test/route_create_test.dart test/route_stop_selection_test.dart

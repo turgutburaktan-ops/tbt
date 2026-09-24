@@ -912,7 +912,9 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     });
   }
 
-  Future<void> _path() async {
+  Future<void> _path() => _places(initialMap: true);
+
+  Future<void> _drawPath() async {
     final result = await Navigator.push<RoutePathResult>(
       context,
       MaterialPageRoute(
@@ -969,7 +971,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       );
   }
 
-  Future<void> _places() async {
+  Future<void> _places({bool initialMap = false}) async {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
@@ -978,8 +980,19 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
               builder:
                   (c, refresh) => Scaffold(
                     backgroundColor: AppColors.background,
-                    appBar: AppBar(title: const Text('Durak ekle')),
+                    appBar: AppBar(
+                      title: const Text('Durak ekle'),
+                      actions: [IconButton(
+                        tooltip: 'Güzergâh çizim seçenekleri',
+                        icon: const Icon(Icons.edit_road),
+                        onPressed: () async {
+                          await _drawPath();
+                          if (c.mounted) refresh(() {});
+                        },
+                      )],
+                    ),
                     body: RouteStopsStep(
+                      initialShowMap: initialMap,
                       city: _city.text.trim(),
                       stops: _stops,
                       itinerary: _itinerary,
@@ -1028,8 +1041,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: RouteAction(
-                          label: 'Rotama dön · ${_stops.length} durak',
-                          onPressed: () => Navigator.pop(c),
+                          label: 'Devam et · ${_stops.length} durak',
+                          onPressed: _stops.isEmpty ? null : () => Navigator.pop(c),
                         ),
                       ),
                     ),
