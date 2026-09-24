@@ -1,3 +1,4 @@
+import '../services/password_policy.dart';
 import '../theme/app_theme.dart';
 import 'dart:async';
 
@@ -39,10 +40,12 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_current.text.isEmpty) return _setError('Mevcut şifreni gir.');
-    if (_next.text.length < 6)
-      return _setError('Yeni şifre en az 6 karakter olmalı.');
+    if (!PasswordPolicy.accepts(_next.text))
+      return _setError(PasswordPolicy.message);
     if (_next.text != _confirm.text)
       return _setError('Yeni şifreler aynı değil.');
+    if (_next.text == _current.text)
+      return _setError('Yeni şifren mevcut şifrenden farklı olmalı.');
     if (_saving) return;
     setState(() {
       _saving = true;
@@ -71,7 +74,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
     } on FirebaseAuthException catch (e) {
       _setError(switch (e.code) {
         'wrong-password' || 'invalid-credential' => 'Mevcut şifre yanlış.',
-        'weak-password' => 'Yeni şifre çok zayıf.',
+        'weak-password' || 'password-does-not-meet-requirements' => PasswordPolicy.message,
         'requires-recent-login' =>
           'Güvenlik için tekrar giriş yapıp yeniden dene.',
         'network-request-failed' => 'İnternet bağlantısı kurulamadı.',
@@ -123,7 +126,8 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
             enabled: !_saving,
             decoration: const InputDecoration(
               labelText: 'Yeni şifre',
-              helperText: 'En az 6 karakter',
+              helperText: PasswordPolicy.hint,
+              helperMaxLines: 3,
             ),
           ),
           const SizedBox(height: 10),

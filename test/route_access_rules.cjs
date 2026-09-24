@@ -1,7 +1,7 @@
 const {readFileSync}=require('node:fs');
 const {test,before,after,beforeEach}=require('node:test');
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
-const {doc,setDoc,getDoc,updateDoc,arrayUnion,arrayRemove,serverTimestamp,Timestamp,runTransaction}=require('firebase/firestore');
+const {collection,query,where,getDocs,doc,setDoc,getDoc,updateDoc,arrayUnion,arrayRemove,serverTimestamp,Timestamp,runTransaction}=require('firebase/firestore');
 let env;
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-tbt-access',firestore:{rules:readFileSync('firestore.rules','utf8')}});});
 after(async()=>{await env?.cleanup();});
@@ -86,4 +86,26 @@ test('bookmark does not grant route, album or chat access',async()=>{
  await assertSucceeds(setDoc(doc(db('outsider'),'users/outsider/saved_routes/r'),{routeId:'r',createdAt:serverTimestamp()}));
  await assertFails(getDoc(doc(db('outsider'),'travel_plans/r')));
  await assertFails(getDoc(doc(db('outsider'),'travel_plans/r/album/a')));
+});
+
+test('editorial IDs are reserved while personal copies remain allowed',async()=>{
+ const data={...base(),visibility:'private',isPublic:false,joinEnabled:false,joinAudience:'private',hasSchedule:false,invitedIds:[]};
+ await assertFails(setDoc(doc(db('owner'),'travel_plans/tbt_ready_fake'),data));
+ await assertSucceeds(setDoc(doc(db('owner'),'travel_plans/personal_copy'),data));
+});
+
+test('public editorial routes without participants are discoverable but absent from personal plans',async()=>{
+ await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'travel_plans/tbt_ready_example'),{
+  ...base(),memberIds:[],invitedIds:[],joinEnabled:false,hasSchedule:false,discoverPublished:true
+ }));
+ const discover=await assertSucceeds(getDocs(query(collection(db('owner'),'travel_plans'),where('isPublic','==',true))));
+ if(!discover.docs.some(d=>d.id==='tbt_ready_example')) throw Error('Editorial route missing from Discover');
+ const mine=await assertSucceeds(getDocs(query(collection(db('owner'),'travel_plans'),where('memberIds','array-contains','owner'))));
+ if(mine.docs.some(d=>d.id==='tbt_ready_example')) throw Error('Editorial route leaked into personal plans');
+ await assertSucceeds(getDoc(doc(db('outsider'),'travel_plans/tbt_ready_example')));
+});
+test('update policy is readable before sign-in but cannot be changed by clients',async()=>{
+ await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'app_config/update_policy'),{androidMinimumBuild:0,iosMinimumVersion:'0.0.0'}));
+ await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'app_config/update_policy')));
+ await assertFails(setDoc(doc(db('owner'),'app_config/update_policy'),{androidMinimumBuild:99999}));
 });

@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /app_config/update_policy { allow read: if true; allow write: if false; }
     function signedIn() { return request.auth != null; }
     function isAdmin() { return signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com'; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
@@ -538,7 +539,7 @@ service cloud.firestore {
              (audience(d) == 'followers' && d.get('visibility','private') == 'followers'))));
       }
       allow read: if routeVisible(resource.data);
-      allow create: if signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&
+      allow create: if !planId.matches('tbt_ready_.*') && signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&
         request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
         request.resource.data.memberIds.hasAny([request.auth.uid]) &&
         request.resource.data.spotIds is list && request.resource.data.spotIds.size() >= 1 &&

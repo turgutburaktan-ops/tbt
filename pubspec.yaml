@@ -1,12 +1,14 @@
 name: best_photo_spot
 description: Smart photography assistant MVP.
 publish_to: "none"
-version: 1.0.31+59
+version: 1.0.32+60
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
 
 dependencies:
+  in_app_update: 5.0.0
+  package_info_plus: 9.0.1
   app_tracking_transparency: ^2.0.7
   firebase_core: 4.13.0
   firebase_crashlytics: ^5.0.0

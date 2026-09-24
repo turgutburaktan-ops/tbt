@@ -1,3 +1,4 @@
+import 'password_policy.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,6 +30,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    if (!PasswordPolicy.accepts(password)) throw Exception(PasswordPolicy.message);
     try {
       return await _auth.createUserWithEmailAndPassword(
         email: email.trim(),

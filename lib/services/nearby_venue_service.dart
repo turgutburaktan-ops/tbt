@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -241,6 +242,7 @@ class NearbyVenueService {
 
   double? _cityLatitude, _cityLongitude, _south, _west, _north, _east;
   String? _cityName;
+  final selectedCityChanges = ValueNotifier<String?>(null);
   int _cityRevision = 0;
   Future<void> _citySaveQueue = Future.value();
   static const _cityPreferenceKey = 'venue_selected_city_v1';
@@ -270,6 +272,7 @@ class NearbyVenueService {
       _west = (d['west'] as num?)?.toDouble();
       _north = (d['north'] as num?)?.toDouble();
       _east = (d['east'] as num?)?.toDouble();
+      selectedCityChanges.value = name;
       return name;
     } catch (_) {
       return null;
@@ -431,6 +434,7 @@ class NearbyVenueService {
     _north = north;
     _east = east;
     _persistCity();
+    selectedCityChanges.value = _cityName;
   }
 
   void useCurrentCity() {
@@ -442,6 +446,7 @@ class NearbyVenueService {
     _north = null;
     _east = null;
     _persistCity();
+    selectedCityChanges.value = _cityName;
   }
 
   Future<List<NearbyVenue>> nearby({

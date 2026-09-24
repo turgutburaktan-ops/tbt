@@ -1,3 +1,4 @@
+import 'widgets/app_update_gate.dart';
 import 'screens/admin_records_screen.dart';
 import 'services/video_audio_session.dart';
 
@@ -339,7 +340,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
         return MediaQuery(
           data: media.copyWith(textScaler: TextScaler.linear(clampedScale)),
-          child: child ?? const SizedBox.shrink(),
+          child: AppUpdateGate(child: child ?? const SizedBox.shrink()),
         );
       },
       routes: {

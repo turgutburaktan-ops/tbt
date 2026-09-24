@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TravelPlan {
   final String id;
+  bool get isCurated => id.startsWith('tbt_ready_');
   final String ownerId;
   final String ownerName;
   final bool discoverPublished;
