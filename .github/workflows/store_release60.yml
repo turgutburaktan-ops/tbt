@@ -1,0 +1,32 @@
+name: Publish TBT 1.0.32 (60) to both stores
+on:
+  push:
+    branches: [codex/ready-routes-20260922]
+    paths: ['.github/workflows/store_release60.yml']
+permissions:
+  contents: read
+concurrency:
+  group: tbt-release60
+  cancel-in-progress: false
+jobs:
+  android:
+    uses: ./.github/workflows/android_play_release60.yml
+    secrets: inherit
+  ios:
+    uses: ./.github/workflows/ios_testflight_release60.yml
+    secrets: inherit
+  submit-ios:
+    needs: ios
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Submit verified build 60 to App Review
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build60.cjs
