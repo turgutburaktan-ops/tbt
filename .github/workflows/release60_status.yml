@@ -1,0 +1,25 @@
+name: Inspect stores before release 60
+on:
+  push:
+    branches: [codex/ready-routes-20260922]
+    paths: ['.github/workflows/release60_status.yml', 'tool/store_status60.cjs']
+permissions:
+  contents: read
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read Google Play tracks
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/play_release_status.cjs
+      - name: Read App Store versions
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/store_status60.cjs
