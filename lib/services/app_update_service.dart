@@ -56,7 +56,8 @@ class AppUpdateService extends ChangeNotifier with WidgetsBindingObserver {
     if (!force && _checkedAt != null && DateTime.now().difference(_checkedAt!) < const Duration(hours: 6)) return;
     _checking = true;
     try {
-      final info = await PackageInfo.fromPlatform();
+      final info = await PackageInfo.fromPlatform().timeout(const Duration(seconds: 8));
+      if (_disposed) return;
       StoreUpdateOffer? next;
       if (defaultTargetPlatform == TargetPlatform.android) {
         // Direct APK installs are intentionally outside this feature.
@@ -76,6 +77,7 @@ class AppUpdateService extends ChangeNotifier with WidgetsBindingObserver {
           next = StoreUpdateOffer(id: 'android-$available',
             required: requiresAndroidUpdate(int.parse(info.buildNumber), available, minimum is int ? minimum : 0),
             downloaded: update.installStatus == InstallStatus.downloaded);
+          if (_disposed) return;
           _downloads ??= InAppUpdate.installUpdateListener.listen((status) {
             if (status == InstallStatus.downloaded && !_disposed && _android?.availableVersionCode != null) {
               offer = StoreUpdateOffer(id: 'android-${_android!.availableVersionCode}', required: offer?.required ?? false, downloaded: true);
@@ -105,7 +107,7 @@ class AppUpdateService extends ChangeNotifier with WidgetsBindingObserver {
           required: minimum is String && requiresIosUpdate(info.version,version,minimum));
       }
       _checkedAt = DateTime.now();
-      if (next != null && !next.required && !next.downloaded) {
+      if (next != null && !next.required) {
         final prefs = await SharedPreferences.getInstance();
         final postponed = prefs.getInt('update_later_${next.id}');
         if (postponed != null && DateTime.now().millisecondsSinceEpoch - postponed < const Duration(days:1).inMilliseconds) next = null;
