@@ -1,0 +1,27 @@
+name: Verify store update policy
+on:
+  push:
+    branches: [codex/ready-routes-20260922]
+    paths:
+      - lib/services/app_update*
+      - lib/widgets/app_update_gate.dart
+      - lib/main.dart
+      - pubspec.yaml
+      - test/app_update_policy_test.dart
+      - .github/workflows/store_updates_check.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/app_update_policy.dart lib/services/app_update_service.dart lib/widgets/app_update_gate.dart lib/main.dart
+      - run: flutter test test/app_update_policy_test.dart test/route_selection_modes_test.dart test/route_create_test.dart
+      - name: Record resolved update dependencies
+        run: python3 -c "import pathlib; print(pathlib.Path('pubspec.lock').read_text())"

@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /app_config/update_policy { allow read: if true; allow write: if false; }
     function signedIn() { return request.auth != null; }
     function isAdmin() { return signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com'; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }

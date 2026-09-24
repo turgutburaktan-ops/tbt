@@ -104,3 +104,8 @@ test('public editorial routes without participants are discoverable but absent f
  if(mine.docs.some(d=>d.id==='tbt_ready_example')) throw Error('Editorial route leaked into personal plans');
  await assertSucceeds(getDoc(doc(db('outsider'),'travel_plans/tbt_ready_example')));
 });
+test('update policy is readable before sign-in but cannot be changed by clients',async()=>{
+ await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'app_config/update_policy'),{androidMinimumBuild:0,iosMinimumVersion:'0.0.0'}));
+ await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'app_config/update_policy')));
+ await assertFails(setDoc(doc(db('owner'),'app_config/update_policy'),{androidMinimumBuild:99999}));
+});
