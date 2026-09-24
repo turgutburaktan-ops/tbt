@@ -1027,7 +1027,9 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                         await _add();
                         refresh(() {});
                       },
-                      stopBuilder: _stopRow,
+                      stopBuilder: (i) => _stopRow(i, onChanged: () {
+                        if (c.mounted) refresh(() {});
+                      }),
                       onReorder: (a, b) {
                         setState(() {
                           if (b > a) b--;
@@ -1484,7 +1486,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     ],
   );
 
-  Widget _stopRow(int i) {
+  Widget _stopRow(int i, {VoidCallback? onChanged}) {
     final stop = _stops[i];
     final leg =
         _itinerary != null && i > 0 && i - 1 < _itinerary!.legs.length
@@ -1596,7 +1598,10 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 ),
               IconButton(
                 tooltip: 'Durağı kaldır',
-                onPressed: _busy ? null : () => _removeSpot(stop),
+                onPressed: _busy ? null : () {
+                  _removeSpot(stop, onUndo: onChanged);
+                  onChanged?.call();
+                },
                 icon: const Icon(
                   Icons.close,
                   size: 18,

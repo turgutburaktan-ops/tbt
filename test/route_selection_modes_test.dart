@@ -33,7 +33,7 @@ void main() {
   expect(tester.widget<RouteEditorMap>(find.byType(RouteEditorMap)).stops.map((p)=>p.id), ['İlk durak','İkinci durak']);
   await tester.tap(find.text('Seçilen duraklar · 2'));
   await tester.pump();
-  tester.widget<SliverReorderableList>(find.byType(SliverReorderableList)).onReorder(0,2);
+  tester.widget<SliverReorderableList>(find.byType(SliverReorderableList)).onReorder!(0,2);
   await tester.pump();
   expect(stops.map((p)=>p.id), ['İkinci durak','İlk durak']);
   await tester.tap(find.descendant(of:find.byKey(const ValueKey('İlk durak')),matching:find.byType(IconButton)));
