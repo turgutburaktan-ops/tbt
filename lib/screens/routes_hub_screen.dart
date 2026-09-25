@@ -518,6 +518,55 @@ class RoutePreviewCard extends StatelessWidget {
             ),
           )
         : FirebaseMediaImage(imageUrl: image, fit: BoxFit.cover);
+    if (plan.isCurated) {
+      final minutes = plan.travelMinutes > 0 ? plan.travelMinutes : plan.durationHours * 60;
+      final duration = minutes % 60 == 0 ? '${minutes ~/ 60} saat'
+          : minutes > 60 ? '${minutes ~/ 60} sa ${minutes % 60} dk' : '$minutes dk';
+      final difficulty = (plan.dayPlan['difficulty'] ?? '').toString();
+      return Material(
+        color: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.large),
+          side: const BorderSide(color: AppColors.border)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(onTap: () => _open(context), child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Stack(children: [
+              SizedBox(height: 175, width: double.infinity, child: thumbnail),
+              Positioned(top: 10, left: 12, child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                child: const Text('Hazır rota', style: TextStyle(color: Colors.white, fontSize: 12)))),
+              Positioned(top: 6, right: 6, child: UseReadyRouteButton(plan: plan, saveOnly: true)),
+            ]),
+            Padding(padding: const EdgeInsets.all(16), child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(plan.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                const Text('TBT', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                const SizedBox(height: 10),
+                Row(children: [
+                  Icon(routeTransportIcon(plan.transport), size: 18, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(
+                    '${plan.distanceKm > 0 ? '${plan.distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km · ' : ''}$duration · ${plan.spotIds.length} durak',
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13))),
+                ]),
+                if (difficulty.isNotEmpty && ['Yürüyüş', 'Bisiklet'].contains(plan.transport)) ...[
+                  const SizedBox(height: 10),
+                  Align(alignment: Alignment.centerLeft, child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(border: Border.all(color: AppColors.warning), borderRadius: BorderRadius.circular(20)),
+                    child: Text('$difficulty · Tahmini zorluk', style: const TextStyle(color: AppColors.warning, fontSize: 12)))),
+                ],
+                const SizedBox(height: 14),
+                UseReadyRouteButton(plan: plan),
+              ])),
+          ])),
+      );
+    }
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

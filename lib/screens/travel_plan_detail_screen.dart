@@ -1,3 +1,4 @@
+import '../widgets/use_ready_route_button.dart';
 import '../widgets/route_bookmark_button.dart';
 import '../widgets/route_publish_button.dart';
 import '../widgets/route_stop_suggestion.dart';
@@ -577,7 +578,10 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                       padding: const EdgeInsets.all(16),
                       children: [
                         if (_owned) RoutePublishButton(plan: plan),
-                        RouteBookmarkButton(routeId: plan.id),
+                        if (plan.isCurated) ...[
+                          UseReadyRouteButton(plan: plan),
+                          const SizedBox(height: 12),
+                        ] else RouteBookmarkButton(routeId: plan.id),
                         if (stops.any(
                           (s) => (s['imageUrl'] ?? '').toString().isNotEmpty,
                         ))

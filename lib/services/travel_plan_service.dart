@@ -63,6 +63,7 @@ class TravelPlanService {
     int estimatedBudget = 0,
     String weatherSummary = '',
     bool isPublic = false,
+    bool discoverPublished = false,
     String? visibility,
     bool? allowJoinRequests,
     String? joinAudience,
@@ -124,7 +125,7 @@ class TravelPlanService {
           )
           .toList(growable: false),
       'memberIds': [user.uid],
-      'discoverPublished': false,
+      'discoverPublished': discoverPublished && audience == 'public',
       if (meetingPoint.isNotEmpty) 'meetingPoint': meetingPoint,
       ...access.fields,
       'invitedIds': <String>[],

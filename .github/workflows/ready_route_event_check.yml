@@ -1,0 +1,20 @@
+name: Verify ready route event flow
+on:
+  push:
+    branches: [codex/ready-route-events-20260925]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/ready_route_event_screen.dart lib/screens/routes_hub_screen.dart lib/screens/travel_plan_detail_screen.dart lib/widgets/use_ready_route_button.dart lib/services/travel_plan_service.dart
+      - run: flutter test test/ready_route_event_test.dart test/ready_route_city_test.dart test/route_access_test.dart test/route_geometry_test.dart
