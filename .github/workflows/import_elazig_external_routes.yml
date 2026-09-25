@@ -1,0 +1,29 @@
+name: Import four sourced Elazig routes
+on:
+  push:
+    branches: [codex/elazig-external-routes-20260925]
+    paths: ['functions/scripts/elazig_external_routes.json', 'functions/scripts/publish_elazig_external_routes.cjs', 'test/external_ready_routes.test.cjs', '.github/workflows/import_elazig_external_routes.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tbt-elazig-external-routes
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test test/external_ready_routes.test.cjs
+      - run: node functions/scripts/publish_elazig_external_routes.cjs
+      - run: npm install --prefix /tmp/tbt-route-import firebase-admin@13.0.0
+      - name: Create missing routes and verify live documents
+        env:
+          NODE_PATH: /tmp/tbt-route-import/node_modules
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PUBLISH_EXTERNAL_ROUTES: 'true'
+        run: node functions/scripts/publish_elazig_external_routes.cjs
