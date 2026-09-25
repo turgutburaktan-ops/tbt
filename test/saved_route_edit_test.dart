@@ -54,6 +54,8 @@ void main() {
     expect(map.itinerary!.points.length, (day['geometry'] as List).length);
     expect(map.itinerary!.meters, greaterThan(10000));
     expect(find.text('0.0 km · 0 dk yol'), findsNothing);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
     expect(find.text('Bitiş'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
