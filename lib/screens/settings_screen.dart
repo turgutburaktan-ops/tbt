@@ -1,3 +1,4 @@
+import '../services/ad_consent_service.dart';
 import '../widgets/profile_name_link.dart';
 import '../models/profile_identity.dart';
 import 'profile_history_screen.dart';
@@ -506,6 +507,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     _section('Gizlilik'),
+                    AnimatedBuilder(
+                      animation: AdConsentService.instance,
+                      builder: (context, _) {
+                        final consent = AdConsentService.instance;
+                        if (!consent.privacyOptionsRequired) return const SizedBox.shrink();
+                        return _tile(
+                          Icons.privacy_tip_outlined,
+                          'Reklam gizliliği',
+                          consent.showingOptions
+                              ? 'Tercihler açılıyor…'
+                              : 'Reklam izinlerini görüntüle ve değiştir',
+                          () async {
+                            if (consent.showingOptions) return;
+                            final success = await consent.showPrivacyOptions();
+                            if (!success && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Reklam tercihleri açılamadı. Lütfen tekrar dene.')),
+                              );
+                            }
+                          },
+                        );
+                      },
+                    ),
                     _tile(
                       Icons.chat_outlined,
                       'Mesaj ayarları',
@@ -862,3 +886,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   );
 }
+

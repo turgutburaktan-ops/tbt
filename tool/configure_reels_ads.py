@@ -28,6 +28,8 @@ def configure(platform):
         s += '\n'+Path('tool/native_reels/android.txt').read_text()
         p.write_text(s)
     elif platform == 'ios':
+        from configure_admob_privacy import configure as configure_privacy
+        configure_privacy()
         p = Path('ios/Runner/AppDelegate.swift')
         s = p.read_text()
         if '// TBT Reels native ad factory' in s:

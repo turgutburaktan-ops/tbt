@@ -11,7 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'services/ad_consent_service.dart';
 
 import 'firebase_options.dart';
 import 'screens/admin_business_premium_screen.dart';
@@ -146,21 +146,10 @@ Future<void> _initializeDeferredBootstrapServices() async {
       }
     }
   }
+  // Ads and notification prompts wait for the privacy forms to finish.
+  await AdConsentService.instance.initialize();
   if (!_trackingAuthorizationGate.isCompleted) {
     _trackingAuthorizationGate.complete();
-  }
-
-  if (!kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS)) {
-    try {
-      await MobileAds.instance.initialize().timeout(const Duration(seconds: 8));
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('Ads initialization skipped: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
-    }
   }
 
   try {

@@ -1,5 +1,7 @@
 import '../theme/app_theme.dart';
 import 'dart:io';
+import 'dart:async';
+import '../services/ad_consent_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -38,18 +40,44 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS) && _unitId.isNotEmpty) {
+    AdConsentService.instance.addListener(_consentChanged);
+    unawaited(_load());
+  }
+
+  void _consentChanged() {
+    if (!AdConsentService.instance.canRequestAds) {
+      final previous = _ad;
+      _ad = null;
+      if (mounted) setState(() => _loaded = false);
+      previous?.dispose();
+    } else {
+      unawaited(_load());
+    }
+  }
+
+  Future<void> _load() async {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS) || _unitId.isEmpty) return;
+    if (!await AdConsentService.instance.waitUntilReady() || !mounted || _ad != null) return;
+    final generation = AdConsentService.instance.generation;
+    {
       final ad = NativeAd(
         adUnitId: _unitId,
         request: const AdRequest(),
         listener: NativeAdListener(
           onAdLoaded: (ad) {
-            if (!mounted) return;
+            if (!mounted || !identical(_ad, ad) ||
+                !AdConsentService.instance.canRequestAds ||
+                generation != AdConsentService.instance.generation) {
+              ad.dispose();
+              return;
+            }
             setState(() => _loaded = true);
           },
           onAdFailedToLoad: (ad, error) {
             ad.dispose();
-            if (mounted) setState(() => _loaded = false);
+            if (mounted && identical(_ad, ad)) {
+              setState(() { _ad = null; _loaded = false; });
+            }
           },
         ),
         nativeTemplateStyle: NativeTemplateStyle(
@@ -83,12 +111,20 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
         ),
       );
       _ad = ad;
-      ad.load();
+      try {
+        await ad.load();
+      } catch (_) {
+        ad.dispose();
+        if (mounted && identical(_ad, ad)) {
+          setState(() { _ad = null; _loaded = false; });
+        }
+      }
     }
   }
 
   @override
   void dispose() {
+    AdConsentService.instance.removeListener(_consentChanged);
     _ad?.dispose();
     super.dispose();
   }
