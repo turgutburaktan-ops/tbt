@@ -4,7 +4,7 @@ service firebase.storage {
     match /event_chat/{eventId}/{uid}/{messageId}/{fileName} {
       function eventChatParticipant() {
         let e = firestore.get(/databases/(default)/documents/social_events/$(eventId)).data;
-        return request.auth != null && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));
+        return signedIn() && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));
       }
       function eventChatUpload() {
         return request.resource != null && request.resource.size > 0 &&
@@ -57,13 +57,12 @@ service firebase.storage {
 
     // User media stays namespaced by Firebase Auth uid. This keeps existing
     // public feed/profile/chat rendering intact while preventing cross-account writes.
-    match /users/{uid}/{allPaths=**} {
+    match /users/{uid}/{folder}/{allPaths=**} {
       allow read: if resource.metadata.get('moderationBlocked', '') != 'true';
-      allow create: if isOwner(uid) && safeMediaWrite() && !request.resource.metadata.keys().hasAny(['moderationBlocked']) &&
-        (!allPaths.matches('posts/[^/]+') || !firestore.exists(/databases/(default)/documents/photo_moderation/$(allPaths.split('/')[1].split('.')[0]))) &&
-        (!allPaths.matches('event_memories/[^/]+/[^/]+') || !firestore.exists(/databases/(default)/documents/photo_moderation/$(allPaths.split('/')[2].split('.')[0])));
+      allow create: if resource == null && isOwner(uid) && safeMediaWrite() && !request.resource.metadata.keys().hasAny(['moderationBlocked']) &&
+        (!(folder in ['posts','event_memories']) || !firestore.exists(/databases/(default)/documents/photo_moderation/$(request.resource.name.replace('^.*/', '').replace('[.].*', ''))));
       allow update: if isOwner(uid) && safeMediaWrite() && resource.metadata.get('moderationBlocked', '') != 'true' &&
-        !request.resource.metadata.keys().hasAny(['moderationBlocked']) && !allPaths.matches('(posts|event_memories)/.*');
+        !request.resource.metadata.keys().hasAny(['moderationBlocked']) && !(folder in ['posts','event_memories']);
       allow delete: if isOwner(uid) && resource.metadata.get('moderationBlocked', '') != 'true';
     }
 

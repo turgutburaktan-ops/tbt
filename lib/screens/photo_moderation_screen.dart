@@ -90,7 +90,8 @@ class _PhotoModerationScreenState extends State<PhotoModerationScreen> {
           : 'Fotoğraflar paylaşımdan sonra denetlenir. Gizlenen veya ihlal olarak değerlendirilen paylaşımlarına buradan itiraz edebilirsin.')),
         if (widget.admin) Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: DropdownButton<String>(
           isExpanded: true, value: _filter,
-          items: const [DropdownMenuItem(value: 'review', child: Text('İncelenecek fotoğraflar')),
+          items: const [DropdownMenuItem(value: 'scanning', child: Text('Denetimi bekleyenler / servis hataları')),
+            DropdownMenuItem(value: 'review', child: Text('İncelenecek fotoğraflar')),
             DropdownMenuItem(value: 'appeals', child: Text('Fotoğraf itirazları')),
             DropdownMenuItem(value: 'confirmed', child: Text('Doğrulanmış ihlaller')),
             DropdownMenuItem(value: 'dismissed', child: Text('Kaldırılan ihlaller')),

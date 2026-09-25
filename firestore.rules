@@ -166,7 +166,7 @@ service cloud.firestore {
           d.originalVideoStoragePath == 'users/' + request.auth.uid + '/posts/' + postId + '.mp4'
         ));
     }
-    function validPostCreate() {
+    function validPostCreate(postId) {
       return signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&
         request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&
         request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120 &&
@@ -175,7 +175,7 @@ service cloud.firestore {
         request.resource.data.get('sourceType', 'post') in ['post','event_memory'] &&
         (request.resource.data.get('mediaType', 'image') != 'image' || (
           request.resource.data.storagePath is string &&
-          request.resource.data.storagePath.matches('users/' + request.auth.uid + '/(posts|event_memories)/[a-zA-Z0-9_./-]+') &&
+          request.resource.data.storagePath.matches('users/' + request.auth.uid + '/(posts|event_memories/[a-zA-Z0-9_-]+)/' + postId + '[.](jpg|jpeg|png|webp|heic|heif)') &&
           request.resource.data.imageUrl is string &&
           request.resource.data.imageUrl.matches('https://firebasestorage[.]googleapis[.]com/v0/b/en-iyi-cekim-noktasi[.]firebasestorage[.]app/o/' + request.resource.data.storagePath.replace('/', '%2F').replace('[.]', '[.]') + '[?]alt=media&token=[a-zA-Z0-9,-]+')
         ));
@@ -442,7 +442,7 @@ service cloud.firestore {
     match /photo_moderation_appeal_keys/{id} { allow read, write: if false; }
     match /posts/{postId} {
       allow read: if true;
-      allow create: if !exists(/databases/$(database)/documents/photo_moderation/$(postId)) && validPostCreate() && validBusinessPost() && validPostMusic(postId);
+      allow create: if !exists(/databases/$(database)/documents/photo_moderation/$(postId)) && validPostCreate(postId) && validBusinessPost() && validPostMusic(postId);
       allow update: if isAdmin() || validPostOwnerUpdate();
       allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }

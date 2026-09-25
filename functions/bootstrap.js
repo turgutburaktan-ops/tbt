@@ -88,4 +88,4 @@ Object.assign(exports, require('./business_menu_bulk'));
 Object.assign(exports, require('./business_events'));
 
 const photoModeration = require('./photo_moderation');
-for (const name of ['moderatePhotoPost','processPhotoModeration','retryPhotoModeration','reviewPhotoModeration','reviewPhotoAccount','appealPhotoModeration','appealClosedPhotoAccount','photoModerationPreview']) exports[name] = photoModeration[name];
+for (const name of ['moderatePhotoPost','processPhotoModeration','retryPhotoModeration','reviewPhotoModeration','reviewPhotoAccount','appealPhotoModeration','appealClosedPhotoAccount','photoModerationPreview','photoModerationHealth']) exports[name] = photoModeration[name];

@@ -39,7 +39,7 @@ jobs:
       - name: Verify transactions and security rules against emulators
         env:
           NODE_PATH: /tmp/photo-tests/node_modules
-        run: /tmp/photo-tests/node_modules/.bin/firebase emulators:exec --config firebase.photo-tests.json --only firestore,auth,storage --project demo-tbt "node tool/test_photo_moderation.cjs && node tool/test_photo_moderation_rules.cjs" --non-interactive
+        run: /tmp/photo-tests/node_modules/.bin/firebase emulators:exec --config firebase.photo-tests.json --only firestore,auth,storage --project demo-tbt "node tool/test_social_routes.cjs && node tool/test_comment_permissions.cjs && node tool/test_photo_moderation.cjs && node tool/test_photo_moderation_rules.cjs" --non-interactive
   deploy:
     needs: [app, backend]
     runs-on: ubuntu-latest
@@ -69,4 +69,5 @@ jobs:
         run: |
           node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('firebase.json'));c.storage=[{bucket:'en-iyi-cekim-noktasi.firebasestorage.app',rules:'storage.rules'}];fs.writeFileSync('firebase.json',JSON.stringify(c));"
       - name: Deploy rules and only the new moderation functions
-        run: firebase deploy --only firestore:rules,storage,functions:moderatePhotoPost,functions:processPhotoModeration,functions:retryPhotoModeration,functions:reviewPhotoModeration,functions:reviewPhotoAccount,functions:appealPhotoModeration,functions:appealClosedPhotoAccount,functions:photoModerationPreview --project en-iyi-cekim-noktasi --non-interactive
+        run: firebase deploy --only firestore:rules,storage,functions:moderatePhotoPost,functions:processPhotoModeration,functions:retryPhotoModeration,functions:reviewPhotoModeration,functions:reviewPhotoAccount,functions:appealPhotoModeration,functions:appealClosedPhotoAccount,functions:photoModerationPreview,functions:photoModerationHealth --project en-iyi-cekim-noktasi --non-interactive
+      - run: node tool/verify_photo_moderation_live.cjs

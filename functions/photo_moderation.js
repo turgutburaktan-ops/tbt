@@ -251,3 +251,12 @@ exports.photoModerationPreview=onCall(opts,async r=>{
 });
 // Non-function export for emulator tests; bootstrap only exports the named handlers below.
 exports.createEngine=createEngine;
+exports.photoModerationHealth=onCall(opts,async r=>{
+  admin(r);
+  const routes=await getFirestore().collection('travel_plans').where('externalRoutePhoto.version','==',1).limit(1).get();
+  const path=routes.docs[0]?.data().externalRoutePhoto?.storagePath;
+  if(!path || !path.startsWith('users/')) throw new HttpsError('failed-precondition','Deneme için kaynak rota fotoğrafı bulunamadı.');
+  const scores=await safeSearch(path);
+  classify(scores); // A real runtime Vision request, no public test post or moderation change.
+  return {ok:true,provider:'vision-safe-search',scope:'photo-posts',strikeThreshold:5,adminApprovalRequired:true};
+});
