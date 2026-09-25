@@ -1,11 +1,11 @@
 'use strict';
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
-const definitions = require('./elazig_external_routes.json');
+const definitions = require(process.env.ROUTE_MANIFEST || './elazig_external_routes.json');
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
 function validate(routes) {
-  assert.equal(routes.length, 4);
+  assert(routes.length > 0 && routes.length <= 30);
   assert.equal(new Set(routes.map(r => r.id)).size, routes.length);
   for (const r of routes) {
     assert.match(r.id, /^tbt_ready_firat_elazig_[a-z_]+$/);

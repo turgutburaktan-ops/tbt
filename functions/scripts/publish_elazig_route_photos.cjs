@@ -1,14 +1,15 @@
 'use strict';
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
-const photos = require('./elazig_route_photos.json');
-const routes = require('./elazig_external_routes.json');
+const photos = require(process.env.ROUTE_PHOTO_MANIFEST || './elazig_route_photos.json');
+const routes = require(process.env.ROUTE_MANIFEST || './elazig_external_routes.json');
 const creditLine = '\nKapak fotoğrafı: Fırat’ı Keşfet (rota kaynak sayfası).';
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 
 async function main() {
-  assert.equal(photos.length, 4);
-  assert.equal(new Set(photos.map(p=>p.id)).size,4);
+  assert.equal(photos.length, routes.length);
+  assert(photos.length > 0 && photos.length <= 30);
+  assert.equal(new Set(photos.map(p=>p.id)).size,photos.length);
   for (const p of photos) {
     assert(routes.some(r=>r.id===p.id));
     assert.equal(new URL(p.sourceUrl).origin,'https://firatikesfet.com');
@@ -16,7 +17,7 @@ async function main() {
     assert.match(p.sha256,/^[a-f0-9]{64}$/);
   }
   if (process.env.PUBLISH_ROUTE_PHOTOS !== 'true') {
-    console.log('VERIFIED_ROUTE_PHOTO_MANIFEST 4'); return;
+    console.log('VERIFIED_ROUTE_PHOTO_MANIFEST '+photos.length); return;
   }
   const admin = require('firebase-admin');
   const account = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -90,6 +91,6 @@ async function main() {
     assert.deepEqual(restored,old,'An unrelated route field changed');
     console.log('ROUTE_PHOTO_LIVE '+JSON.stringify({id:live[i].id,title:data.title,sha256:prepared[i].sha256}));
   }
-  console.log('PUBLISHED_AND_VERIFIED_ROUTE_PHOTOS 4');
+  console.log('PUBLISHED_AND_VERIFIED_ROUTE_PHOTOS '+photos.length);
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1;});
