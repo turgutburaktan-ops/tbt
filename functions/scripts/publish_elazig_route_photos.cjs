@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const photos = require(process.env.ROUTE_PHOTO_MANIFEST || './elazig_route_photos.json');
 const routes = require(process.env.ROUTE_MANIFEST || './elazig_external_routes.json');
-const creditLine = '\nKapak fotoğrafı: Fırat’ı Keşfet (rota kaynak sayfası).';
+const {validatePhoto,creditLine}=require('./ready_route_sources.cjs');
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 
 async function main() {
@@ -12,8 +12,7 @@ async function main() {
   assert.equal(new Set(photos.map(p=>p.id)).size,photos.length);
   for (const p of photos) {
     assert(routes.some(r=>r.id===p.id));
-    assert.equal(new URL(p.sourceUrl).origin,'https://firatikesfet.com');
-    assert(new URL(p.sourceUrl).pathname.startsWith('/BackOffice/UploadImage/gallery/'));
+    validatePhoto(p,routes.find(r=>r.id===p.id));
     assert.match(p.sha256,/^[a-f0-9]{64}$/);
   }
   if (process.env.PUBLISH_ROUTE_PHOTOS !== 'true') {
@@ -34,9 +33,10 @@ async function main() {
     assert(response.headers.get('content-type')?.startsWith('image/'));
     const bytes=Buffer.from(await response.arrayBuffer());
     assert(bytes.length>10000 && bytes.length<2*1024*1024);
-    assert.equal(bytes.readUInt16BE(0),0xffd8);
+    const png=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
+    assert(png || bytes.readUInt16BE(0)===0xffd8,'Unsupported image format');
     assert.equal(hash(bytes),p.sha256,'Source photo has changed; review it again');
-    const storagePath=`users/${owner.uid}/ready_route_covers/${p.id}/${p.sha256}.jpg`;
+    const storagePath=`users/${owner.uid}/ready_route_covers/${p.id}/${p.sha256}.${png?'png':'jpg'}`;
     const file=bucket.file(storagePath);
     let token;
     if ((await file.exists())[0]) {
@@ -47,7 +47,7 @@ async function main() {
     } else {
       token=crypto.randomUUID();
       await file.save(bytes,{resumable:false,preconditionOpts:{ifGenerationMatch:0},metadata:{
-        contentType:'image/jpeg',cacheControl:'public,max-age=31536000,immutable',
+        contentType:png?'image/png':'image/jpeg',cacheControl:'public,max-age=31536000,immutable',
         metadata:{firebaseStorageDownloadTokens:token,sourceSha256:p.sha256,sourceUrl:p.sourceUrl,credit:p.credit}
       }});
     }
@@ -70,11 +70,11 @@ async function main() {
       const originalStops=data.stopSnapshots.map((s,n)=>({...s,imageUrl:definition.stopSnapshots[n].imageUrl}));
       assert.deepEqual(originalStops,definition.stopSnapshots);
       assert(!data.stopSnapshots[0].imageUrl || data.stopSnapshots[0].imageUrl===photo.imageUrl,'Existing cover conflict');
-      assert([definition.dayPlan.description,definition.dayPlan.description+creditLine].includes(data.dayPlan.description));
+      assert([definition.dayPlan.description,definition.dayPlan.description+creditLine(photo)].includes(data.dayPlan.description));
       before.push(data);
       tx.update(refs[i],{
         stopSnapshots:data.stopSnapshots.map((s,n)=>n===0?{...s,imageUrl:photo.imageUrl}:s),
-        'dayPlan.description':definition.dayPlan.description+creditLine,
+        'dayPlan.description':definition.dayPlan.description+creditLine(photo),
         externalRoutePhoto:{...photo,role:'route-cover',version:1},
         updatedAt:admin.firestore.Timestamp.now()
       });

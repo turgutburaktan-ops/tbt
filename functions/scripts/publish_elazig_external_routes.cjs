@@ -1,6 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const {routeRegion,inside,validatePhoto,creditLine}=require('./ready_route_sources.cjs');
 const definitions = require(process.env.ROUTE_MANIFEST || './elazig_external_routes.json');
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
@@ -8,8 +9,7 @@ function validate(routes) {
   assert(routes.length > 0 && routes.length <= 30);
   assert.equal(new Set(routes.map(r => r.id)).size, routes.length);
   for (const r of routes) {
-    assert.match(r.id, /^tbt_ready_firat_elazig_[a-z_]+$/);
-    assert.equal(r.city, 'Elazığ');
+    const region=routeRegion(r);
     assert(['Yürüyüş','Bisiklet'].includes(r.transport));
     assert(r.distanceKm > 0 && r.distanceKm < 100);
     assert(Number.isInteger(r.travelMinutes) && r.travelMinutes > 0);
@@ -18,10 +18,9 @@ function validate(routes) {
     assert.deepEqual(r.spotNames, r.stopSnapshots.map(s => s.name));
     assert.equal(new Set(r.spotIds).size, r.spotIds.length);
     for (const s of r.stopSnapshots) {
-      assert(s.id.startsWith('external_firat_'));
+      assert(s.id.startsWith(`external_${region.source}_`));
       assert(s.name && s.city === r.city);
-      assert(Number.isFinite(s.latitude) && s.latitude > 38 && s.latitude < 40);
-      assert(Number.isFinite(s.longitude) && s.longitude > 38 && s.longitude < 41);
+      assert(inside(s.latitude,s.longitude,region.bounds));
     }
     const day = r.dayPlan;
     assert.equal(day.signature, `${r.transport}|null,null|false|${r.stopSnapshots.map(s=>`${s.latitude},${s.longitude}`).join(';')}`);
@@ -30,8 +29,7 @@ function validate(routes) {
     assert.equal(day.roundTrip, false);
     assert(day.geometry.length > 10 && day.geometry.length <= 2000);
     for (const p of day.geometry) {
-      assert(Number.isFinite(p.lat) && p.lat > 38 && p.lat < 40);
-      assert(Number.isFinite(p.lng) && p.lng > 38 && p.lng < 41);
+      assert(inside(p.lat,p.lng,region.bounds));
     }
     for (const s of r.stopSnapshots) assert(day.geometry.some(p=>p.lat===s.latitude && p.lng===s.longitude));
     assert.equal(day.geometry[0].lat, r.stopSnapshots[0].latitude);
@@ -40,7 +38,6 @@ function validate(routes) {
     assert(day.legs.every(l=>Number.isFinite(l.meters)&&l.meters>0&&Number.isFinite(l.seconds)&&l.seconds>0));
     assert(Math.abs(day.legs.reduce((s,l)=>s+l.meters,0)/1000-r.distanceKm)<0.001);
     assert(Math.abs(day.legs.reduce((s,l)=>s+l.seconds,0)/60-r.travelMinutes)<0.001);
-    assert.equal(new URL(r.externalSource.url).hostname, 'firatikesfet.com');
     assert.match(r.externalSource.sha256, /^[a-f0-9]{64}$/);
     assert(day.description.includes(r.externalSource.url));
     assert(['Kolay','Orta','Zor'].includes(day.difficulty));
@@ -89,11 +86,11 @@ async function publish() {
     if(data.externalRoutePhoto?.version===1) {
       const photo=data.externalRoutePhoto;
       assert.equal(photo.id,readback[i].id);
-      assert.equal(new URL(photo.sourceUrl).origin,'https://firatikesfet.com');
+      validatePhoto(photo,expected);
       assert.equal(new URL(photo.imageUrl).hostname,'firebasestorage.googleapis.com');
       assert.equal(data.stopSnapshots[0].imageUrl,photo.imageUrl);
       comparable.stopSnapshots=data.stopSnapshots.map((s,n)=>n===0?{...s,imageUrl:expected.stopSnapshots[0].imageUrl}:s);
-      assert.equal(data.dayPlan.description,expected.dayPlan.description+'\nKapak fotoğrafı: Fırat’ı Keşfet (rota kaynak sayfası).');
+      assert.equal(data.dayPlan.description,expected.dayPlan.description+creditLine(photo));
       comparable.dayPlan={...data.dayPlan,description:expected.dayPlan.description};
     }
     for(const [key,value] of Object.entries(expected)) if(key!=='id') assert.deepEqual(comparable[key],value);

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "tbt_ready_firat_malatya_arslantepe_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_5914d5b7-cabe-4e0e-af2c-504cedd36ea42N4A5435.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/malatya/arslantepe-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "62e5ed60800c22d1ddfad993b47430694a412489b73d13e357d18f0b421083b7"
+  },
+  {
+    "id": "tbt_ready_firat_malatya_battalgazi_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_e1ed749a-501b-4476-8c00-4014c83ac24dDSCN5490.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/malatya/battalgazi-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "10dae9120920adf60a4123664c698446150729c8666810326ecafbe3d1c5b97f"
+  },
+  {
+    "id": "tbt_ready_firat_tunceli_ovacik_kirk_merdiven_selaleleri_rotasi",
+    "sourceUrl": "https://www.kulturportali.gov.tr/repoKulturPortali/small/SehirRehberi//GezilecekYer/20260122162307690_vlcsnap%202026%2001%2022%2014h51m53s414.png?format=jpg&quality=50",
+    "sourcePage": "https://www.kulturportali.gov.tr/turkiye/tunceli/gezilecekyer/kirk-merdiven-selaleleri",
+    "credit": "Tunceli İl Kültür ve Turizm Müdürlüğü Arşivi / Kültür Portalı",
+    "sha256": "c77be5667daa767974e98b9a010d1d250949815570930200ff0224aeb6a29db8"
+  },
+  {
+    "id": "tbt_ready_firat_bingol_asagi_carsi_bisiklet_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_a8d07c92-74e2-4cc6-bb5a-c92c897c9fc2Ekran%20Al%C4%B1nt%C4%B1s%C4%B1.PNG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/bingol/asagi-carsi-bisiklet-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "ad79fd3f0a93981058d4002a6d75b49a10ae892fb455ef181730c1181257848c"
+  },
+  {
+    "id": "tbt_ready_kral_diyarbakir_cermik_merkez_kultur_gezi_rotasi",
+    "sourceUrl": "https://diyarbakirkralyolu.com/wp-content/uploads/2026/02/Cermik_Merkez_Kultur_Gezi_RotasY_8.jpg",
+    "sourcePage": "https://diyarbakirkralyolu.com/rota/cermik-merkez-kultur-gezi-rotasi/",
+    "credit": "Diyarbakır Kral Yolu",
+    "sha256": "c9feef63d7fe24343f753fa97800f9f7f709b83eeaac176f210e571fb1523a93"
+  }
+]
