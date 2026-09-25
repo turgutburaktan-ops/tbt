@@ -24,15 +24,21 @@ class _GoogleConsentGateway implements AdConsentGateway {
     return done.future.timeout(const Duration(seconds: 15));
   }
 
-  Future<void> _form(void Function(void Function(FormError?)) present) {
+  Future<void> _form(Future<void> Function(void Function(FormError?)) present) {
     final done = Completer<void>();
-    present((error) {
+    void finish(Object? error) {
+      if (done.isCompleted) return;
       if (error == null) {
         done.complete();
       } else {
         done.completeError(error);
       }
-    });
+    }
+    try {
+      unawaited(present(finish).catchError((Object error) => finish(error)));
+    } catch (error) {
+      finish(error);
+    }
     // Never time out an open form while the user is making a choice.
     return done.future;
   }
