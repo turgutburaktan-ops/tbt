@@ -16,6 +16,11 @@ class UseReadyRouteButton extends StatefulWidget {
 class _UseReadyRouteButtonState extends State<UseReadyRouteButton> {
   bool _busy = false;
   String? _savedId;
+  @override
+  void didUpdateWidget(covariant UseReadyRouteButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.plan.id != widget.plan.id) _savedId = null;
+  }
   Future<void> _use() async {
     if (_busy) return;
     setState(() => _busy = true);
