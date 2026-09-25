@@ -50,9 +50,9 @@ def simplify(points,tolerance=2):
    keep.add(index);stack.extend([(lo,index),(index,hi)])
  return [points[i] for i in sorted(keep)]
 
-def build(root):
+def build(root, specs=None, titles=None, route_notes=None):
  records=[];photos=[]
- for spec,title in zip(SPECS,TITLES):
+ for spec,title in zip(SPECS if specs is None else specs,TITLES if titles is None else titles):
   slug,city,mode,km,mins,diff,track,start,end,index,mirror=spec
   meta=json.loads((root/(slug+'.json')).read_text());raw=(root/(slug+'.kml')).read_bytes()
   points=selected_points(raw,track);source_count=len(points);original_length=sum(meters(a,b) for a,b in zip(points,points[1:]));tolerance=0
@@ -70,9 +70,12 @@ def build(root):
   stops=[{'id':f'external_{provider}_{city_slug}_{slug}_{i}','name':name,'city':city,'latitude':points[n][1],'longitude':points[n][0],'imageUrl':'','category':'Gezi','description':'','bestTime':''} for i,(n,name) in enumerate(stops_index)]
   note=f'Kaynak: {credit}. {meta["url"]}\nKaynak mesafesi: {km:g} km; harita izi: {length/1000:.2f} km. Kaynak süre tahmini: {mins} dakika. Kaynak zorluğu: {diff}. '
   if mirror:note+='KML yalnızca gidişi içerir; dönüş aynı izin ters yönde eklenmesiyle hazırlanmıştır. '
-  if city_slug=='malatya':note+='Kaynak süre aralığının üst sınırı gösterilir. '
-  if city_slug=='tunceli':note+='Kaynak tablosu gidiş-dönüş olarak etiketlenmiş olsa da KML iki farklı noktayı birleştirir. Haritada yalnızca bu tek yönlü iz gösterilir; dönüş eklenmemiştir. Süre kaynak tahminidir. '
-  if city_slug=='diyarbakir':note+='KML içinden yalnızca yürüyüş izi alınmıştır; araçla ulaşım yolları dahil değildir. '
+  if route_notes is not None:
+   note+=route_notes.get(slug,'')
+  else:
+   if city_slug=='malatya':note+='Kaynak süre aralığının üst sınırı gösterilir. '
+   if city_slug=='tunceli':note+='Kaynak tablosu gidiş-dönüş olarak etiketlenmiş olsa da KML iki farklı noktayı birleştirir. Haritada yalnızca bu tek yönlü iz gösterilir; dönüş eklenmemiştir. Süre kaynak tahminidir. '
+   if city_slug=='diyarbakir':note+='KML içinden yalnızca yürüyüş izi alınmıştır; araçla ulaşım yolları dahil değildir. '
   if tolerance:note+=f'Harita izi {tolerance} metre toleransla sadeleştirilmiştir; başlangıç ve bitiş korunmuştur. '
   note+='Duraklar kaynak parkurunun koordinatlarından alınmıştır. Parkur sahada yeniden doğrulanmamıştır; güncel yol ve erişim koşullarını kontrol edin.'
   track_url=urllib.parse.quote(urllib.parse.urljoin(meta['url'],meta['tracks'][0]).replace('http:','https:'),safe=':/?=&%');ident=f'tbt_ready_{provider}_{city_slug}_'+slug.replace('-','_')
