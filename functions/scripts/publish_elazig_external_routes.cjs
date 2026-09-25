@@ -84,7 +84,19 @@ async function publish() {
   for(let i=0;i<readback.length;i++) {
     const data=readback[i].data(), expected=definitions[i];
     assert.equal(data.externalImportHash,digest(expected));
-    for(const [key,value] of Object.entries(expected)) if(key!=='id') assert.deepEqual(data[key],value);
+    // A separately verified cover-photo migration may enrich these two fields.
+    const comparable={...data};
+    if(data.externalRoutePhoto?.version===1) {
+      const photo=data.externalRoutePhoto;
+      assert.equal(photo.id,readback[i].id);
+      assert.equal(new URL(photo.sourceUrl).origin,'https://firatikesfet.com');
+      assert.equal(new URL(photo.imageUrl).hostname,'firebasestorage.googleapis.com');
+      assert.equal(data.stopSnapshots[0].imageUrl,photo.imageUrl);
+      comparable.stopSnapshots=data.stopSnapshots.map((s,n)=>n===0?{...s,imageUrl:expected.stopSnapshots[0].imageUrl}:s);
+      assert.equal(data.dayPlan.description,expected.dayPlan.description+'\nKapak fotoğrafı: Fırat’ı Keşfet (rota kaynak sayfası).');
+      comparable.dayPlan={...data.dayPlan,description:expected.dayPlan.description};
+    }
+    for(const [key,value] of Object.entries(expected)) if(key!=='id') assert.deepEqual(comparable[key],value);
     assert.deepEqual(data.memberIds,[]);
     assert.deepEqual(data.invitedIds,[]);
     assert.equal(data.isPublic,true);
