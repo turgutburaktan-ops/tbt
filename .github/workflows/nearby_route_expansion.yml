@@ -1,0 +1,44 @@
+name: Expand neighboring province ready routes
+on:
+  push:
+    branches: [codex/nearby-route-expansion-20260925]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tbt-elazig-external-routes
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ROUTE_MANIFEST: ./nearby_expansion_routes.json
+      ROUTE_PHOTO_MANIFEST: ./nearby_expansion_photos.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test test/external_ready_routes.test.cjs test/elazig_expansion.test.cjs test/nearby_ready_routes.test.cjs test/nearby_expansion.test.cjs
+      - run: node functions/scripts/publish_elazig_external_routes.cjs
+      - run: node functions/scripts/publish_elazig_route_photos.cjs
+      - run: npm install --prefix /tmp/tbt-expansion firebase-admin@13.0.0
+      - name: Publish and verify route records
+        env:
+          NODE_PATH: /tmp/tbt-expansion/node_modules
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PUBLISH_EXTERNAL_ROUTES: 'true'
+        run: node functions/scripts/publish_elazig_external_routes.cjs
+      - name: Publish and verify cover photos
+        env:
+          NODE_PATH: /tmp/tbt-expansion/node_modules
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PUBLISH_ROUTE_PHOTOS: 'true'
+        run: node functions/scripts/publish_elazig_route_photos.cjs
+      - name: Verify records after cover enrichment
+        env:
+          NODE_PATH: /tmp/tbt-expansion/node_modules
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PUBLISH_EXTERNAL_ROUTES: 'true'
+        run: node functions/scripts/publish_elazig_external_routes.cjs
