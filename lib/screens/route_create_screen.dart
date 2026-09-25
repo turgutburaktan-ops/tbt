@@ -56,6 +56,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   final _city = TextEditingController();
   final _title = TextEditingController();
   RouteItinerary? _itinerary;
+  Map<String, dynamic>? _preservedRoute;
   bool _routing = false;
   int _routeRequest = 0;
   late final List<PhotoSpot> _stops = [...widget.initialStops];
@@ -559,7 +560,18 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         _refreshRoute();
       });
   });
+  Map<String, dynamic> get _routeData => _preservedRoute ?? RouteGeometry.encode(
+    _itinerary,
+    RouteGeometry.signature(_stops, _transport, origin: _origin, roundTrip: _roundTrip),
+    manual: _manual, roundTrip: _roundTrip,
+  );
+
   Future<void> _save() => _act(() async {
+    if (_stops.isEmpty) throw Exception('En az bir durak ekle.');
+    if (_routing) throw Exception('Güzergâh hesaplanıyor. Biraz bekle.');
+    if (_stops.length > 1 && (_itinerary == null || _itinerary!.meters <= 0)) {
+      throw Exception('Geçerli güzergâh bulunamadı. Durakları kontrol edip tekrar dene.');
+    }
     final city =
         _city.text.trim().isEmpty ? _stops.first.city : _city.text.trim();
     if (_startAt != null && !_startAt!.isAfter(DateTime.now()))
@@ -577,21 +589,11 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         'spotNames': _stops.map((s) => s.name).toList(),
         'stopSnapshots': _stops.map(RouteDraftStore.encodeSpot).toList(),
         'dayPlan': {
-          ...RouteGeometry.encode(
-            _itinerary,
-            RouteGeometry.signature(
-              _stops,
-              _transport,
-              origin: _origin,
-              roundTrip: _roundTrip,
-            ),
-            manual: _manual,
-            roundTrip: _roundTrip,
-          ),
+          ..._routeData,
           'description': _description.text.trim(),
           if (RouteTerrainService.supports(_transport) && _difficulty.isNotEmpty) ...{
             'difficulty': _difficulty,
-            'difficultyEstimated': true,
+            'difficultyEstimated': _preservedRoute?['difficultyEstimated'] ?? true,
           },
         },
         'routeOrigin':
@@ -641,21 +643,11 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           interests: [],
           spots: _stops,
           dayPlan: {
-            ...RouteGeometry.encode(
-              _itinerary,
-              RouteGeometry.signature(
-                _stops,
-                _transport,
-                origin: _origin,
-                roundTrip: _roundTrip,
-              ),
-              manual: _manual,
-              roundTrip: _roundTrip,
-            ),
+            ..._routeData,
             'description': _description.text.trim(),
             if (RouteTerrainService.supports(_transport) && _difficulty.isNotEmpty) ...{
             'difficulty': _difficulty,
-            'difficultyEstimated': true,
+            'difficultyEstimated': _preservedRoute?['difficultyEstimated'] ?? true,
           },
           },
           routeOrigin:
@@ -704,6 +696,21 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   // Request IDs keep a late response from an older order/mode out of the UI.
   Future<void> _refreshRoute() async {
     final request = ++_routeRequest;
+    final saved = widget.existingPlan?.dayPlan;
+    final restored = saved == null ? null : RouteGeometry.restoreForEdit(
+      saved, _stops, _transport, origin: _origin,
+      roundTrip: _roundTrip, manual: _manual,
+    );
+    if (restored != null) {
+      _preservedRoute = saved;
+      _itinerary = restored;
+      _difficulty = (saved!['difficulty'] ?? '').toString();
+      _routing = false;
+      // Also refresh after returning from the stop picker without any edits.
+      if (mounted) setState(() {});
+      return;
+    }
+    _preservedRoute = null;
     _itinerary = null;
     _difficulty = '';
     final points = RouteGeometry.waypoints(
@@ -1569,7 +1576,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      i == 0 ? 'Başlangıç' : stop.category,
+                      i == 0 ? 'Başlangıç' : i == _stops.length - 1 ? 'Bitiş' : stop.category,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

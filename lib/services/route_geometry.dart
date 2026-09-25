@@ -12,6 +12,18 @@ class RouteGeometry {
     bool roundTrip = false,
   }) =>
       '$mode|${origin?.latitude},${origin?.longitude}|$roundTrip|${stops.map((s) => '${s.latitude},${s.longitude}').join(';')}';
+  /// Reuse a recorded trail only while the route inputs still match it.
+  static RouteItinerary? restoreForEdit(
+    Map<String, dynamic> data, List<PhotoSpot> stops, String mode, {
+    LatLng? origin, bool roundTrip = false, bool manual = false,
+  }) {
+    if ((data['manual'] == true) != manual ||
+        data['signature'] != signature(stops, mode, origin: origin, roundTrip: roundTrip)) return null;
+    final route = decode(data);
+    if (route == null || route.meters <= 0) return null;
+    return route;
+  }
+
   static List<LatLng> waypoints(
     List<PhotoSpot> stops, {
     LatLng? origin,
