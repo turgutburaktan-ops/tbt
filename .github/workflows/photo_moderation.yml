@@ -1,0 +1,72 @@
+name: Verify and deploy asynchronous photo moderation
+on:
+  push:
+    branches: [codex/photo-moderation-20260925]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tbt-photo-moderation
+  cancel-in-progress: false
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/photo_moderation_screen.dart lib/screens/admin_records_screen.dart lib/screens/settings_screen.dart lib/screens/login_screen.dart
+      - run: flutter build bundle --debug
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: npm install --prefix /tmp/photo-tests @firebase/rules-unit-testing firebase firebase-tools --no-audit --no-fund
+      - run: node --test functions/test/photo_moderation.test.js
+      - name: Verify transactions and security rules against emulators
+        env:
+          NODE_PATH: /tmp/photo-tests/node_modules
+        run: /tmp/photo-tests/node_modules/.bin/firebase emulators:exec --config firebase.photo-tests.json --only firestore,auth,storage --project demo-tbt "node tool/test_photo_moderation.cjs && node tool/test_photo_moderation_rules.cjs" --non-interactive
+  deploy:
+    needs: [app, backend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix functions --no-audit --no-fund
+      - run: npm install -g firebase-tools
+      - name: Prepare credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          data=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          if data['project_id']!='en-iyi-cekim-noktasi': raise Exception('Unexpected project')
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'firebase.json'
+          p.write_text(json.dumps(data));p.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('GOOGLE_APPLICATION_CREDENTIALS='+str(p)+'\n')
+          PY
+      - run: node tool/photo_moderation_preflight.cjs
+      - run: node tool/ensure_photo_indexes.cjs
+      - name: Set the existing storage bucket
+        run: |
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('firebase.json'));c.storage=[{bucket:'en-iyi-cekim-noktasi.firebasestorage.app',rules:'storage.rules'}];fs.writeFileSync('firebase.json',JSON.stringify(c));"
+      - name: Deploy rules and only the new moderation functions
+        run: firebase deploy --only firestore:rules,storage,functions:moderatePhotoPost,functions:processPhotoModeration,functions:retryPhotoModeration,functions:reviewPhotoModeration,functions:reviewPhotoAccount,functions:appealPhotoModeration,functions:appealClosedPhotoAccount,functions:photoModerationPreview --project en-iyi-cekim-noktasi --non-interactive

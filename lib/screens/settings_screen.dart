@@ -1,3 +1,4 @@
+import 'photo_moderation_screen.dart';
 import '../widgets/profile_name_link.dart';
 import '../models/profile_identity.dart';
 import 'profile_history_screen.dart';
@@ -655,6 +656,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Veri ve depolama',
                       'Önbellek ve veri tercihleri',
                       _storage,
+                    ),
+                    _tile(
+                      Icons.policy_outlined,
+                      'Paylaşım denetimi',
+                      'İnceleme sonuçları ve itirazlar',
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PhotoModerationScreen())),
                     ),
                     _tile(
                       Icons.help_outline_rounded,

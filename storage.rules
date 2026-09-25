@@ -19,7 +19,8 @@ service firebase.storage {
     }
 
     function signedIn() {
-      return request.auth != null;
+      return request.auth != null && (!firestore.exists(/databases/(default)/documents/photo_moderation_accounts/$(request.auth.uid)) ||
+        !(firestore.get(/databases/(default)/documents/photo_moderation_accounts/$(request.auth.uid)).data.get('closureStatus', 'none') in ['closing','closed','reopening']));
     }
 
     function isOwner(uid) {
@@ -57,9 +58,13 @@ service firebase.storage {
     // User media stays namespaced by Firebase Auth uid. This keeps existing
     // public feed/profile/chat rendering intact while preventing cross-account writes.
     match /users/{uid}/{allPaths=**} {
-      allow read: if true;
-      allow create, update: if isOwner(uid) && safeMediaWrite();
-      allow delete: if isOwner(uid);
+      allow read: if resource.metadata.get('moderationBlocked', '') != 'true';
+      allow create: if isOwner(uid) && safeMediaWrite() && !request.resource.metadata.keys().hasAny(['moderationBlocked']) &&
+        (!allPaths.matches('posts/[^/]+') || !firestore.exists(/databases/(default)/documents/photo_moderation/$(allPaths.split('/')[1].split('.')[0]))) &&
+        (!allPaths.matches('event_memories/[^/]+/[^/]+') || !firestore.exists(/databases/(default)/documents/photo_moderation/$(allPaths.split('/')[2].split('.')[0])));
+      allow update: if isOwner(uid) && safeMediaWrite() && resource.metadata.get('moderationBlocked', '') != 'true' &&
+        !request.resource.metadata.keys().hasAny(['moderationBlocked']) && !allPaths.matches('(posts|event_memories)/.*');
+      allow delete: if isOwner(uid) && resource.metadata.get('moderationBlocked', '') != 'true';
     }
 
     match /admin_broadcasts/{broadcastId}/image.jpg {

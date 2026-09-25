@@ -1,3 +1,4 @@
+import 'photo_moderation_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 
@@ -186,6 +187,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            TextButton(onPressed: _busy ? null : () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ClosedAccountAppealScreen())), child: const Text('Hesap itirazı')),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(

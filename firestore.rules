@@ -2,7 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /app_config/update_policy { allow read: if true; allow write: if false; }
-    function signedIn() { return request.auth != null; }
+    function signedIn() {
+      return request.auth != null && (!exists(/databases/$(database)/documents/photo_moderation_accounts/$(request.auth.uid)) ||
+        !(get(/databases/$(database)/documents/photo_moderation_accounts/$(request.auth.uid)).data.get('closureStatus', 'none') in ['closing','closed','reopening']));
+    }
     function isAdmin() { return signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com'; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
     function safeUserCreate(uid) {
@@ -169,7 +172,13 @@ service cloud.firestore {
         request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120 &&
         request.resource.data.get('mediaType', 'image') in ['image','video'] &&
         request.resource.data.get('durationMs', 0) is int && request.resource.data.get('durationMs', 0) >= 0 && request.resource.data.get('durationMs', 0) <= 60000 &&
-        request.resource.data.get('sourceType', 'post') in ['post','event_memory'];
+        request.resource.data.get('sourceType', 'post') in ['post','event_memory'] &&
+        (request.resource.data.get('mediaType', 'image') != 'image' || (
+          request.resource.data.storagePath is string &&
+          request.resource.data.storagePath.matches('users/' + request.auth.uid + '/(posts|event_memories)/[a-zA-Z0-9_./-]+') &&
+          request.resource.data.imageUrl is string &&
+          request.resource.data.imageUrl.matches('https://firebasestorage[.]googleapis[.]com/v0/b/en-iyi-cekim-noktasi[.]firebasestorage[.]app/o/' + request.resource.data.storagePath.replace('/', '%2F').replace('[.]', '[.]') + '[?]alt=media&token=[a-zA-Z0-9,-]+')
+        ));
     }
     function validBusinessPost() {
       let key = request.resource.data.get('businessVenueKey', '');
@@ -266,7 +275,7 @@ service cloud.firestore {
         allow update: if isSelf(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
         allow create: if signedIn() && request.resource.data.keys().hasAll(['type','title','body','actorId']) &&
           request.resource.data.type is string && request.resource.data.title is string && request.resource.data.body is string &&
-          request.resource.data.type != 'tbt_broadcast' && !request.resource.data.keys().hasAny(['senderName', 'pushAllowed']) &&
+          !(request.resource.data.type in ['tbt_broadcast','photo_moderation']) && !request.resource.data.keys().hasAny(['senderName', 'pushAllowed']) &&
           request.resource.data.actorId == request.auth.uid && request.resource.data.title.size() > 0 &&
           request.resource.data.title.size() <= 160 && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 600;
       }
@@ -420,9 +429,20 @@ service cloud.firestore {
     match /creator_referrals/{uid} { allow read, write: if false; }
     match /creator_metric_receipts/{id} { allow read, write: if false; }
     match /social_publish_limits/{id} { allow read, write: if false; }
+
+    match /photo_moderation/{id} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+    match /photo_moderation_accounts/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow write: if false;
+    }
+    match /photo_moderation_archive/{id} { allow read, write: if false; }
+    match /photo_moderation_appeal_keys/{id} { allow read, write: if false; }
     match /posts/{postId} {
       allow read: if true;
-      allow create: if validPostCreate() && validBusinessPost() && validPostMusic(postId);
+      allow create: if !exists(/databases/$(database)/documents/photo_moderation/$(postId)) && validPostCreate() && validBusinessPost() && validPostMusic(postId);
       allow update: if isAdmin() || validPostOwnerUpdate();
       allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }

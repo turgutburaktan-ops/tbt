@@ -1,3 +1,4 @@
+import 'photo_moderation_screen.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -265,6 +266,8 @@ class _AdminRecordsScreenState extends State<AdminRecordsScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
+      actions: [if (_reports) IconButton(tooltip: 'Fotoğraf denetimi', icon: const Icon(Icons.image_search),
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PhotoModerationScreen(admin: true))))],
       title: Text(
         _reports
             ? 'Moderasyon'
