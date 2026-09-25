@@ -34,7 +34,39 @@ class MainCameraScreen extends StatefulWidget {
   State<MainCameraScreen> createState() => _MainCameraScreenState();
 }
 
-class _MainCameraScreenState extends State<MainCameraScreen> {
+class _MainCameraScreenState extends State<MainCameraScreen> with WidgetsBindingObserver {
+  CameraState? _cameraState;
+  Future<void> _flashQueue = Future<void>.value();
+
+  Future<void> _setFlash(FlashMode mode) {
+    _flashQueue = _flashQueue.then((_) async {
+      final state = _cameraState;
+      if (state == null) return;
+      try {
+        await state.sensorConfig.setFlashMode(mode);
+      } catch (error) {
+        // The sensor stream may already be disposed during camera teardown.
+        if (mode == FlashMode.none) {
+          try { await CamerawesomePlugin.setFlashMode(FlashMode.none); }
+          catch (_) {}
+        } else {
+          _message('Flaş değiştirilemedi. Tekrar dene.');
+        }
+      }
+    });
+    return _flashQueue;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) unawaited(_setFlash(FlashMode.none));
+  }
+
+  Future<void> _closeCamera() async {
+    await _setFlash(FlashMode.none);
+    if (mounted) Navigator.pop(context);
+  }
+
   final ImagePicker _picker = ImagePicker();
   late CameraShareMode _mode;
   CameraShareMode? _pendingMode;
@@ -74,6 +106,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _mode = widget.initialMode;
     _orientationSubscription = CamerawesomePlugin.getNativeOrientation()?.listen(
       (value) => _orientation = value,
@@ -82,6 +115,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_setFlash(FlashMode.none));
     _recordingTimer?.cancel();
     _orientationSubscription?.cancel();
     super.dispose();
@@ -94,11 +129,13 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
-  void _selectMode(CameraShareMode mode, CameraState cameraState) {
+  Future<void> _selectMode(CameraShareMode mode, CameraState cameraState) async {
     if (_recordingState != null ||
         _cameraBusy ||
         mode == _mode)
       return;
+    await _setFlash(FlashMode.none);
+    if (!mounted) return;
     setState(() {
       _mode = mode;
       if (mode == CameraShareMode.story) _storyVideo = false;
@@ -111,7 +148,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     );
   }
 
-  void _selectStoryMedia(bool video, CameraState cameraState) {
+  Future<void> _selectStoryMedia(bool video, CameraState cameraState) async {
     if ((_mode != CameraShareMode.story &&
             _mode != CameraShareMode.photo &&
             _mode != CameraShareMode.video) ||
@@ -123,6 +160,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             video) {
       return;
     }
+    await _setFlash(FlashMode.none);
+    if (!mounted) return;
     setState(() {
       if (_mode == CameraShareMode.story) {
         _storyVideo = video;
@@ -138,6 +177,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     if (_cameraBusy || _recordingState != null) return;
     setState(() => _switchingSensor = true);
     try {
+      await _setFlash(FlashMode.none);
+      if (!mounted) return;
       await state.switchCameraSensor(
         aspectRatio: _mode == CameraShareMode.photo ? state.sensorConfig.aspectRatio : null,
       );
@@ -262,6 +303,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     setState(() => _openingGallery = true);
     try {
       final selectedMode = _mode;
+      await _setFlash(FlashMode.none);
+      if (!mounted) return;
       final wantsVideo = _isVideoMode;
       if (selectedMode == CameraShareMode.story) {
         // One native picker shows both photos and videos, without an extra menu.
@@ -332,6 +375,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     Rect? initialPhotoCrop,
     int photoTurns = 0,
   }) async {
+    await _setFlash(FlashMode.none);
+    if (!mounted) return;
     if (!await file.exists() || await file.length() <= 0) {
       throw Exception('Çekilen dosya okunamadı.');
     }
@@ -405,7 +450,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
         ),
         sensorConfig: SensorConfig.single(
           sensor: Sensor.position(SensorPosition.back),
-          flashMode: FlashMode.auto,
+          flashMode: FlashMode.none,
           aspectRatio: CameraAspectRatios.ratio_16_9,
           zoom: 0,
         ),
@@ -439,6 +484,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
         ),
         onMediaCaptureEvent: _onMediaCapture,
         builder: (cameraState, preview) {
+          _cameraState = cameraState;
           final recording = cameraState is VideoRecordingCameraState;
           _recordingState = cameraState is VideoRecordingCameraState
               ? cameraState
@@ -459,11 +505,14 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             recordedSeconds: _recordedSeconds,
             showGrid: _showGrid,
             busy: _cameraBusy,
-            onClose: () => Navigator.pop(context),
-            onImport: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ImportShareScreen()),
-            ),
+            onClose: _closeCamera,
+            onFlashSelected: _setFlash,
+            onImport: () async {
+              await _setFlash(FlashMode.none);
+              if (!mounted) return;
+              await Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ImportShareScreen()));
+            },
             onGallery: _openGallery,
             onCapture: () => _capture(cameraState),
             onSwitchSensor: () => _switchSensor(cameraState),
@@ -488,6 +537,7 @@ class _CameraOverlay extends StatelessWidget {
   final bool busy;
   final bool showGrid;
   final int recordedSeconds;
+  final ValueChanged<FlashMode> onFlashSelected;
   final VoidCallback onClose;
   final VoidCallback onImport;
   final VoidCallback onGallery;
@@ -507,6 +557,7 @@ class _CameraOverlay extends StatelessWidget {
     required this.showGrid,
     required this.recordedSeconds,
     required this.onClose,
+    required this.onFlashSelected,
     required this.onImport,
     required this.onGallery,
     required this.onCapture,
@@ -614,11 +665,34 @@ class _CameraOverlay extends StatelessWidget {
                       icon: showGrid ? Icons.grid_on_rounded : Icons.grid_off_rounded,
                       onTap: onToggleGrid,
                     ),
-                    _GlassButton(
-                      icon: Icons.flash_auto_rounded,
-                      onTap: recording || busy
-                          ? null
-                          : () => state.sensorConfig.switchCameraFlash(),
+                    StreamBuilder<FlashMode>(
+                      stream: state.sensorConfig.flashMode$,
+                      initialData: state.sensorConfig.flashMode,
+                      builder: (context, snapshot) {
+                        final flash = snapshot.data ?? FlashMode.none;
+                        return PopupMenuButton<FlashMode>(
+                          tooltip: flash == FlashMode.none ? 'Flaş kapalı'
+                              : flash == FlashMode.auto ? 'Flaş otomatik' : 'Flaş açık',
+                          enabled: !busy,
+                          initialValue: flash,
+                          onSelected: onFlashSelected,
+                          icon: Icon(flash == FlashMode.none
+                              ? Icons.flash_off_rounded
+                              : flash == FlashMode.auto
+                                  ? Icons.flash_auto_rounded : Icons.flash_on_rounded,
+                            color: Colors.white),
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(value: FlashMode.none,
+                              child: Text('Kapalı')),
+                            if (!_videoMode)
+                              const PopupMenuItem(value: FlashMode.auto,
+                                child: Text('Otomatik')),
+                            PopupMenuItem(
+                              value: _videoMode ? FlashMode.always : FlashMode.on,
+                              child: const Text('Açık')),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),

@@ -428,14 +428,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       context: context,
       backgroundColor: AppColors.surface,
       showDragHandle: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .85),
       builder: (sheetContext) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+              child: Wrap(
+                alignment: WrapAlignment.spaceAround,
                 children: ['❤️', '😂', '🔥', '👏', '👍', '😮']
                     .map(
                       (emoji) => InkWell(
@@ -499,6 +504,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 onTap: () => Navigator.pop(sheetContext, 'delete'),
               ),
           ],
+          ),
         ),
       ),
     );
