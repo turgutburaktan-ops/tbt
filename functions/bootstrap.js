@@ -86,3 +86,7 @@ Object.assign(exports, require('./route_membership'));
 
 Object.assign(exports, require('./business_menu_bulk'));
 Object.assign(exports, require('./business_events'));
+
+
+const {chatPrivatePhoto, expireChatPrivatePhotos} = require('./chat_private_photo');
+Object.assign(exports, {chatPrivatePhoto, expireChatPrivatePhotos});

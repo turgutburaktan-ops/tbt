@@ -121,6 +121,8 @@ class ChatMessage {
   final bool closed;
   final String text;
   final String type;
+  final String? photoMode;
+  final Map<String, int> photoViews;
   final String? mediaUrl;
   final int? durationMs;
   final String? replyToId;
@@ -146,6 +148,8 @@ class ChatMessage {
     this.closed = false,
     required this.text,
     this.type = 'text',
+    this.photoMode,
+    this.photoViews = const {},
     this.mediaUrl,
     this.durationMs,
     this.replyToId,
@@ -160,6 +164,10 @@ class ChatMessage {
     this.sharedTitle,
     this.sharedImageUrl,
   });
+
+  bool get isPrivatePhoto => type == 'private_photo';
+  int get maxPhotoViews => photoMode == 'replay' ? 2 : 1;
+  int remainingPhotoViews(String uid) => (maxPhotoViews - (photoViews[uid] ?? 0)).clamp(0, maxPhotoViews);
 
   bool get isImage => type == 'image' && (mediaUrl?.isNotEmpty ?? false);
   bool get isAudio => type == 'audio' && (mediaUrl?.isNotEmpty ?? false);
@@ -195,6 +203,8 @@ class ChatMessage {
       closed: data['closed'] == true,
       text: (data['text'] ?? '').toString(),
       type: (data['type'] ?? 'text').toString(),
+      photoMode: data['photoMode']?.toString(),
+      photoViews: (data['photoViews'] as Map? ?? {}).map((key, value) => MapEntry(key.toString(), value is num ? value.toInt() : 0)),
       mediaUrl: data['mediaUrl']?.toString(),
       durationMs: rawDuration is num ? rawDuration.toInt() : null,
       replyToId: data['replyToId']?.toString(),
@@ -211,3 +221,4 @@ class ChatMessage {
     );
   }
 }
+

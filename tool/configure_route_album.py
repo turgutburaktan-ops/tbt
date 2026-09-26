@@ -39,3 +39,8 @@ elif platform == 'ios':
         s = 'import Photos\n'+s+'\n'+Path('tool/native_album/ios.txt').read_text()
         p.write_text(s)
 else: raise RuntimeError('Expected android or ios')
+
+# Protect ephemeral chat photos in every generated store host.
+import runpy
+runpy.run_path('tool/configure_private_photo.py', run_name='__main__')
+

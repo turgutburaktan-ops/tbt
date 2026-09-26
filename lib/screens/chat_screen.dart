@@ -1,3 +1,6 @@
+import '../services/private_photo_service.dart';
+import 'private_photo_screen.dart';
+import 'chat_photo_preview_screen.dart';
 import '../theme/app_theme.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/profile_name_link.dart';
@@ -254,6 +257,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _pickAndSendImage(ImageSource source) async {
     final id = _threadId;
     if (id == null || _sending || _sendingMedia) return;
+    setState(() => _sendingMedia = true);
     try {
       final picked = await _picker.pickImage(
         source: source,
@@ -263,6 +267,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (picked == null) return;
       if (mounted) setState(() => _sendingMedia = true);
       final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      final mode = await Navigator.push<ChatPhotoMode>(context, MaterialPageRoute(
+        builder: (_) => ChatPhotoPreviewScreen(bytes: bytes)));
+      if (mode == null || !mounted) return;
+      if (mode != ChatPhotoMode.keep) {
+        await PrivatePhotoService.send(id, bytes, mode);
+        if (mounted) setState(() => _replyTo = null);
+        return;
+      }
       await ChatService.instance.sendImageMessage(
         threadId: id,
         otherUserId: widget.otherUserId,
@@ -464,7 +477,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               title: const Text('Yanıtla'),
               onTap: () => Navigator.pop(sheetContext, 'reply'),
             ),
-            if (!message.isImage && !message.isShare && !message.isAudio)
+            if (!message.isPrivatePhoto && !message.isImage && !message.isShare && !message.isAudio)
               ListTile(
                 leading: const Icon(Icons.copy_rounded),
                 title: const Text('Kopyala'),
@@ -870,6 +883,34 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _focusNode.requestFocus();
   }
 
+  bool _openingPrivatePhoto = false;
+
+  Widget _privatePhotoCard(ChatMessage message, bool mine) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final remaining = message.remainingPhotoViews(uid);
+    final opened = message.photoViews.values.any((count) => count > 0);
+    final label = mine ? (opened ? 'Açıldı' : 'Fotoğraf gönderildi')
+      : remaining == 0 ? 'Açıldı'
+      : remaining < message.maxPhotoViews ? 'Bir kez daha görüntüle'
+      : message.maxPhotoViews == 2 ? 'Fotoğraf · İki görüntüleme' : 'Fotoğraf · Bir kez görüntüle';
+    return InkWell(
+      onTap: mine || remaining == 0 ? null : () async {
+        if (_openingPrivatePhoto || _threadId == null) return;
+        _openingPrivatePhoto = true;
+        try {
+          await Navigator.push(context, MaterialPageRoute(
+            builder: (_) => PrivatePhotoScreen(threadId: _threadId!, messageId: message.id)));
+        } finally { _openingPrivatePhoto = false; }
+      },
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(remaining == 0 && !mine ? Icons.check_circle_outline : Icons.photo_outlined),
+          const SizedBox(width: 10),
+          Flexible(child: Text(label)),
+        ])),
+    );
+  }
+
   Widget _messageBubble({
     required ChatMessage message,
     required bool mine,
@@ -948,7 +989,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               : EdgeInsets.zero,
                           child: _replyPreview(message, mine),
                         ),
-                      if (message.isImage)
+                      if (message.isPrivatePhoto)
+                        _privatePhotoCard(message, mine)
+                      else if (message.isImage)
                         GestureDetector(
                           onTap: () => _openImage(message.mediaUrl!),
                           child: ClipRRect(
@@ -1731,3 +1774,4 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 }
+

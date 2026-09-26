@@ -1,0 +1,102 @@
+name: Private chat photos validation and backend
+on:
+  push:
+    branches: [codex/private-chat-photos-20260926]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/chat_screen.dart lib/screens/chat_photo_preview_screen.dart lib/screens/private_photo_screen.dart lib/services/private_photo_service.dart lib/models/chat_message.dart
+      - run: flutter test test/private_photo_test.dart test/chat_layout_test.dart test/chat_access_test.dart test/camera_share_controls_test.dart
+      - run: |
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          python3 tool/patch_native_photo_pipeline.py
+          python3 tool/configure_route_album.py android
+          python3 tool/configure_route_album.py android
+          flutter build apk --debug
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: |
+          flutter config --no-enable-swift-package-manager
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          flutter pub get
+          python3 tool/configure_notifications.py ios
+          python3 tool/configure_route_album.py ios
+          python3 tool/configure_route_album.py ios
+          flutter build ios --debug --no-codesign
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm install --prefix functions
+          npm install --prefix /tmp/private-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0 firebase-admin@13.0.0
+      - name: Private photo transactions and access rules
+        env:
+          NODE_PATH: /tmp/private-tests/node_modules
+        run: /tmp/private-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-access "node --test test/private_photo_backend.cjs" --non-interactive
+  deploy:
+    needs: [flutter, ios, backend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm install --prefix functions
+          npm install --prefix /tmp/private-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0 firebase-admin@13.0.0
+      - name: Authenticate scoped backend deployment
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'private-photo-credentials.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - run: node tool/check_private_photo_rules.cjs
+      - name: Verify private data is denied under actual live rules
+        env:
+          NODE_PATH: /tmp/private-tests/node_modules
+        run: /tmp/private-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-access "node --test test/private_photo_backend.cjs" --non-interactive
+      - name: Deploy only private photo endpoints and expiry cleanup
+        run: /tmp/private-tests/node_modules/.bin/firebase deploy --only functions:chatPrivatePhoto,functions:expireChatPrivatePhotos --project en-iyi-cekim-noktasi --non-interactive
