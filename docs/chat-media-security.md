@@ -14,3 +14,9 @@ The app uses in-memory images and app-private temporary audio files. Audio files
 The corrected client must be included in the next Android/iOS release. Old client versions cannot upload to the retired public chat path. Token-based media rendering in old versions may stop working after revocation. This branch includes the previously validated single-view/replay photo and camera/menu fixes; it must not be replaced by the older main branch.
 
 Validation pipeline: .github/workflows/chat_media_security.yml. Tests include outsider/anonymous/removed-member denial, deleted messages, owner-scoped uploads, immutable metadata, finalizer auth/path checks, token-removal retries, and the prior one-view/replay guarantees. Production deployment is gated on these tests plus Flutter analysis, tests, and a debug application bundle.
+
+## Verified production outcome
+
+2026-09-26 20:11 UTC: workflow 36268399738 completed successfully (deploy job 108477832996). Flutter analysis, selected regression tests, debug bundle, and all 14 backend/access tests passed. The deployment re-ran the security tests against the actual current production policies before publishing.
+
+Both finalizeChatMedia and sealPendingChatMedia were created in europe-west1. Storage release now points to ruleset 12ad5c16-ddf3-4a25-8859-5b1883601e5a. All 8 legacy chat objects were retained; 8 bearer tokens were revoked. Anonymous Firebase requests, each old token, and direct GCS requests were denied. Post-migration read-only audit: chatObjects=8, chatObjectsWithTokens=0, broadUserMatch=false. Android/iOS store submissions were not made by this security task.
