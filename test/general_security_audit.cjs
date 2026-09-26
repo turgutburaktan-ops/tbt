@@ -2,11 +2,12 @@ const {test,before,after}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {initializeTestEnvironment,assertFails,assertSucceeds}=require('@firebase/rules-unit-testing');
+const {ref,uploadBytes,getBytes}=require('firebase/storage');
 const {doc,setDoc,getDoc,updateDoc,writeBatch,serverTimestamp}=require('firebase/firestore');
 let env;
 const db=uid=>env.authenticatedContext(uid).firestore();
 before(async()=>{
- env=await initializeTestEnvironment({projectId:'demo-tbt-general-audit',firestore:{rules:fs.readFileSync('firestore.rules','utf8')}});
+ env=await initializeTestEnvironment({projectId:'demo-tbt-general-audit',firestore:{rules:fs.readFileSync('firestore.rules','utf8')},storage:{rules:fs.readFileSync('storage.rules','utf8')}});
  await env.withSecurityRulesDisabled(async c=>{
   const d=c.firestore();
   await setDoc(doc(d,'users/victim'),{uid:'victim',email:'synthetic@example.invalid',phoneNumber:'+900000000000',displayName:'Synthetic',reputationTotal:100});
@@ -53,4 +54,10 @@ test('P02 protected: self assigning admin or reputation is denied',async()=>{
 test('P03 protected: other users cannot read device tokens or admin audit',async()=>{
  await assertFails(getDoc(doc(db('attacker'),'users/victim/push_tokens/token')));
  await assertFails(getDoc(doc(db('attacker'),'admin_audit_logs/log')));
+});
+
+test('F07 confirmed: business verification evidence path is anonymously readable',async()=>{
+ const bucket='gs://demo-tbt-general-audit.appspot.com',path='users/victim/business_claims/cafe:synthetic/evidence.jpg';
+ await env.withSecurityRulesDisabled(c=>uploadBytes(ref(c.storage(bucket),path),new Uint8Array([1,2,3]),{contentType:'image/jpeg'}));
+ await assertSucceeds(getBytes(ref(env.unauthenticatedContext().storage(bucket),path)));
 });

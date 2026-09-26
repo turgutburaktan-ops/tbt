@@ -37,7 +37,7 @@ jobs:
       - name: Reproduce suspected flaws with synthetic emulator data only
         env:
           NODE_PATH: /tmp/audit-tests/node_modules
-        run: /tmp/audit-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-general-audit "node --test test/general_security_audit.cjs" --non-interactive
+        run: /tmp/audit-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test test/general_security_audit.cjs" --non-interactive
       - name: Dependency risk inventory
         run: |
           npm audit --prefix functions --omit=dev --json > dependency-audit.json || true

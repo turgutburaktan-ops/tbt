@@ -23,9 +23,9 @@ const {Storage}=require('../functions/node_modules/@google-cloud/storage');
  }catch(e){report.bucket={unverified:true,status:e.code};}
  report.mediaInventory={};
  const bucket=new Storage().bucket(bucketName);
- for(const prefix of ['private_chat/','route_albums/','route_chat/','event_chat/']){
+ for(const prefix of ['private_chat/','route_albums/','route_chat/','event_chat/','users/']){
   let query={prefix,autoPaginate:false,maxResults:250},count=0,tokens=0,pages=0;
-  do {const [files,next]=await bucket.getFiles(query);for(const f of files){count++;if(f.metadata?.metadata?.firebaseStorageDownloadTokens)tokens++;}query=next;pages++;}while(query&&pages<20);
+  do {const [files,next]=await bucket.getFiles(query);for(const f of files){if(prefix==='users/'&&!/^users\/[^/]+\/business_claims\//.test(f.name))continue;count++;if(f.metadata?.metadata?.firebaseStorageDownloadTokens)tokens++;}query=next;pages++;}while(query&&pages<20);
   report.mediaInventory[prefix]={objects:count,tokenObjects:tokens,truncated:Boolean(query)};
  }
  fs.writeFileSync('audit-summary.json',JSON.stringify(report,null,2));console.log('AUDIT_SUMMARY '+JSON.stringify(report));
