@@ -1,3 +1,5 @@
+import '../services/private_chat_media.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
 import 'dart:async';
 import 'dart:io';
@@ -261,12 +263,14 @@ class ChatAudioBubble extends StatefulWidget {
   final String url;
   final int? durationMs;
   final bool mine;
+  final bool privateChat;
 
   const ChatAudioBubble({
     super.key,
     required this.url,
     this.durationMs,
     required this.mine,
+    this.privateChat = false,
   });
 
   @override
@@ -275,6 +279,28 @@ class ChatAudioBubble extends StatefulWidget {
 
 class _ChatAudioBubbleState extends State<ChatAudioBubble> {
   final AudioPlayer _player = AudioPlayer();
+  Directory? _privateAudio;
+  StreamSubscription<dynamic>? _auth;
+  int _mediaGeneration = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.privateChat) {
+      _auth = FirebaseAuth.instance.authStateChanges().listen((_) {
+        unawaited(_clearPrivateAudio());
+      });
+    }
+  }
+
+  Future<void> _clearPrivateAudio() async {
+    ++_mediaGeneration;
+    _loaded = false;
+    final directory = _privateAudio; _privateAudio = null;
+    try { await _player.stop(); } catch (_) {}
+    if (directory != null) { try { await directory.delete(recursive: true); } catch (_) {} }
+  }
+
   bool _loaded = false;
   bool _loading = false;
 
@@ -289,7 +315,18 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
     try {
       if (!_loaded) {
         setState(() => _loading = true);
-        await _player.setUrl(widget.url).timeout(const Duration(seconds: 10));
+        if (widget.privateChat) {
+          final generation = _mediaGeneration;
+          final directory = await PrivateChatMedia.audioFile(widget.url);
+          if (!mounted || generation != _mediaGeneration) {
+            await directory.delete(recursive: true); return;
+          }
+          _privateAudio = directory;
+          await _player.setFilePath('${directory.path}/audio.m4a');
+          if (!mounted || generation != _mediaGeneration) return;
+        } else {
+          await _player.setUrl(widget.url).timeout(const Duration(seconds: 10));
+        }
         _loaded = true;
       }
       if (_player.playing) {
@@ -313,7 +350,8 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
 
   @override
   void dispose() {
-    _player.dispose();
+    _auth?.cancel();
+    unawaited(_clearPrivateAudio().whenComplete(() => _player.dispose()));
     super.dispose();
   }
 
@@ -417,3 +455,4 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
     );
   }
 }
+

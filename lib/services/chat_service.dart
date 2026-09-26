@@ -413,15 +413,18 @@ class ChatService {
         ? 'webp'
         : 'jpg';
     final storageRef = _storage.ref(
-      'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
+      'private_chat/$threadId/${user.uid}/${messageRef.id}/media.$ext',
     );
     try {
       await storageRef
           .putData(bytes, SettableMetadata(contentType: contentType))
           .timeout(const Duration(seconds: 25));
-      final mediaUrl = await storageRef
-          .getDownloadURL()
-          .timeout(const Duration(seconds: 8));
+      final finalized = await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('finalizeChatMedia').call({
+            'threadId': threadId, 'messageId': messageRef.id,
+            'fileName': storageRef.name,
+          });
+      final mediaUrl = (finalized.data as Map)['storageUrl'] as String;
       await _sendPreparedMessage(
         threadId: threadId,
         otherUserId: otherUserId,
@@ -458,15 +461,18 @@ class ChatService {
         .collection('messages')
         .doc();
     final storageRef = _storage.ref(
-      'users/${user.uid}/chat/$threadId/${messageRef.id}.m4a',
+      'private_chat/$threadId/${user.uid}/${messageRef.id}/audio.m4a',
     );
     try {
       await storageRef
           .putData(bytes, SettableMetadata(contentType: 'audio/mp4'))
           .timeout(const Duration(seconds: 30));
-      final mediaUrl = await storageRef
-          .getDownloadURL()
-          .timeout(const Duration(seconds: 8));
+      final finalized = await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('finalizeChatMedia').call({
+            'threadId': threadId, 'messageId': messageRef.id,
+            'fileName': storageRef.name,
+          });
+      final mediaUrl = (finalized.data as Map)['storageUrl'] as String;
       await _sendPreparedMessage(
         threadId: threadId,
         otherUserId: otherUserId,
@@ -684,4 +690,5 @@ class ChatService {
     }).timeout(const Duration(seconds: 8));
   }
 }
+
 

@@ -1,3 +1,4 @@
+import '../widgets/private_chat_image.dart';
 import '../services/private_photo_service.dart';
 import 'private_photo_screen.dart';
 import 'chat_photo_preview_screen.dart';
@@ -630,13 +631,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             child: InteractiveViewer(
               minScale: 0.8,
               maxScale: 5,
-              child: FirebaseMediaImage(
-                imageUrl: imageUrl,
+              child: PrivateChatImage(
+                url: imageUrl,
                 fit: BoxFit.contain,
-                errorWidget: const Icon(
-                  Icons.broken_image_outlined,
-                  color: Colors.white54,
-                ),
               ),
             ),
           ),
@@ -1001,18 +998,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             child: SizedBox(
                               width: 238,
                               height: 246,
-                              child: FirebaseMediaImage(
-                                imageUrl: message.mediaUrl!,
+                              child: PrivateChatImage(
+                                url: message.mediaUrl!,
                                 fit: BoxFit.cover,
-                                errorWidget: const ColoredBox(
-                                  color: AppColors.surface,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      color: Colors.white54,
-                                    ),
-                                  ),
-                                ),
                               ),
                             ),
                           ),
@@ -1020,6 +1008,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       else if (message.isAudio)
                         ChatAudioBubble(
                           url: message.mediaUrl!,
+                          privateChat: true,
                           durationMs: message.durationMs,
                           mine: mine,
                         )
@@ -1774,4 +1763,5 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 }
+
 

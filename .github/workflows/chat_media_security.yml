@@ -1,0 +1,93 @@
+name: Private chat media security
+on:
+  push:
+    branches: [codex/chat-media-security-20260926]
+    paths:
+      - .github/workflows/chat_media_security.yml
+      - lib/**
+      - functions/**
+      - test/chat_media_security.cjs
+      - test/private_chat_media_test.dart
+      - tool/secure_chat_storage.cjs
+      - tool/chat_media_storage_rules.txt
+permissions:
+  contents: read
+concurrency:
+  group: tbt-chat-media-security
+  cancel-in-progress: false
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/chat_screen.dart lib/services/chat_service.dart lib/services/private_chat_media.dart lib/widgets/private_chat_image.dart lib/widgets/chat_voice_message.dart
+      - run: flutter test test/private_chat_media_test.dart test/private_photo_test.dart test/chat_layout_test.dart test/chat_access_test.dart test/camera_share_controls_test.dart
+      - run: flutter build bundle --debug
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm install --prefix functions
+          npm install --prefix /tmp/chat-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0 firebase-admin@13.0.0
+      - name: Prepare private rules without changing production
+        run: node -e "const fs=require('fs');const {patchRules}=require('./tool/secure_chat_storage.cjs');fs.writeFileSync('storage.rules',patchRules(fs.readFileSync('storage.rules','utf8')))"
+      - name: Verify authenticated media access and prior private photo guarantees
+        env:
+          NODE_PATH: /tmp/chat-tests/node_modules
+        run: /tmp/chat-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-access "node --test --test-concurrency=1 test/chat_media_security.cjs test/private_photo_backend.cjs" --non-interactive
+  deploy:
+    needs: [flutter,security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm install --prefix functions
+          npm install --prefix /tmp/chat-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0 firebase-admin@13.0.0
+          npm install --prefix /tmp/chat-deploy firebase-tools@latest
+      - name: Authenticate scoped security deployment
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'chat-security.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - run: node tool/secure_chat_storage.cjs prepare
+      - name: Verify against actual live policies before publishing
+        env:
+          NODE_PATH: /tmp/chat-tests/node_modules
+        run: /tmp/chat-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-access "node --test --test-concurrency=1 test/chat_media_security.cjs test/private_photo_backend.cjs" --non-interactive
+      - name: Deploy chat media finalizer and token cleanup trigger only
+        run: /tmp/chat-deploy/node_modules/.bin/firebase deploy --only functions:finalizeChatMedia,functions:sealUploadedChatMedia --project en-iyi-cekim-noktasi --non-interactive
+      - name: Restrict chat Storage policy and revoke existing media tokens
+        run: |
+          node tool/secure_chat_storage.cjs deploy
+          node tool/secure_chat_storage.cjs revoke
+      - run: node tool/audit_chat_storage.cjs

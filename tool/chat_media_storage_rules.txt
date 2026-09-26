@@ -1,0 +1,29 @@
+    // TBT authenticated chat media v1. Never grant this namespace public access.
+    function chatMediaMember(threadId) {
+      return signedIn() && firestore.get(/databases/(default)/documents/chat_threads/$(threadId)).data.memberIds.hasAny([request.auth.uid]);
+    }
+    function chatMediaReadable(threadId, uid, messageId) {
+      let thread = firestore.get(/databases/(default)/documents/chat_threads/$(threadId)).data;
+      let message = firestore.get(/databases/(default)/documents/chat_threads/$(threadId)/messages/$(messageId)).data;
+      return thread.memberIds.hasAny([request.auth.uid]) &&
+        message.senderId == uid && message.get('deleted', false) == false &&
+        !thread.get('deletedMessageIds', []).hasAny([messageId]);
+    }
+    match /private_chat/{threadId}/{uid}/{messageId}/{fileName} {
+      allow get: if signedIn() && resource.metadata.get('chatSealed', '') == 'true' &&
+        chatMediaReadable(threadId, uid, messageId);
+      allow list: if false;
+      allow create: if isOwner(uid) && chatMediaMember(threadId) &&
+        !firestore.exists(/databases/(default)/documents/chat_threads/$(threadId)/messages/$(messageId)) &&
+        !request.resource.metadata.keys().hasAny(['firebaseStorageDownloadTokens', 'chatSealed']) &&
+        ((fileName.matches('media\\.(jpg|png|webp)') && safeImageWrite()) ||
+         (fileName == 'audio.m4a' && safeAudioWrite() && request.resource.contentType == 'audio/mp4'));
+      allow update: if false;
+      allow delete: if isOwner(uid) && chatMediaMember(threadId);
+    }
+    match /users/{uid}/chat/{threadId}/{fileName} {
+      allow get: if signedIn() && resource.metadata.get('chatSealed', '') == 'true' &&
+        chatMediaReadable(threadId, uid, resource.metadata.get('chatMessageId', ''));
+      allow list, create, update: if false;
+      allow delete: if isOwner(uid) && chatMediaMember(threadId);
+    }

@@ -90,3 +90,7 @@ Object.assign(exports, require('./business_events'));
 
 const {chatPrivatePhoto, expireChatPrivatePhotos} = require('./chat_private_photo');
 Object.assign(exports, {chatPrivatePhoto, expireChatPrivatePhotos});
+
+
+const {finalizeChatMedia,sealUploadedChatMedia}=require('./chat_media_security');
+Object.assign(exports,{finalizeChatMedia,sealUploadedChatMedia});
