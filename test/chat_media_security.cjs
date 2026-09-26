@@ -44,7 +44,7 @@ test('removed members and deleted messages fail closed',async()=>{
  await assertFails(getBytes(media('alice')));
  await seed(c=>updateDoc(doc(c.firestore(),'chat_threads/thread/messages/message'),{deleted:false}));
 });
-test('uploads are owner-scoped and immutable; clients cannot seal or add tokens',async()=>{
+test('uploads are owner-scoped and immutable; clients cannot mark files sealed',async()=>{
  const fresh='private_chat/thread/alice/fresh/media.jpg';
  await assertSucceeds(uploadBytes(media('alice',fresh),bytes,{contentType:'image/jpeg'}));
  await assertFails(getBytes(media('alice',fresh)));
@@ -52,7 +52,10 @@ test('uploads are owner-scoped and immutable; clients cannot seal or add tokens'
  await assertFails(uploadBytes(media('outsider','private_chat/thread/outsider/forged/media.jpg'),bytes,{contentType:'image/jpeg'}));
  await assertFails(uploadBytes(media('alice','users/alice/chat/thread/new.jpg'),bytes,{contentType:'image/jpeg'}));
  await assertFails(uploadBytes(media('alice','private_chat/thread/alice/forged/media.jpg'),bytes,{contentType:'image/jpeg',customMetadata:{chatSealed:'true'}}));
- await assertFails(uploadBytes(media('alice','private_chat/thread/alice/token/media.jpg'),bytes,{contentType:'image/jpeg',customMetadata:{firebaseStorageDownloadTokens:'public'}}));
+ // Reserved download tokens are not exposed to Storage rule evaluation.
+ // The server finalizer strips them; reads stay denied until the server seal.
+ await assertSucceeds(uploadBytes(media('alice','private_chat/thread/alice/token/media.jpg'),bytes,{contentType:'image/jpeg',customMetadata:{firebaseStorageDownloadTokens:'public'}}));
+ await assertFails(getBytes(media('bob','private_chat/thread/alice/token/media.jpg')));
  await assertFails(updateMetadata(media('alice'),{customMetadata:{firebaseStorageDownloadTokens:'public'}}));
  await assertFails(uploadBytes(media('alice'),bytes,{contentType:'image/jpeg'}));
  await assertFails(uploadBytes(media('alice','private_chat/thread/alice/bad/audio.m4a'),bytes,{contentType:'application/octet-stream'}));

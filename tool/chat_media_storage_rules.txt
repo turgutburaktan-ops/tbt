@@ -15,7 +15,7 @@
       allow list: if false;
       allow create: if isOwner(uid) && chatMediaMember(threadId) &&
         !firestore.exists(/databases/(default)/documents/chat_threads/$(threadId)/messages/$(messageId)) &&
-        !request.resource.metadata.keys().hasAny(['firebaseStorageDownloadTokens', 'chatSealed']) &&
+        !request.resource.metadata.keys().hasAny(['chatSealed']) &&
         ((fileName.matches('media\\.(jpg|png|webp)') && safeImageWrite()) ||
          (fileName == 'audio.m4a' && safeAudioWrite() && request.resource.contentType == 'audio/mp4'));
       allow update: if false;
