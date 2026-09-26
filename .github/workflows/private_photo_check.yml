@@ -18,12 +18,20 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/chat_screen.dart lib/screens/chat_photo_preview_screen.dart lib/screens/private_photo_screen.dart lib/services/private_photo_service.dart lib/models/chat_message.dart
       - run: flutter test test/private_photo_test.dart test/chat_layout_test.dart test/chat_access_test.dart test/camera_share_controls_test.dart
       - run: |
+          rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          python3 - <<'PYHOST'
+          from pathlib import Path
+          p=Path('android/app/build.gradle.kts')
+          p.write_text(p.read_text().replace('minSdk = flutter.minSdkVersion','minSdk = 26'))
+          PYHOST
+          python3 tool/patch_receive_sharing_intent.py
+          python3 tool/configure_notifications.py android
           python3 tool/patch_native_photo_pipeline.py
           python3 tool/configure_route_album.py android
           python3 tool/configure_route_album.py android
@@ -39,8 +47,20 @@ jobs:
           cache: true
       - run: |
           flutter config --no-enable-swift-package-manager
+          rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
           flutter pub get
+          python3 - <<'PYHOST'
+          from pathlib import Path
+          import re
+          p=Path('ios/Podfile')
+          s=p.read_text()
+          s=re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, flags=re.M)
+          if "platform :ios, '15.0'" not in s: s="platform :ios, '15.0'\n"+s
+          p.write_text(s)
+          p=Path('ios/Runner.xcodeproj/project.pbxproj')
+          p.write_text(re.sub(r'IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;', 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;', p.read_text()))
+          PYHOST
           python3 tool/configure_notifications.py ios
           python3 tool/configure_route_album.py ios
           python3 tool/configure_route_album.py ios
