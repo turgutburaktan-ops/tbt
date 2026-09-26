@@ -8,7 +8,9 @@ import 'package:image/image.dart' as img;
 enum ChatPhotoMode { once, replay, keep }
 
 Uint8List preparePrivatePhoto(Uint8List bytes) {
-  final decoded = img.decodeImage(bytes);
+  img.Image? decoded;
+  try { decoded = img.decodeImage(bytes); }
+  catch (_) { throw Exception('Fotoğraf okunamadı.'); }
   if (decoded == null) throw Exception('Fotoğraf okunamadı.');
   var image = img.bakeOrientation(decoded);
   if (image.width > 1280 || image.height > 1280) {
