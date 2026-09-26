@@ -1,3 +1,4 @@
+import shutil
 import pathlib
 import subprocess
 import sys
@@ -16,12 +17,17 @@ class AlbumHostTest(unittest.TestCase):
                 native=root/'tool/native_album'
                 native.mkdir(parents=True)
                 (native/'ios.txt').write_text((ROOT/'tool/native_album/ios.txt').read_text())
+                shutil.copytree(ROOT/'tool/native_private_photo',root/'tool/native_private_photo')
+                shutil.copy(ROOT/'tool/configure_private_photo.py',root/'tool/configure_private_photo.py')
                 command=[sys.executable,str(ROOT/'tool/configure_route_album.py'),'ios']
                 subprocess.run(command,cwd=root,check=True)
                 first=delegate.read_text()
                 self.assertIn('registerTBTAlbum('+registry+')',first)
                 self.assertIn('registrar.messenger()',first)
-                self.assertNotIn('rootViewController',first)
+                self.assertNotIn('window?.rootViewController',first)
+                self.assertIn('registerTBTPrivatePhoto('+registry+')',first)
+                self.assertIn('UIScreen.capturedDidChangeNotification',first)
                 subprocess.run(command,cwd=root,check=True)
                 self.assertEqual(first,delegate.read_text())
 if __name__=='__main__':unittest.main()
+
