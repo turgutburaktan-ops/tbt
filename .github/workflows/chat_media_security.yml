@@ -84,8 +84,8 @@ jobs:
         env:
           NODE_PATH: /tmp/chat-tests/node_modules
         run: /tmp/chat-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-access "node --test --test-concurrency=1 test/chat_media_security.cjs test/private_photo_backend.cjs" --non-interactive
-      - name: Deploy chat media finalizer and token cleanup trigger only
-        run: /tmp/chat-deploy/node_modules/.bin/firebase deploy --only functions:finalizeChatMedia,functions:sealUploadedChatMedia --project en-iyi-cekim-noktasi --non-interactive
+      - name: Deploy chat media finalizer and bounded cleanup schedule only
+        run: /tmp/chat-deploy/node_modules/.bin/firebase deploy --only functions:finalizeChatMedia,functions:sealPendingChatMedia --project en-iyi-cekim-noktasi --non-interactive
       - name: Restrict chat Storage policy and revoke existing media tokens
         run: |
           node tool/secure_chat_storage.cjs deploy

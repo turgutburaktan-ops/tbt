@@ -1,5 +1,5 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
-const {onObjectFinalized} = require('firebase-functions/v2/storage');
+const {onSchedule} = require('firebase-functions/v2/scheduler');
 const {getFirestore} = require('firebase-admin/firestore');
 const {getStorage} = require('firebase-admin/storage');
 const BUCKET = 'en-iyi-cekim-noktasi.firebasestorage.app';
@@ -40,11 +40,32 @@ async function finalizeChatMediaHandler(request, db = getFirestore(), bucket = g
 }
 exports.finalizeChatMedia=onCall({region:'europe-west1',maxInstances:10},
   request=>finalizeChatMediaHandler(request));
-exports.sealUploadedChatMedia=onObjectFinalized({bucket:BUCKET,region:'europe-west1',maxInstances:10},
-  async event=>{
-    const name=event.data.name||'';
-    if (!/^private_chat\/[^/]+\/[^/]+\/[^/]+\/(media\.(jpg|png|webp)|audio\.m4a)$/.test(name)) return;
-    await sealFile(getStorage().bucket(BUCKET).file(name));
-  });
+// The callable seals every normal app upload before its message is created.
+// A bounded sweep also removes tokens from abandoned/custom-client uploads.
+async function sealPendingChatMediaHandler(db = getFirestore(), bucket = getStorage().bucket(BUCKET)) {
+  const state = db.doc('maintenance_jobs/chat_media_seal');
+  const prior = (await state.get()).data() || {};
+  const query = {prefix:'private_chat/',maxResults:100,autoPaginate:false};
+  if (prior.pageToken) query.pageToken = prior.pageToken;
+  let result;
+  try { result = await bucket.getFiles(query); }
+  catch (error) {
+    if (Number(error.code) !== 400 || !query.pageToken) throw error;
+    delete query.pageToken; result = await bucket.getFiles(query);
+  }
+  const [files,next] = result;
+  for (let offset=0;offset<files.length;offset+=10) {
+    await Promise.all(files.slice(offset,offset+10).map(async file=>{
+      if (!/^private_chat\/[^/]+\/[^/]+\/[^/]+\/(media\.(jpg|png|webp)|audio\.m4a)$/.test(file.name)) return;
+      const meta=file.metadata?.metadata;
+      if (meta?.chatSealed==='true' && !meta.firebaseStorageDownloadTokens) return;
+      try { await sealFile(file); } catch(error) { if(Number(error.code)!==404) throw error; }
+    }));
+  }
+  await state.set({pageToken:next?.pageToken||null,updatedAt:Date.now()});
+}
+exports.sealPendingChatMedia=onSchedule({schedule:'every 5 minutes',region:'europe-west1',
+  maxInstances:1,concurrency:1,timeoutSeconds:240},()=>sealPendingChatMediaHandler());
+exports._sealPendingChatMediaHandler=sealPendingChatMediaHandler;
 exports._finalizeChatMediaHandler=finalizeChatMediaHandler;
 exports._sealChatFile=sealFile;

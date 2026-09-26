@@ -82,3 +82,13 @@ test('sealing retries metadata races and refuses token persistence',async()=>{
  assert.equal(n,2);
  await assert.rejects(()=>_sealChatFile({getMetadata:async()=>[{metageneration:'1',metadata:{firebaseStorageDownloadTokens:'still-open'}}],setMetadata:async()=>{}}));
 });
+test('bounded sweeper removes abandoned upload tokens and persists pagination',async()=>{
+ const {_sealPendingChatMediaHandler}=require('../functions/chat_media_security');
+ let saved, sealed=false;
+ let m={metageneration:'1',metadata:{firebaseStorageDownloadTokens:'abandoned'}};
+ const file={name:path,metadata:m,getMetadata:async()=>[m],setMetadata:async value=>{m={...value,metageneration:'2'};sealed=true;}};
+ const db={doc:p=>{assert.equal(p,'maintenance_jobs/chat_media_seal');return {get:async()=>({data:()=>({pageToken:'page-one'})}),set:async d=>{saved=d;}};}};
+ const bucket={getFiles:async q=>{assert.equal(q.prefix,'private_chat/');assert.equal(q.maxResults,100);assert.equal(q.pageToken,'page-one');return [[file],{pageToken:'page-two'}];}};
+ await _sealPendingChatMediaHandler(db,bucket);
+ assert(sealed);assert.equal(saved.pageToken,'page-two');assert.equal(m.metadata.firebaseStorageDownloadTokens,null);
+});

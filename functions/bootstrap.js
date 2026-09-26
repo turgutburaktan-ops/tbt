@@ -92,5 +92,5 @@ const {chatPrivatePhoto, expireChatPrivatePhotos} = require('./chat_private_phot
 Object.assign(exports, {chatPrivatePhoto, expireChatPrivatePhotos});
 
 
-const {finalizeChatMedia,sealUploadedChatMedia}=require('./chat_media_security');
-Object.assign(exports,{finalizeChatMedia,sealUploadedChatMedia});
+const {finalizeChatMedia,sealPendingChatMedia}=require('./chat_media_security');
+Object.assign(exports,{finalizeChatMedia,sealPendingChatMedia});
