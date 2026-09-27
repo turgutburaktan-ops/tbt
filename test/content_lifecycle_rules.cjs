@@ -52,3 +52,6 @@ test('clients cannot create or read lifecycle operation locks', async () => {
     await assertFails(getDoc(doc(db(uid),'account_lifecycle_locks',uid)));
   }
 });
+test('an account without a profile cannot publish content', async () => {
+  for (const [collection,data] of Object.entries(content('missing-profile'))) await assertFails(setDoc(doc(db('missing-profile'),collection,'missing-profile'),data));
+});

@@ -10,6 +10,7 @@ const base=()=>({ownerId:'owner',memberIds:['owner'],invitedIds:['invite'],visib
  accessVersion:2,joinAudience:'followers',joinEnabled:true,joinRequiresApproval:false,
  hasSchedule:true,startAt:Timestamp.fromMillis(Date.now()+86400000),participantLimit:60,spotIds:['s'],title:'Rota'});
 async function seed(extra={}) {await env.withSecurityRulesDisabled(async c=>{
+ await setDoc(doc(c.firestore(),'users/owner'),{accountStatus:'active'});
  await setDoc(doc(c.firestore(),'travel_plans/r'),{...base(),...extra});
  await setDoc(doc(c.firestore(),'users/owner/followers/follower'),{userId:'follower'});
 });}

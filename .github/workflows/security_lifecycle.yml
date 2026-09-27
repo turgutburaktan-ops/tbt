@@ -10,6 +10,7 @@ on:
       - functions/test/strict_rule_patches.test.js
       - firestore.rules
       - test/content_lifecycle_rules.cjs
+      - test/route_access_rules.cjs
       - tool/security_rules_patch.json
       - tool/strict_rule_patches.cjs
       - tool/deploy_security_hardening.cjs
