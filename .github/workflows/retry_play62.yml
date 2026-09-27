@@ -1,0 +1,30 @@
+name: Retry verified Play security bundle
+on:
+  push:
+    branches: [codex/store-release62-security-20260927]
+    paths: ['.github/workflows/retry_play62.yml', 'tool/upload_play_build62.cjs']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-play-release
+  cancel-in-progress: false
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-play-release-1.0.34-code62
+          path: build/app/outputs/bundle/release
+          run-id: 36307786631
+          github-token: ${{ github.token }}
+      - name: Submit the original verified bundle and report API rejection details
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/upload_play_build62.cjs

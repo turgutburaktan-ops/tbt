@@ -28,7 +28,7 @@ const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applicat
    if(!(bundles.bundles||[]).some(b=>Number(b.versionCode)===62)){
      const upload=await fetch('https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/com.tbt.social/edits/'+encodeURIComponent(edit.id)+'/bundles?uploadType=media',{method:'POST',headers:{Authorization:headers.Authorization,'Content-Type':'application/octet-stream'},body:bytes,signal:AbortSignal.timeout(300000)});
      const bundle=await upload.json();
-     if(!upload.ok||Number(bundle.versionCode)!==62)throw Error('Bundle upload failed HTTP '+upload.status);
+     if(!upload.ok||Number(bundle.versionCode)!==62){const e=Error('Bundle upload failed HTTP '+upload.status);e.apiMessage=bundle.error?.message||'Unexpected uploaded version code';throw e;}
      if(bundle.sha256&&bundle.sha256.toLowerCase()!==sha)throw Error('Uploaded bundle checksum mismatch');
      console.log('Uploaded and verified versionCode 62');
    } else {
