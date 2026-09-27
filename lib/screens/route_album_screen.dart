@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import '../widgets/route_design/route_design.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -135,6 +136,10 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
               SettableMetadata(contentType: 'image/jpeg'),
             );
             thumbDone = true;
+          }
+          await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
+          if (thumbDone) {
+            await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': thumb.fullPath});
           }
           stage = 'İçeriğin albüme eklenmesi';
           await doc.set({
@@ -629,3 +634,4 @@ class _AlbumViewerState extends State<_AlbumViewer> {
     },
   );
 }
+

@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:io';
 import 'video_media_service.dart';
 import 'dart:typed_data';
@@ -77,6 +78,7 @@ class RouteChatService {
       'route_chat/$id/${data['senderId']}/${doc.id}/audio.m4a',
     );
     await ref.putData(bytes, SettableMetadata(contentType: 'audio/mp4'));
+    await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
     // Keep uploaded bytes on an ambiguous Firestore failure: the write may have committed.
     await doc.set({
       ...data,
@@ -127,6 +129,7 @@ class RouteChatService {
       'route_albums/$id/${data['senderId']}/${doc.id}/media.$extension',
     );
     await ref.putFile(prepared?.video ?? File(file.path), SettableMetadata(contentType: mime));
+    await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
     final batch = FirebaseFirestore.instance.batch();
     batch.set(doc, {
       ...data,
@@ -146,3 +149,4 @@ class RouteChatService {
     await batch.commit();
   }
 }
+

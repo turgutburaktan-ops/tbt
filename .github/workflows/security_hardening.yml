@@ -27,3 +27,45 @@ jobs:
         env:
           NODE_PATH: /tmp/security-tests/node_modules
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
+      - run: node --test test/private_route_media_security.cjs
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/admin_businesses_v2_screen.dart lib/screens/route_album_screen.dart lib/services/route_chat_service.dart lib/services/event_chat_service.dart
+      - run: flutter build bundle --debug
+  deploy:
+    needs: [verify, flutter]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --prefix functions
+          npm install --prefix /tmp/security-deploy firebase-tools@latest
+      - name: Authenticate scoped security deployment
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'security.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - run: node tool/deploy_security_hardening.cjs check
+      - name: Deploy evidence and private media controls
+        run: /tmp/security-deploy/node_modules/.bin/firebase deploy --only functions:submitBusinessClaimV2,functions:finalizePrivateMedia,functions:sealPendingChatMedia --project en-iyi-cekim-noktasi --non-interactive
+      - name: Publish verified policies and revoke private media tokens
+        run: node tool/deploy_security_hardening.cjs deploy

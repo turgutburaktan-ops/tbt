@@ -94,3 +94,6 @@ Object.assign(exports, {chatPrivatePhoto, expireChatPrivatePhotos});
 
 const {finalizeChatMedia,sealPendingChatMedia}=require('./chat_media_security');
 Object.assign(exports,{finalizeChatMedia,sealPendingChatMedia});
+
+
+exports.finalizePrivateMedia = require('./chat_media_security').finalizePrivateMedia;

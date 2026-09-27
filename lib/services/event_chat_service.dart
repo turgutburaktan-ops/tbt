@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:io';
 import 'video_media_service.dart';
 import 'dart:typed_data';
@@ -27,6 +28,7 @@ class EventChatService {
     final data = _data('Sesli mesaj', 'audio', reply), doc = messages(id).doc();
     final ref = FirebaseStorage.instance.ref('event_chat/$id/${data['senderId']}/${doc.id}/audio.m4a');
     await ref.putData(bytes, SettableMetadata(contentType: 'audio/mp4'));
+    await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
     await doc.set({...data, 'storagePath': ref.fullPath, 'durationMs': duration});
   }
   Future<void> media(String id, XFile file, {Map<String, dynamic>? reply}) async {
@@ -42,6 +44,8 @@ class EventChatService {
     final mime = video ? 'video/mp4' : 'image/${ext == 'jpg' ? 'jpeg' : ext}';
     final ref = FirebaseStorage.instance.ref('event_chat/$id/${data['senderId']}/${doc.id}/media.$extension');
     await ref.putFile(prepared?.video ?? File(file.path), SettableMetadata(contentType: mime));
+    await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
     await doc.set({...data, 'storagePath': ref.fullPath});
   }
 }
+

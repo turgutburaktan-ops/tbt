@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -232,7 +234,10 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
 
   Future<void> _details(Map<String, dynamic> data) async {
     final status = (data['status'] ?? 'registered').toString();
-    final evidenceUrl = (data['evidenceUrl'] ?? '').toString().trim();
+    final evidencePath = (data['evidenceStoragePath'] ?? '').toString().trim();
+    final evidence = RegExp(r'^users/[^/]+/business_claims/[^/]+/evidence\.(jpg|png|webp)$').hasMatch(evidencePath)
+        ? FirebaseStorage.instance.ref(evidencePath).getData(10 * 1024 * 1024)
+        : Future<Uint8List?>.value(null);
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
@@ -264,7 +269,7 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 9),
-            if (evidenceUrl.isEmpty)
+            if (evidencePath.isEmpty)
               const SizedBox(
                 height: 180,
                 child: Center(child: Text('Kanıt görseli bulunamadı.')),
@@ -277,12 +282,14 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
                   child: InteractiveViewer(
                     minScale: 1,
                     maxScale: 4,
-                    child: Image.network(
-                      evidenceUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Text('Kanıt görseli yüklenemedi.'),
-                      ),
+                    child: FutureBuilder<Uint8List?>(
+                      future: evidence,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) return const Center(child: Text('Kanıt görseli yüklenemedi.'));
+                        final bytes = snapshot.data;
+                        if (bytes == null) return const Center(child: CircularProgressIndicator());
+                        return Image.memory(bytes, fit: BoxFit.contain);
+                      },
                     ),
                   ),
                 ),
@@ -500,3 +507,4 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
     ),
   );
 }
+
