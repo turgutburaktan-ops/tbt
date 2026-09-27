@@ -31,7 +31,8 @@ exports.pushOnNotificationCreated = onDocumentCreated(
         return;
       }
       const thread = (await db.doc(`chat_threads/${data.sourceId}`).get()).data();
-      if (thread?.type === 'direct') {
+      if (!thread || !['direct','group'].includes(thread.type) || !thread.memberIds?.includes(data.actorId) || !thread.memberIds?.includes(userId)) return;
+      if (thread.type === 'direct') {
         const actor = data.actorId;
         if (!actor || !thread.memberIds?.includes(actor) || !thread.memberIds?.includes(userId)) return;
         const blocks = await Promise.all([
@@ -459,4 +460,5 @@ exports.awardFiftyLikesXp = onDocumentCreated('posts/{postId}/likes/{userId}', a
     stat: 'creatorQualityBonuses',
   });
 });
+
 

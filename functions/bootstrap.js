@@ -97,3 +97,8 @@ Object.assign(exports,{finalizeChatMedia,sealPendingChatMedia});
 
 
 exports.finalizePrivateMedia = require('./chat_media_security').finalizePrivateMedia;
+
+const trustedNotifications = require('./trusted_notifications');
+for (const [name, handler] of Object.entries(trustedNotifications)) {
+  if (!name.startsWith('_')) exports[name] = handler;
+}

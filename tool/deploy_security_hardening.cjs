@@ -25,7 +25,7 @@ async function main() {
   if(rules.source.files.length!==1) throw Error('Unexpected live policy layout');
   const content=fs.readFileSync(name+'.rules','utf8');
   const hash=digest(rules.source.files[0].content);
-  if(hash!==expected[name] && hash!==digest(content)) throw Error(name+' live rules changed; refusing overwrite');
+  if(![expected[name]].flat().includes(hash) && hash!==digest(content)) throw Error(name+' live rules changed; refusing overwrite');
   pending.push({name,path,live,content,changed:hash!==digest(content)});
  }
  if(process.argv[2]==='check') {console.log('LIVE_RULE_BASE_VERIFIED');return;}

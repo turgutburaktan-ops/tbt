@@ -281,11 +281,8 @@ service cloud.firestore {
       match /notifications/{notificationId} {
         allow read, delete: if isSelf(uid);
         allow update: if isSelf(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
-        allow create: if signedIn() && request.resource.data.keys().hasAll(['type','title','body','actorId']) &&
-          request.resource.data.type is string && request.resource.data.title is string && request.resource.data.body is string &&
-          request.resource.data.type != 'tbt_broadcast' && !request.resource.data.keys().hasAny(['senderName', 'pushAllowed']) &&
-          request.resource.data.actorId == request.auth.uid && request.resource.data.title.size() > 0 &&
-          request.resource.data.title.size() <= 160 && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 600;
+        // Notifications are derived from real source events by trusted backend triggers.
+        allow create: if false;
       }
       match /push_tokens/{tokenId} {
         allow read: if isAdmin() || isSelf(uid);

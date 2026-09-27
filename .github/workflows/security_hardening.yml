@@ -27,7 +27,7 @@ jobs:
         env:
           NODE_PATH: /tmp/security-tests/node_modules
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
-      - run: node --test test/private_route_media_security.cjs
+      - run: node --test test/private_route_media_security.cjs test/trusted_notifications.cjs
   flutter:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -66,7 +66,7 @@ jobs:
           PY
       - run: node tool/deploy_security_hardening.cjs check
       - name: Deploy evidence and private media controls
-        run: /tmp/security-deploy/node_modules/.bin/firebase deploy --only functions:submitBusinessClaimV2,functions:finalizePrivateMedia,functions:sealPendingChatMedia --project en-iyi-cekim-noktasi --non-interactive
+        run: /tmp/security-deploy/node_modules/.bin/firebase deploy --only functions:submitBusinessClaimV2,functions:finalizePrivateMedia,functions:sealPendingChatMedia,functions:pushOnNotificationCreated,functions:trustedDirectMessage,functions:trustedFollow,functions:trustedPostLike,functions:trustedPostComment,functions:trustedEventAttendance,functions:trustedStoryInteraction,functions:trustedStoryMention,functions:trustedEventMemory,functions:trustedPostTag --project en-iyi-cekim-noktasi --non-interactive
       - name: Publish verified policies and revoke private media tokens
         run: node tool/deploy_security_hardening.cjs deploy
       - name: Enforce password length and enable database recovery

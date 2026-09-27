@@ -24,8 +24,8 @@ after(async()=>env?.cleanup());
 test.skip('F01 regression: denied unrelated authenticated account reads email and phone',async()=>{
  const s=await assertSucceeds(getDoc(doc(db('attacker'),'users/victim')));assert.equal(s.data().email,'synthetic@example.invalid');assert.equal(s.data().phoneNumber,'+900000000000');
 });
-test.skip('F02 regression: denied outsider creates arbitrary notification in another account',async()=>{
- await assertSucceeds(setDoc(doc(db('attacker'),'users/victim/notifications/forged'),{type:'group_message',title:'Synthetic forged alert',body:'SYNTHETIC_ONLY',actorId:'attacker',sourceId:'nonexistent-group'}));
+test('F02 regression: denied outsider creates arbitrary notification in another account',async()=>{
+ await assertFails(setDoc(doc(db('attacker'),'users/victim/notifications/forged'),{type:'group_message',title:'Synthetic forged alert',body:'SYNTHETIC_ONLY',actorId:'attacker',sourceId:'nonexistent-group'}));
 });
 test('F03 regression: denied private event outsider self-enrolls and gains chat access',async()=>{
  const d=db('attacker');await assertFails(getDoc(doc(d,'social_events/private-event/chat/secret')));
