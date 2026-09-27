@@ -28,6 +28,12 @@ jobs:
           NODE_PATH: /tmp/security-tests/node_modules
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
       - run: node --test test/private_route_media_security.cjs test/trusted_notifications.cjs functions/test/account_lifecycle.test.js
+      - name: Validate release-coupled contact privacy rules separately
+        env:
+          NODE_PATH: /tmp/security-tests/node_modules
+        run: |
+          node tool/contact_privacy_rules.cjs
+          /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-general-audit "node --test test/private_contacts.cjs" --non-interactive
   flutter:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -38,7 +44,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/admin_businesses_v2_screen.dart lib/screens/route_album_screen.dart lib/services/route_chat_service.dart lib/services/event_chat_service.dart lib/services/trust_safety_service.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/admin_businesses_v2_screen.dart lib/screens/route_album_screen.dart lib/services/route_chat_service.dart lib/services/event_chat_service.dart lib/services/trust_safety_service.dart lib/services/auth_service.dart lib/services/social_service.dart lib/screens/register_screen.dart lib/screens/account_security_gate_v2.dart
       - run: flutter build bundle --debug
   deploy:
     needs: [verify, flutter]

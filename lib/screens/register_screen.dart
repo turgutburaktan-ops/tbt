@@ -94,7 +94,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'fullName': fullName,
           'firstName': nameParts.first,
           'lastName': nameParts.skip(1).join(' '),
-          'email': email,
           'profileType': 'personal',
           'onboardingRequired': true,
           'onboardingCompleted': false,
@@ -401,3 +400,4 @@ class _Requirement extends StatelessWidget {
     ),
   );
 }
+

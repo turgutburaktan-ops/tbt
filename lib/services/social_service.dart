@@ -44,7 +44,6 @@ class SocialService {
         'displayName': user.displayName?.trim().isNotEmpty == true
             ? user.displayName
             : 'Fotoğrafçı',
-        'email': user.email ?? '',
         'photoUrl': user.photoURL ?? '',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -60,10 +59,6 @@ class SocialService {
     if ((existing['displayName'] ?? '').toString().trim().isEmpty &&
         (user.displayName ?? '').trim().isNotEmpty) {
       patch['displayName'] = user.displayName!.trim();
-    }
-    if ((existing['email'] ?? '').toString().trim().isEmpty &&
-        (user.email ?? '').trim().isNotEmpty) {
-      patch['email'] = user.email!.trim();
     }
     if ((existing['photoUrl'] ?? '').toString().trim().isEmpty &&
         (user.photoURL ?? '').trim().isNotEmpty) {
@@ -298,3 +293,4 @@ class SocialService {
     } catch (_) {}
   }
 }
+

@@ -153,8 +153,6 @@ class AuthService {
           .toList();
       await ref.set({
         'uid': user.uid,
-        'email': user.email ?? data?['email'] ?? '',
-        'phoneNumber': user.phoneNumber ?? data?['phoneNumber'] ?? '',
         'displayName': resolvedFullName,
         if (resolvedFullName.isNotEmpty) 'fullName': resolvedFullName,
         if (nameParts.isNotEmpty) 'firstName': nameParts.first,
@@ -326,3 +324,4 @@ class AuthService {
     }
   }
 }
+

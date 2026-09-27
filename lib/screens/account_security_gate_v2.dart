@@ -35,7 +35,6 @@ class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
       try {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'phoneVerified': true,
-          'verifiedPhoneNumber': user.phoneNumber,
           'phoneVerifiedAt': FieldValue.serverTimestamp(),
           'phoneVerificationDeferred': FieldValue.delete(),
           'updatedAt': FieldValue.serverTimestamp(),
@@ -441,7 +440,6 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
           .collection('users')
           .doc(user.uid)
           .set({
-            'phoneNumber': phone,
             'phoneVerified': true,
             'phoneVerifiedAt': FieldValue.serverTimestamp(),
             'phoneVerificationDeferred': false,
@@ -551,3 +549,4 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
     );
   }
 }
+
