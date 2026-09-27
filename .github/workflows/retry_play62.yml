@@ -1,8 +1,6 @@
 name: Retry verified Play security bundle
 on:
-  push:
-    branches: [codex/store-release62-security-20260927]
-    paths: ['.github/workflows/retry_play62.yml', 'tool/upload_play_build62.cjs']
+  workflow_dispatch:
 permissions:
   contents: read
   actions: read
@@ -18,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Require completed security verification
+        run: node tool/security_release_gate.cjs
       - uses: actions/download-artifact@v4
         with:
           name: tbt-play-release-1.0.34-code62

@@ -1,4 +1,5 @@
 'use strict';
+require('node:child_process').execFileSync(process.execPath, [require('node:path').join(__dirname, 'security_release_gate.cjs')], {stdio: 'inherit'});
 const crypto=require('node:crypto'),fs=require('node:fs');
 const root='https://api.appstoreconnect.apple.com/v1';
 const appId='6808182194';

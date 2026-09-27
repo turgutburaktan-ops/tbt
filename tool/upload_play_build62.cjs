@@ -1,4 +1,5 @@
 'use strict';
+require('node:child_process').execFileSync(process.execPath, [require('node:path').join(__dirname, 'security_release_gate.cjs')], {stdio: 'inherit'});
 const fs=require('node:fs'),crypto=require('node:crypto');
 const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.tbt.social/edits';
 (async()=>{
