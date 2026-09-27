@@ -39,6 +39,22 @@ service cloud.firestore {
         (('allowedUserIds' in d) && d.allowedUserIds.hasAny([request.auth.uid]))
       ));
     }
+    // Check the pre-write audience, never a participant list supplied by the caller.
+    function eventJoinAllowed(d) {
+      return signedIn() && (d.get('visibility', 'public') == 'public' ||
+        d.get('allowedUserIds', []).hasAny([request.auth.uid]));
+    }
+    function attendanceAllowed(d, status) {
+      return eventJoinAllowed(d) && (status == 'interested' ||
+        d.get('accessType', 'free') == 'free');
+    }
+    function validCommentUpdate() {
+      return signedIn() && resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'updatedAt']) &&
+        request.resource.data.text is string && request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 700;
+    }
     function memoryVisible(d) {
       let id = d.eventId;
       return exists(/databases/$(database)/documents/social_events/$(id)) &&
@@ -229,6 +245,7 @@ service cloud.firestore {
       let capacity = request.resource.data.get('capacity', 1);
       return signedIn() && resource.data.hostId != request.auth.uid && resource.data.status == 'open' &&
         nextStatus in ['going','interested','private','none'] &&
+        (nextStatus == 'none' || attendanceAllowed(resource.data, nextStatus)) &&
         changed.hasOnly(['participantIds','interestedCount','privateParticipantCount','updatedAt']) &&
         validMembershipDelta(eventId) && validAttendanceCounters(eventId) &&
         request.resource.data.participantIds.size() + request.resource.data.get('privateParticipantCount', 0) <= capacity;
@@ -374,7 +391,7 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.status == 'open' && paidCreateValid() && privacyValid() && validCommunityHost();
       allow update: if isAdmin() || validAttendanceEventUpdate(eventId) || (signedIn() && resource.data.hostId == request.auth.uid && protectedEventFieldsSame() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled']);
       allow delete: if isAdmin();
-      match /attendance/{uid} { allow read: if signedIn() && eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create, update: if isSelf(uid) && request.resource.data.userId == uid && request.resource.data.status in ['going','interested','private'] && get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId != uid && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open'; allow delete: if isSelf(uid); }
+      match /attendance/{uid} { allow read: if signedIn() && eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create, update: if isSelf(uid) && request.resource.data.userId == uid && request.resource.data.status in ['going','interested','private'] && attendanceAllowed(get(/databases/$(database)/documents/social_events/$(eventId)).data, request.resource.data.status) && get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId != uid && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open'; allow delete: if isSelf(uid); }
       match /info/{infoId} {
         allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
         allow create, update: if infoId == 'main' && signedIn() && get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid && validEventInfo();
@@ -402,14 +419,14 @@ service cloud.firestore {
       }
       match /reports/{reporterId} { allow read: if isAdmin(); allow create: if signedIn() && reporterId == request.auth.uid && request.resource.data.reporterId == request.auth.uid && request.resource.data.reason is string && request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 300; allow update, delete: if false; }
       match /likes/{uid} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
-      match /comments/{commentId} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if validCommentCreate(); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+      match /comments/{commentId} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if validCommentCreate(); allow update: if validCommentUpdate(); allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
       match /tags/{taggedUserId} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
       match /{sub}/{docId} { allow read, write: if false; }
     }
     match /event_memories/{memoryId} {
       allow read: if memoryVisible(resource.data); allow create: if validMemoryCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /likes/{uid} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
-      match /comments/{commentId} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if validCommentCreate() && memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+      match /comments/{commentId} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if validCommentCreate() && memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow update: if validCommentUpdate(); allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
       match /tags/{taggedUserId} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
       match /{sub}/{docId} { allow read, write: if false; }
     }
@@ -429,7 +446,7 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if true;
         allow create: if validCommentCreate();
-        allow update: if signedIn() && resource.data.userId == request.auth.uid;
+        allow update: if validCommentUpdate();
         allow delete: if signedIn() && (resource.data.userId == request.auth.uid ||
           get(/databases/$(database)/documents/posts/$(postId)).data.userId == request.auth.uid);
       }
@@ -456,11 +473,11 @@ service cloud.firestore {
     match /catalog_links/{id} { allow read, write: if false; }
     match /catalog_jobs/{id} { allow read, write: if false; }
     match /catalog_exclusions/{id} { allow read, write: if false; }
-    match /spot_presence/{id} { allow read: if signedIn(); allow create: if signedIn() && request.resource.data.userId == request.auth.uid; allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+    match /spot_presence/{id} { allow read: if signedIn(); allow create: if signedIn() && request.resource.data.userId == request.auth.uid; allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId; allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
     match /spot_meetups/{id} { allow read: if true; allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.participantIds.hasAny([request.auth.uid]); allow update: if signedIn() && (participantOnlyChange() || (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled'])); allow delete: if isAdmin(); }
     match /event_tickets/{id} {
       allow read: if signedIn() && (resource.data.userId == request.auth.uid || (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) && get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid));
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && exists(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)) && request.resource.data.status in ['active','pendingPayment'] && ((get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.get('accessType', 'free') == 'free' && request.resource.data.status == 'active') || (get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.get('accessType', 'free') == 'paid' && request.resource.data.status == 'pendingPayment'));
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && exists(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)) && request.resource.data.status in ['active','pendingPayment'] && eventJoinAllowed(get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data) && ((get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.get('accessType', 'free') == 'free' && request.resource.data.status == 'active') || (get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.get('accessType', 'free') == 'paid' && request.resource.data.status == 'pendingPayment'));
       allow update: if signedIn() && (
         (resource.data.userId == request.auth.uid &&
           request.resource.data.userId == resource.data.userId &&
@@ -478,7 +495,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     match /user_reports/{id} { allow read: if isAdmin(); allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid && request.resource.data.reportedUserId is string && request.resource.data.reason is string && request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 500; allow update, delete: if isAdmin(); }
-    match /activity_demands/{id} { allow read: if true; allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
+    match /activity_demands/{id} { allow read: if true; allow create: if signedIn() && request.resource.data.userId == request.auth.uid; allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId; allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
     match /communities/{id} {
       allow read: if true;
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false && request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);
@@ -724,4 +741,5 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
   }
 }
+
 

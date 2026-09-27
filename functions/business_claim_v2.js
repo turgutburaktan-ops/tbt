@@ -1,7 +1,6 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 const {getStorage} = require('firebase-admin/storage');
-const {randomUUID} = require('crypto');
 
 const MAX_ACTIVE_CLAIMS = 2;
 const REJECT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -32,7 +31,7 @@ exports.submitBusinessClaimV2 = onCall({region: 'europe-west1', timeoutSeconds: 
   const evidenceContentType = clean(d.evidenceContentType, 80).toLowerCase();
   const evidenceBase64 = String(d.evidenceBase64 || '');
 
-  if (!['cafe', 'dining', 'hotel'].includes(category) || !venueId || venueName.length < 2 || legalName.length < 3 || taxOffice.length < 2) {
+  if (!['cafe', 'dining', 'hotel'].includes(category) || !/^[A-Za-z0-9_-]{1,180}$/.test(venueId) || venueName.length < 2 || legalName.length < 3 || taxOffice.length < 2) {
     throw new HttpsError('invalid-argument', 'Eksik veya geçersiz işletme bilgisi.');
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail)) {
@@ -90,14 +89,13 @@ exports.submitBusinessClaimV2 = onCall({region: 'europe-west1', timeoutSeconds: 
 
   const ext = evidenceContentType === 'image/png' ? 'png' : evidenceContentType === 'image/webp' ? 'webp' : 'jpg';
   const evidenceStoragePath = `users/${uid}/business_claims/${id}/evidence.${ext}`;
-  const token = randomUUID();
   const bucket = getStorage().bucket();
   await bucket.file(evidenceStoragePath).save(evidence, {
     resumable: false,
     contentType: evidenceContentType,
-    metadata: {metadata: {firebaseStorageDownloadTokens: token}},
+    metadata: {cacheControl: 'private, no-store, max-age=0'},
   });
-  const evidenceUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(evidenceStoragePath)}?alt=media&token=${token}`;
+  const evidenceUrl = `gs://${bucket.name}/${evidenceStoragePath}`;
 
   await ref.set({
     venueKey: id, venueId, category, venueName, applicantUid: uid,
@@ -111,3 +109,4 @@ exports.submitBusinessClaimV2 = onCall({region: 'europe-west1', timeoutSeconds: 
 
   return {status: 'pending_review'};
 });
+

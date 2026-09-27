@@ -1,0 +1,29 @@
+name: Security hardening regression and deployment
+on:
+  push:
+    branches: [codex/security-hardening-20260927]
+permissions:
+  contents: read
+concurrency:
+  group: tbt-security-hardening
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm install --prefix functions --ignore-scripts
+          npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - name: Test access rejection and legitimate owner and invited-user operations
+        env:
+          NODE_PATH: /tmp/security-tests/node_modules
+        run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
