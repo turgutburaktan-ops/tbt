@@ -12,6 +12,30 @@ async function denied(url) {
   await r.body?.cancel();
   if(![401,403,404].includes(r.status)) throw Error('Anonymous access check failed: '+r.status);
 }
+function patchStorage(source) {
+ const marker='match /users/{uid}/{category}/{allPaths=**} {';
+ const start=source.indexOf(marker);
+ if(start<0||source.indexOf(marker,start+1)>=0)throw Error('Unexpected user-media rule structure');
+ let end=start+marker.length,depth=1;
+ while(depth&&end<source.length){if(source[end]==='{')depth++;if(source[end]==='}')depth--;end++;}
+ let block=source.slice(start,end);
+ const prior="category != 'chat'",next="!(category in ['chat', 'business_claims'])";
+ if(!block.includes(next)) {
+  if(block.split(prior).length!==4||!block.includes('isOwner(uid)')||!block.includes('safeMediaWrite()'))throw Error('Unexpected existing user-media access');
+  block=block.replaceAll(prior,next);
+ }
+ source=source.slice(0,start)+block+source.slice(end);
+ const evidence=`
+    match /users/{uid}/business_claims/{claimId}/{fileName} {
+      allow get: if isOwner(uid) || (signedIn() && request.auth.token.admin == true &&
+        request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com');
+      allow list, write: if false;
+    }
+`;
+ if(!source.includes('match /users/{uid}/business_claims/'))source=source.replace(marker,evidence+'    '+marker);
+ else if(!source.includes(evidence.trim()))throw Error('Unexpected existing evidence policy');
+ return source;
+}
 async function main() {
  const client = await new GoogleAuth({scopes:['https://www.googleapis.com/auth/cloud-platform']}).getClient();
  const get = async name => (await client.request({url:BASE+name})).data;
@@ -31,7 +55,8 @@ async function main() {
   const hash=digest(original);
   if(mode==='prepare') {
    content=original;
-   for(const [i,patch] of patches[name].entries()) {
+   if(name==='storage') content=patchStorage(content);
+   for(const [i,patch] of (name==='storage'?[]:patches[name]).entries()) {
     if(content.includes(patch.new))continue;
     if(content.split(patch.old).length!==2)throw Error(name+' live policy does not match reviewed patch '+i);
     content=content.replace(patch.old,patch.new);
