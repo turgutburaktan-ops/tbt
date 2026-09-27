@@ -1,0 +1,9 @@
+{
+  "requiredChecks": [
+    {"id": "private-contacts", "status": "pending", "reason": "Mevcut e-posta ve telefon verileri henüz özel alana taşınmadı."},
+    {"id": "frozen-content-reads", "status": "pending", "reason": "Dondurulmuş içeriklerin belge ve medya erişim koruması tamamlanmadı."},
+    {"id": "end-to-end-encryption", "status": "pending", "reason": "Uçtan uca şifreleme ve cihazlar arası doğrulama uygulanmadı."},
+    {"id": "app-check", "status": "blocked", "reason": "Gerçek mağaza cihazlarında geçerli doğrulama teyit edilmeden zorunlu denetim açılmadı."},
+    {"id": "database-recovery", "status": "blocked", "reason": "Veritabanı kurtarma koruması mevcut sunucu kimliğinde 403 yetki hatası veriyor."}
+  ]
+}

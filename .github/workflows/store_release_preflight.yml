@@ -27,6 +27,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Block store submission while known security work remains open
+        run: node tool/security_release_gate.cjs
       - name: Install server dependencies
         run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
       - name: Check configured release prerequisites without changing production
