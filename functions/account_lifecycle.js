@@ -183,7 +183,7 @@ exports.deleteAccountNow = onCall(
 
     const bucket=getStorage().bucket();
     // Fail closed: never delete Auth while private uploaded files remain.
-    await bucket.deleteFiles({prefix: `users/${uid}/`, force: true});
+    await bucket.deleteFiles({prefix: `users/${uid}/`, force: false});
     for (const prefix of ['private_chat/', 'route_albums/', 'route_chat/', 'event_chat/']) {
       let query={prefix,maxResults:100,autoPaginate:false};
       while(query) {
