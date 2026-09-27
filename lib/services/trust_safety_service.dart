@@ -95,7 +95,14 @@ class TrustSafetyService {
   }
 
   Future<void> deleteAccountNow() async {
-    await _functions.httpsCallable('deleteAccountNow').call();
+    try {
+      await _functions.httpsCallable('deleteAccountNow').call();
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code == 'failed-precondition') {
+        throw Exception('Güvenlik için çıkış yapıp yeniden giriş yaptıktan sonra hesabını silmeyi tekrar dene.');
+      }
+      rethrow;
+    }
   }
 }
 
@@ -182,3 +189,4 @@ class BusinessTrustService {
         });
   }
 }
+

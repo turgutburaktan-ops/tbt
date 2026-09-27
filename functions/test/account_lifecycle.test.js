@@ -4,7 +4,7 @@ const Module = require('node:module');
 const fs = require('node:fs');
 const path = require('node:path');
 
-function fixture() {
+function fixture(storageFails=false) {
   const records = new Map([
     ['users/customer', {username: 'customer'}],
     ['users/other', {username: 'other'}],
@@ -14,6 +14,7 @@ function fixture() {
     ['reservation_disputes/other', {userUid: 'other'}],
   ]);
   const deletedAuth = [];
+  const deletedFiles=[];
   const ref = key => ({path: key, get: async () => ({exists: records.has(key), data: () => records.get(key)}),
     set: async data => records.set(key, {...records.get(key), ...data}), delete: async () => records.delete(key)});
   function query(name, group = false, filters = [], limit = Infinity) {
@@ -44,12 +45,12 @@ function fixture() {
     if (id === 'firebase-functions/v2/https') return {onCall: (_, handler) => handler, HttpsError};
     if (id === 'firebase-admin/firestore') return {getFirestore: () => db, FieldValue: {serverTimestamp: () => 1}};
     if (id === 'firebase-admin/auth') return {getAuth: () => ({deleteUser: async uid => deletedAuth.push(uid)})};
-    if (id === 'firebase-admin/storage') return {getStorage: () => ({bucket: () => ({deleteFiles: async () => {}})})};
+    if (id === 'firebase-admin/storage') return {getStorage: () => ({bucket: () => ({deleteFiles: async () => {if(storageFails)throw Error('Storage unavailable');}, getFiles: async()=>[[...['private_chat/t/customer/m/media.jpg','private_chat/t/other/m/media.jpg'].map(name=>({name,delete:async()=>deletedFiles.push(name)}))],null]})})};
     return require(id);
   };
   const source = path.join(__dirname, '../account_lifecycle.js');
   loaded._compile(fs.readFileSync(source, 'utf8'), source);
-  return {remove: loaded.exports.deleteAccountNow, records, deletedAuth};
+  return {remove: loaded.exports.deleteAccountNow, records, deletedAuth, deletedFiles};
 }
 
 test('account deletion removes own reservation and dispute data while preserving other customers', async () => {
@@ -62,7 +63,7 @@ test('account deletion removes own reservation and dispute data while preserving
     ['creator_referrals/reader', {userId:'reader',creatorId:'customer'}],
     ['post_reposts/other', {userId:'other',postId:'original'}],
   ]) f.records.set(path,data);
-  const result = await f.remove({auth: {uid: 'customer'}, data: {uid: 'other'}});
+  const result = await f.remove({auth: {uid: 'customer', token:{auth_time:Math.floor(Date.now()/1000)}}, data: {uid: 'other'}});
   for (const path of ['post_reposts/own','post_bookmarks/own','creator_profiles/customer','creator_stats/customer/content/original','creator_referrals/reader']) assert.equal(f.records.has(path),false);
   assert.equal(f.records.has('post_reposts/other'),true);
 
@@ -74,6 +75,8 @@ test('account deletion removes own reservation and dispute data while preserving
   assert.equal(f.records.has('reservation_disputes/other'), true);
   assert.equal(f.records.has('users/other'), true);
   assert.deepEqual(f.deletedAuth, ['customer']);
+  assert.ok(f.deletedFiles.length>0);
+  assert.ok(f.deletedFiles.every(name=>name.split('/')[2]==='customer'));
 });
 
 test('account deletion requires an authenticated session', async () => {
@@ -81,4 +84,19 @@ test('account deletion requires an authenticated session', async () => {
   await assert.rejects(f.remove({data: {uid: 'customer'}}), {code: 'unauthenticated'});
   assert.equal(f.records.size, 6);
   assert.deepEqual(f.deletedAuth, []);
+});
+
+
+test('deletion rejects stale authentication before any data mutation',async()=>{
+ const f=fixture();await assert.rejects(f.remove({auth:{uid:'customer',token:{auth_time:1}}}),{code:'failed-precondition'});
+ assert.equal(f.records.size,6);assert.deepEqual(f.deletedAuth,[]);
+});
+test('missing public profile does not skip private data cleanup',async()=>{
+ const f=fixture();f.records.delete('users/customer');
+ await f.remove({auth:{uid:'customer',token:{auth_time:Math.floor(Date.now()/1000)}}});
+ assert.equal(f.records.has('reservation_disputes/own'),false);assert.deepEqual(f.deletedAuth,['customer']);
+});
+test('storage cleanup failure preserves auth for retry',async()=>{
+ const f=fixture(true);await assert.rejects(f.remove({auth:{uid:'customer',token:{auth_time:Math.floor(Date.now()/1000)}}}),/Storage unavailable/);
+ assert.deepEqual(f.deletedAuth,[]);assert.equal(f.records.has('users/customer'),true);
 });

@@ -105,13 +105,12 @@ exports.deleteAccountNow = onCall(
     const uid = requireUser(request);
     const db = getFirestore();
     const userRef = db.collection('users').doc(uid);
-    const user = await userRef.get();
-    if (!user.exists) {
-      await getAuth().deleteUser(uid).catch((error) => {
-        if (error?.code !== 'auth/user-not-found') throw error;
-      });
-      return {ok: true, status: 'deleted'};
+    const authTime = Number(request.auth.token?.auth_time || 0);
+    if (!Number.isFinite(authTime) || authTime <= 0 || Date.now()/1000 - authTime > 300 || authTime > Date.now()/1000 + 60) {
+      throw new HttpsError('failed-precondition', 'Hesabını silmek için çıkış yapıp yeniden giriş yapmalısın.', {reason:'recent-login-required'});
     }
+    // Cleanup must run even if a legacy client already removed the public profile.
+    await db.collection('account_cleanup_jobs').doc(uid).set({status:'running',updatedAt:FieldValue.serverTimestamp()}, {merge:true});
 
     await userRef.set({
       accountStatus: 'deleting',
@@ -137,6 +136,9 @@ exports.deleteAccountNow = onCall(
       ['analytics_events', 'userId'],
       ['app_errors', 'userId'],
       ['reservation_disputes', 'userUid'],
+      ['chat_private_photos', 'senderId'],
+      ['activity_demands', 'userId'],
+      ['event_tickets', 'userId'],
     ];
     const groupQueries = [
       ['comments', 'userId'],
@@ -179,14 +181,29 @@ exports.deleteAccountNow = onCall(
       await batch.commit();
     }
 
-    await getStorage().bucket().deleteFiles({prefix: `users/${uid}/`, force: true})
-      .catch((error) => console.error('Account storage cleanup failed', uid, error));
+    const bucket=getStorage().bucket();
+    // Fail closed: never delete Auth while private uploaded files remain.
+    await bucket.deleteFiles({prefix: `users/${uid}/`, force: true});
+    for (const prefix of ['private_chat/', 'route_albums/', 'route_chat/', 'event_chat/']) {
+      let query={prefix,maxResults:100,autoPaginate:false};
+      while(query) {
+        const [files,next]=await bucket.getFiles(query);
+        for (const file of files) {
+          const parts=file.name.split('/');
+          if(parts.length===5 && parts[2]===uid) await file.delete({ignoreNotFound:true});
+        }
+        query=next;
+      }
+    }
+    await db.recursiveDelete(db.collection('private_users').doc(uid));
     await Promise.all(['creator_profiles', 'creator_stats', 'notification_reply_limits'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
     await db.recursiveDelete(userRef);
     await db.collection('account_delete_requests').doc(uid).delete().catch(() => {});
     await getAuth().deleteUser(uid).catch((error) => {
       if (error?.code !== 'auth/user-not-found') throw error;
     });
+    await db.collection('account_cleanup_jobs').doc(uid).set({status:'completed',updatedAt:FieldValue.serverTimestamp()}, {merge:true});
     return {ok: true, status: 'deleted'};
   }
 );
+
