@@ -24,10 +24,34 @@ const {GoogleAuth}=require('../functions/node_modules/google-auth-library');
   const verified=(await client.request({url:dbUrl})).data;
   summary.databaseRecovery={pointInTimeRecoveryEnablement:verified.pointInTimeRecoveryEnablement,deleteProtectionState:verified.deleteProtectionState};
  } catch(e) {summary.databaseRecovery={completed:false,status:e.response?.status||e.code||e.message};}
- // Read registration state only; never enable enforcement before real-client compatibility is verified.
+ // Inspect each registered app via the Management API; App Check has no apps-list endpoint.
+ // Report only registration status, never provider credentials or private keys.
+ summary.appCheck={enforcementChanged:false,apps:[]};
+ for(const [platform,resource,providers] of [
+  ['android','androidApps',['playIntegrityConfig']],
+  ['ios','iosApps',['appAttestConfig','deviceCheckConfig']],
+ ]) {
+  try {
+   let pageToken;
+   do {
+    const page=(await client.request({url:`https://firebase.googleapis.com/v1beta1/projects/${project}/${resource}`,params:{pageSize:100,...(pageToken?{pageToken}:{})}})).data;
+    for(const app of page.apps||[]) {
+     const result={platform,appId:app.appId,providers:{}};
+     for(const provider of providers) {
+      try {
+       await client.request({url:`https://firebaseappcheck.googleapis.com/v1/projects/330568532415/apps/${encodeURIComponent(app.appId)}/${provider}`});
+       result.providers[provider]='registered';
+      }catch(e){result.providers[provider]=e.response?.status===404?'not-registered':`unverified-http-${e.response?.status||'unknown'}`;}
+     }
+     summary.appCheck.apps.push(result);
+    }
+    pageToken=page.nextPageToken;
+   }while(pageToken);
+  }catch(e){summary.appCheck[platform+'ReadStatus']=e.response?.status||e.code;}
+ }
  try {
-  const apps=(await client.request({url:'https://firebaseappcheck.googleapis.com/v1/projects/330568532415/apps'})).data;
-  summary.appCheck={registeredApps:apps.apps?.length||0,enforcementChanged:false};
- }catch(e){summary.appCheck={enforcementChanged:false,readStatus:e.response?.status||e.code};}
+  const services=(await client.request({url:'https://firebaseappcheck.googleapis.com/v1/projects/330568532415/services',params:{pageSize:100}})).data;
+  summary.appCheck.services=(services.services||[]).map(s=>({name:s.name,enforcementMode:s.enforcementMode}));
+ }catch(e){summary.appCheck.serviceReadStatus=e.response?.status||e.code;}
  console.log('CONFIG_HARDENING '+JSON.stringify(summary));
 })().catch(e=>{console.error('Configuration hardening failed',e.response?.status||e.code||e.message);process.exitCode=1;});

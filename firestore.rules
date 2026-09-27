@@ -10,7 +10,7 @@ service cloud.firestore {
         !request.resource.data.keys().hasAny([
           'isCreator','creatorTier','creatorBadge','creatorInviteCode','creatorProgramVersion','creatorJoinedAt','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
-          'moderationStatus','trustLevel','banned','disabled',
+          'moderationStatus','trustLevel','banned','disabled','accountStatus','accountStatusUpdatedAt','frozenAt',
           'reputation','reputationTotal','accountTypes','tbtVerified','tbtAmbassador',
           'reputationEmailVerified','reputationUpdatedAt'
         ]);
@@ -20,7 +20,7 @@ service cloud.firestore {
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'uid','isCreator','creatorTier','creatorBadge','creatorInviteCode','creatorProgramVersion','creatorJoinedAt','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
-          'moderationStatus','trustLevel','banned','disabled','xp','dailyXp',
+          'moderationStatus','trustLevel','banned','disabled','accountStatus','accountStatusUpdatedAt','frozenAt','xp','dailyXp',
           'weeklyXp','dailyActions','weeklyActions','stats','reputation',
           'reputationTotal','accountTypes','tbtVerified','tbtAmbassador',
           'reputationEmailVerified','reputationUpdatedAt'
@@ -259,7 +259,7 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if safeUserCreate(uid);
       allow update: if isAdmin() || safeUserUpdate(uid);
-      allow delete: if isAdmin() || isSelf(uid);
+      allow delete: if isAdmin();
       match /chat_preferences/{threadId} {
         allow read: if isSelf(uid);
         allow write: if false;

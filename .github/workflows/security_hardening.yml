@@ -8,6 +8,23 @@ concurrency:
   group: tbt-security-hardening
   cancel-in-progress: false
 jobs:
+  store-status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read current Google Play release
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/play_release_status.cjs
+      - name: Read current App Store release
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/store_status60.cjs
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -21,13 +38,15 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: |
-          npm install --prefix functions --ignore-scripts
+          npm ci --prefix functions
           npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
       - name: Test access rejection and legitimate owner and invited-user operations
         env:
           NODE_PATH: /tmp/security-tests/node_modules
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
-      - run: node --test test/private_route_media_security.cjs test/trusted_notifications.cjs functions/test/account_lifecycle.test.js
+      - run: node --test test/private_route_media_security.cjs test/trusted_notifications.cjs functions/test/*.test.js
+      - run: npm audit --prefix functions --omit=dev --audit-level=moderate
+      - run: node -e "require('./functions/bootstrap'); console.log('BOOTSTRAP_OK')"
       - name: Validate release-coupled contact privacy rules separately
         env:
           NODE_PATH: /tmp/security-tests/node_modules
@@ -44,7 +63,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/admin_businesses_v2_screen.dart lib/screens/route_album_screen.dart lib/services/route_chat_service.dart lib/services/event_chat_service.dart lib/services/trust_safety_service.dart lib/services/auth_service.dart lib/services/social_service.dart lib/screens/register_screen.dart lib/screens/account_security_gate_v2.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/admin_businesses_v2_screen.dart lib/screens/route_album_screen.dart lib/services/route_chat_service.dart lib/services/event_chat_service.dart lib/services/trust_safety_service.dart lib/services/auth_service.dart lib/services/social_service.dart lib/screens/register_screen.dart lib/screens/account_security_gate_v2.dart lib/screens/phone_verification_screen.dart
       - run: flutter build bundle --debug
   deploy:
     needs: [verify, flutter]
@@ -56,7 +75,7 @@ jobs:
         with:
           node-version: '22'
       - run: |
-          npm install --prefix functions
+          npm ci --prefix functions
           npm install --prefix /tmp/security-deploy firebase-tools@latest
       - name: Authenticate scoped security deployment
         env:
@@ -82,7 +101,7 @@ jobs:
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
       - run: node tool/deploy_security_hardening.cjs check
       - name: Deploy evidence and private media controls
-        run: /tmp/security-deploy/node_modules/.bin/firebase deploy --only functions:submitBusinessClaimV2,functions:finalizePrivateMedia,functions:sealPendingChatMedia,functions:pushOnNotificationCreated,functions:trustedDirectMessage,functions:trustedFollow,functions:trustedPostLike,functions:trustedPostComment,functions:trustedEventAttendance,functions:trustedStoryInteraction,functions:trustedStoryMention,functions:trustedEventMemory,functions:trustedPostTag,functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
+        run: /tmp/security-deploy/node_modules/.bin/firebase deploy --only functions:submitBusinessClaimV2,functions:finalizePrivateMedia,functions:sealPendingChatMedia,functions:pushOnNotificationCreated,functions:trustedDirectMessage,functions:trustedFollow,functions:trustedPostLike,functions:trustedPostComment,functions:trustedEventAttendance,functions:trustedStoryInteraction,functions:trustedStoryMention,functions:trustedEventMemory,functions:trustedPostTag,functions:deleteAccountNow,functions:getAdminInsights,functions:adminDirectoryPage,functions:trustedSocialEventLike,functions:trustedSocialEventComment,functions:trustedSocialEventTag,functions:trustedMemoryLike,functions:trustedMemoryComment,functions:trustedMemoryTag,functions:trustedCommunityEvent --project en-iyi-cekim-noktasi --non-interactive
       - name: Publish verified policies and revoke private media tokens
         run: node tool/deploy_security_hardening.cjs deploy
       - name: Enforce password length and enable database recovery

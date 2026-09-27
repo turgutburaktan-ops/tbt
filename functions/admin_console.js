@@ -2,6 +2,7 @@ const {getStorage,getDownloadURL}=require('firebase-admin/storage');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
 const {isNamedAdmin} = require('./broadcast_policy');
+const {adminUserEmails} = require('./admin_user_contacts');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
@@ -130,13 +131,14 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
     db.collection('verification_email_deliveries').orderBy('createdAt', 'desc').limit(40).get(),
   ]);
 
+  const contactEmails = await adminUserEmails(recentUsersSnap.docs.map(doc => doc.id));
   const recentUsers = recentUsersSnap.docs.map((doc) => {
     const d = doc.data() || {};
     return {
       id: doc.id,
       displayName: String(d.displayName || d.name || d.username || 'TBT kullanıcısı'),
       username: String(d.username || ''),
-      email: String(d.email || ''),
+      email: contactEmails.get(doc.id) || '',
       photoURL: String(d.photoURL || d.photoUrl || ''),
       // Callable responses serialize Firestore Timestamp objects differently
       // between SDK versions. The web admin renders these values with Date,

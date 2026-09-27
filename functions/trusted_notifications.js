@@ -26,11 +26,11 @@ exports.trustedFollow=onDocumentCreated('users/{target}/followers/{actor}',async
 });
 exports.trustedPostLike=onDocumentCreated('posts/{postId}/likes/{actor}',async event=>{
  const db=getFirestore(),p=(await db.doc(`posts/${event.params.postId}`).get()).data();
- if(!p||event.data?.data()?.userId!==event.params.actor)return;
+ if(!p||p.accountFrozen===true||event.data?.data()?.userId!==event.params.actor)return;
  await deliver(db,{target:p.userId,actor:event.params.actor,type:'post_like',source:event.params.postId,title:n=>`${n} gönderini beğendi`,eventId:event.id});
 });
 exports.trustedPostComment=onDocumentCreated('posts/{postId}/comments/{commentId}',async event=>{
- const db=getFirestore(),p=(await db.doc(`posts/${event.params.postId}`).get()).data(),d=event.data?.data();if(!p||!d)return;
+ const db=getFirestore(),p=(await db.doc(`posts/${event.params.postId}`).get()).data(),d=event.data?.data();if(!p||p.accountFrozen===true||!d)return;
  await deliver(db,{target:p.userId,actor:d.userId,type:'post_comment',source:event.params.postId,title:n=>`${n} gönderine yorum yaptı`,body:d.text,eventId:event.id});
 });
 exports.trustedEventAttendance=onDocumentWritten('social_events/{eventId}/attendance/{actor}',async event=>{
@@ -58,5 +58,52 @@ exports.trustedEventMemory=onDocumentCreated('event_memories/{memoryId}',async e
 });
 exports.trustedPostTag=onDocumentCreated('posts/{postId}/tags/{target}',async event=>{
  const d=event.data?.data();if(!d||d.userId!==event.params.target)return;
- await deliver(getFirestore(),{target:event.params.target,actor:d.taggedBy,type:'post_tag',source:event.params.postId,title:n=>`${n} bir gönderide seni etiketledi`,eventId:event.id});
+ const db=getFirestore(),p=(await db.doc(`posts/${event.params.postId}`).get()).data();if(!p||p.accountFrozen===true)return;
+ await deliver(db,{target:event.params.target,actor:d.taggedBy,type:'post_tag',source:event.params.postId,title:n=>`${n} bir gönderide seni etiketledi`,eventId:event.id});
 });
+
+const engagementSources = {
+ social_events: {owner:'hostId',type:'social_event'},
+ event_memories: {owner:'userId',type:'event_memory'},
+};
+async function contentEngagement(event, collection, action, db=getFirestore()) {
+ const config=engagementSources[collection];
+ if(!config||!['like','comment','tag'].includes(action))return;
+ const d=event.data?.data();if(!d)return;
+ const content=(await db.doc(`${collection}/${event.params.contentId}`).get()).data();
+ if(!content||content.accountFrozen===true)return;
+ const actor=action==='tag'?d.taggedBy:d.userId;
+ if(action==='like'&&actor!==event.params.actor)return;
+ if(action==='tag'&&d.userId!==event.params.target)return;
+ await deliver(db,{
+  target:action==='tag'?event.params.target:content[config.owner],actor,
+  type:`${config.type}_${action}`,source:event.params.contentId,
+  title:n=>action==='like'?`${n} içeriğini beğendi`:action==='comment'?`${n} içeriğine yorum yaptı`:`${n} seni etiketledi`,
+  // Never leak private event captions or comments to an unverified tag target.
+  body:action==='comment'?d.text:'Görmek için dokun.',eventId:event.id,
+ });
+}
+for(const [collection,label] of [['social_events','SocialEvent'],['event_memories','Memory']]) {
+ for(const [action,sub,param] of [['like','likes','actor'],['comment','comments','commentId'],['tag','tags','target']]) {
+  const suffix=action[0].toUpperCase()+action.slice(1);
+  exports[`trusted${label}${suffix}`]=onDocumentCreated(`${collection}/{contentId}/${sub}/{${param}}`,event=>contentEngagement(event,collection,action));
+ }
+}
+async function communityEvent(event,db=getFirestore()) {
+ const e=event.data?.data();
+ if(!e||e.visibility!=='public'||e.status!=='open'||e.accountFrozen===true||!key(e.communityId))return;
+ const community=(await db.doc(`communities/${e.communityId}`).get()).data();
+ if(!community||community.accountFrozen===true||!(community.ownerId===e.hostId||community.adminIds?.includes(e.hostId)))return;
+ let cursor;
+ do {
+  let q=db.collection(`communities/${e.communityId}/followers`).orderBy('__name__').limit(100);
+  if(cursor)q=q.startAfter(cursor);
+  const page=await q.get();
+  // Bounded concurrency and deterministic IDs make at-least-once retries safe.
+  for(let i=0;i<page.docs.length;i+=10)await Promise.all(page.docs.slice(i,i+10).map(doc=>deliver(db,{target:doc.id,actor:e.hostId,type:'community_event',source:event.params.eventId,title:n=>`${n} yeni etkinlik oluşturdu`,body:e.title,eventId:event.id})));
+  cursor=page.size===100?page.docs.at(-1):null;
+ }while(cursor);
+}
+exports.trustedCommunityEvent=onDocumentCreated({document:'social_events/{eventId}',timeoutSeconds:540},event=>communityEvent(event));
+exports._contentEngagement=contentEngagement;
+exports._communityEvent=communityEvent;

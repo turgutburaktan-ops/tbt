@@ -193,9 +193,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         await user.updatePhoneNumber(credential);
       }
       await user.reload();
-      final refreshed = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'phoneNumber': refreshed?.phoneNumber ?? user.phoneNumber,
         'phoneVerified': true,
         'phoneVerifiedAt': FieldValue.serverTimestamp(),
         'phoneVerificationDeferred': false,

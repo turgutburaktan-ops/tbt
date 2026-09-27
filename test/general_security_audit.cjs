@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {initializeTestEnvironment,assertFails,assertSucceeds}=require('@firebase/rules-unit-testing');
 const {ref,uploadBytes,getBytes}=require('firebase/storage');
-const {doc,setDoc,getDoc,updateDoc,writeBatch,serverTimestamp}=require('firebase/firestore');
+const {doc,setDoc,getDoc,updateDoc,deleteDoc,writeBatch,serverTimestamp}=require('firebase/firestore');
 let env;
 const db=uid=>env.authenticatedContext(uid).firestore();
 before(async()=>{
@@ -79,4 +79,13 @@ test('Invited user can join, then leave a private event atomically', async()=>{
 test('Owners can edit demand and comment without changing attribution',async()=>{
  await assertSucceeds(updateDoc(doc(db('victim'),'activity_demands/victim-owned'),{activity:'cycle'}));
  await assertSucceeds(updateDoc(doc(db('attacker'),'posts/post/comments/comment'),{text:'edited'}));
+});
+
+test('Lifecycle state is server-owned and profile deletion cannot reset restrictions',async()=>{
+ for(const field of ['accountStatus','accountStatusUpdatedAt','frozenAt']) {
+  await assertFails(updateDoc(doc(db('victim'),'users/victim'),{[field]:'active'}));
+  await assertFails(setDoc(doc(db('new-user'),'users/new-user'),{uid:'new-user',[field]:'active'}));
+ }
+ await assertFails(deleteDoc(doc(db('victim'),'users/victim')));
+ await assertSucceeds(updateDoc(doc(db('victim'),'users/victim'),{displayName:'Updated display name'}));
 });
