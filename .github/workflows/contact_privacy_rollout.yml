@@ -1,0 +1,114 @@
+name: Release-gated contact privacy migration
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/store-release62-security-20260927]
+    paths: ['.github/workflows/contact_privacy_rollout.yml', 'tool/contact_privacy_rules.cjs', 'tool/deploy_contact_privacy.cjs', 'tool/migrate_private_contacts.cjs']
+permissions:
+  contents: read
+concurrency:
+  group: tbt-contact-privacy-migration
+  cancel-in-progress: false
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify client availability on both stores
+        id: check
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          node tool/play_release_status.cjs > /tmp/contact-play-status.txt
+          node tool/store_status60.cjs > /tmp/contact-apple-status.txt
+          python3 - <<'PY'
+          import json,os,pathlib
+          def read(path,prefix):
+              lines=pathlib.Path(path).read_text().splitlines()
+              return json.loads(next(line[len(prefix):] for line in lines if line.startswith(prefix)))
+          play=read('/tmp/contact-play-status.txt','PLAY_STATUS ')
+          apple=read('/tmp/contact-apple-status.txt','APPLE_STATUS ')
+          android=any(t.get('track')=='alpha' and any(r.get('status')=='completed' and '62' in r.get('versionCodes',[]) for r in t.get('releases',[])) for t in play.get('tracks',[]))
+          ios=any(v.get('version')=='1.0.34' and v.get('state') in ['READY_FOR_SALE','READY_FOR_DISTRIBUTION'] for v in apple.get('versions',[]))
+          ios=ios and any(b.get('version')=='1.0.34' and b.get('build')=='62' and b.get('state')=='VALID' for b in apple.get('builds',[]))
+          ready=android and ios
+          print('CONTACT_ROLLOUT_GATE',json.dumps({'androidAvailable':android,'iosAvailable':ios,'ready':ready}))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('ready='+str(ready).lower()+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('Contact migration: '+('store availability confirmed' if ready else 'waiting for security client availability on both stores; live contacts and policies were not changed')+'\n')
+          PY
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix /tmp/contact-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - run: node tool/contact_privacy_rules.cjs
+      - env:
+          NODE_PATH: /tmp/contact-tests/node_modules
+        run: /tmp/contact-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-general-audit "node --test test/private_contacts.cjs" --non-interactive
+  migrate:
+    needs: [availability, verify]
+    if: needs.availability.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CONTACT_FREE_CLIENT_RELEASED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+          npm install --prefix /tmp/contact-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - name: Authenticate migration
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'contacts.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - run: node tool/deploy_contact_privacy.cjs prepare
+      - name: Verify the actual live policy with the contact patch applied
+        env:
+          NODE_PATH: /tmp/contact-tests/node_modules
+        run: /tmp/contact-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-general-audit "node --test test/private_contacts.cjs" --non-interactive
+      - name: Require the available security client
+        run: |
+          node - <<'JS'
+          const {initializeApp}=require('./functions/node_modules/firebase-admin/app');
+          const {getFirestore,FieldValue}=require('./functions/node_modules/firebase-admin/firestore');
+          initializeApp({projectId:'en-iyi-cekim-noktasi'});
+          const db=getFirestore(),ref=db.doc('app_config/update_policy');
+          const rank=v=>String(v||'0').split('.').map(Number).reduce((n,x)=>n*1000+x,0);
+          db.runTransaction(async tx=>{
+            const current=(await tx.get(ref)).data()||{};
+            tx.set(ref,{androidMinimumBuild:Math.max(62,current.androidMinimumBuild||0),iosMinimumVersion:rank(current.iosMinimumVersion)>1000034?current.iosMinimumVersion:'1.0.34',updatedAt:FieldValue.serverTimestamp()},{merge:true});
+          }).catch(()=>{process.exitCode=1;});
+          JS
+      - run: node tool/deploy_contact_privacy.cjs deploy
+      - run: node tool/migrate_private_contacts.cjs
