@@ -88,6 +88,7 @@ Future<void> main() async {
         await Firebase.initializeApp(
           options: AppFirebaseOptions.currentPlatform,
         ).timeout(const Duration(seconds: 15));
+        await _initializeAppCheck();
       } catch (error, stackTrace) {
         bootstrapError = error;
         if (kDebugMode) {
@@ -131,6 +132,33 @@ Future<void> main() async {
   );
 }
 
+// App Check must be configured before widgets start Auth/Firestore/Storage
+// requests. ATT and advertising consent are independent of app attestation.
+Future<void> _initializeAppCheck() async {
+  if (kIsWeb ||
+      (defaultTargetPlatform != TargetPlatform.android &&
+          defaultTargetPlatform != TargetPlatform.iOS)) {
+    return;
+  }
+  try {
+    await FirebaseAppCheck.instance
+        .activate(
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+        )
+        .timeout(const Duration(seconds: 8));
+  } catch (error, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('App Check activation skipped: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+}
+
 Future<void> _initializeDeferredBootstrapServices() async {
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
     try {
@@ -150,24 +178,6 @@ Future<void> _initializeDeferredBootstrapServices() async {
   await AdConsentService.instance.initialize();
   if (!_trackingAuthorizationGate.isCompleted) {
     _trackingAuthorizationGate.complete();
-  }
-
-  try {
-    await FirebaseAppCheck.instance
-        .activate(
-          providerAndroid: kDebugMode
-              ? const AndroidDebugProvider()
-              : const AndroidPlayIntegrityProvider(),
-          providerApple: kDebugMode
-              ? const AppleDebugProvider()
-              : const AppleAppAttestWithDeviceCheckFallbackProvider(),
-        )
-        .timeout(const Duration(seconds: 8));
-  } catch (error, stackTrace) {
-    if (kDebugMode) {
-      debugPrint('App Check activation skipped: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
   }
 
   try {

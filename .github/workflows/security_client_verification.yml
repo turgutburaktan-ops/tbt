@@ -1,0 +1,22 @@
+name: Security client verification without store submission
+on:
+  push:
+    branches: [codex/store-release62-security-20260927]
+    paths:
+      - lib/main.dart
+      - .github/workflows/security_client_verification.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/main.dart
+      - run: flutter build bundle --debug
