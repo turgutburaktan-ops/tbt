@@ -1,0 +1,31 @@
+name: Verify restored route layout
+on:
+  push:
+    branches: [codex/restore-route-layout]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/screens/home_shell_v3.dart lib/screens/route_planner_screen.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/home_shell_v3.dart lib/screens/route_planner_screen.dart lib/screens/today_plan_screen.dart lib/screens/smart_plan_screen.dart lib/screens/collaborative_plans_screen.dart lib/screens/travel_plan_detail_screen.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/chat_screen.dart lib/widgets/chat_request_banner.dart lib/widgets/chat_backdrop.dart lib/widgets/chat_surface.dart lib/widgets/chat_background_picker.dart
+      - run: flutter test test/chat_layout_test.dart test/chat_appearance_test.dart
+      - run: python3 tool/prepare_restored_route_review.py
+      - run: flutter test test/route_itinerary_test.dart test/profile_identity_test.dart test/profile_content_navigation_test.dart test/restored_route_review_test.dart
+      - uses: actions/upload-artifact@v4
+        with:
+          name: restored-route-review
+          path: |
+            /tmp/restored-route-review.png
+            /tmp/smart-route-selection-review.png
+          if-no-files-found: error

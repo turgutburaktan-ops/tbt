@@ -1,0 +1,61 @@
+name: Deploy verified private photo backend
+on:
+  push:
+    branches: [codex/private-chat-photos-ready-20260926]
+    paths: [.github/workflows/private_photo_deploy.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require successful native builds and security tests for this source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYVERIFY'
+          import json,os,urllib.request,subprocess
+          url='https://api.github.com/repos/turgutburaktan-ops/tbt/actions/runs/36233330616/jobs'
+          req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+          jobs=json.load(urllib.request.urlopen(req))['jobs']
+          for name in ['flutter','ios','backend']:
+              assert any(j['name']==name and j['conclusion']=='success' for j in jobs), name+' gate not passed'
+          subprocess.run(['git','diff','--exit-code','e77d563415328ac5a419b1ee63fc3a4fbcfcb890','HEAD','--','lib','functions','tool/configure_private_photo.py','tool/configure_route_album.py','tool/native_private_photo'],check=True)
+          PYVERIFY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: |
+          npm install --prefix functions
+          npm install --prefix /tmp/private-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0 firebase-admin@13.0.0
+      - name: Authenticate scoped backend deployment
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'private-photo-credentials.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - run: node tool/check_private_photo_rules.cjs
+      - name: Verify private data is denied under actual live rules
+        env:
+          NODE_PATH: /tmp/private-tests/node_modules
+        run: /tmp/private-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-access "node --test test/private_photo_backend.cjs" --non-interactive
+      - run: npm install --prefix /tmp/private-deploy firebase-tools@latest
+      - name: Deploy only private photo endpoints and expiry cleanup
+        run: /tmp/private-deploy/node_modules/.bin/firebase deploy --only functions:chatPrivatePhoto,functions:expireChatPrivatePhotos --project en-iyi-cekim-noktasi --non-interactive

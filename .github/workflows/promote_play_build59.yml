@@ -1,0 +1,36 @@
+name: Submit TBT 1.0.31 (59) to closed testing
+on:
+  push:
+    branches: [codex/ios-logo-release-20260922]
+    paths: ['.github/workflows/promote_play_build59.yml', 'tool/promote_play_build59.cjs']
+permissions:
+  contents: read
+concurrency:
+  group: android-play-release
+  cancel-in-progress: false
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Report route backend availability
+        run: |
+          node - <<'JS'
+          (async()=>{
+            for(const name of ['submitSpotSuggestion','listPendingSpotSuggestions','reviewSpotSuggestion']){
+              try {
+                const r=await fetch('https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/'+name,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{}}),signal:AbortSignal.timeout(15000)});
+                const b=await r.json().catch(()=>({}));
+                console.log('BACKEND '+name+' HTTP='+r.status+' status='+(b.error?.status||'unavailable'));
+              }catch(e){console.log('BACKEND '+name+' unavailable');}
+            }
+          })();
+          JS
+      - name: Promote existing verified alpha draft and read back
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/promote_play_build59.cjs

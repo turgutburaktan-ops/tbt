@@ -1,0 +1,21 @@
+name: Inspect verified stops for TBT ready routes
+on:
+  push:
+    branches: [codex/ready-routes-20260922]
+    paths: ['.github/workflows/inspect_ready_route_spots.yml', 'functions/scripts/inspect_ready_route_spots.cjs']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Read published verified public stops
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node functions/scripts/inspect_ready_route_spots.cjs

@@ -1,0 +1,25 @@
+name: Submit uploaded TBT iOS 1.0.31 (59)
+on:
+  push:
+    branches: [codex/ios-logo-release-20260922]
+    paths: ['.github/workflows/submit_apple_build59.yml']
+permissions:
+  contents: read
+concurrency:
+  group: tbt-ios-release59
+  cancel-in-progress: false
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate uploaded build and submit requested update
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build59.cjs

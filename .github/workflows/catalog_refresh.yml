@@ -1,0 +1,34 @@
+name: Update catalog refresh worker
+on:
+  push:
+    branches: [codex/catalog-refresh]
+permissions:
+  contents: read
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions
+      - run: node --test functions/catalog/schema.test.js
+      - run: npm install -g firebase-tools
+      - name: Authenticate
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PYAUTH'
+          import json, os
+          from pathlib import Path
+          value=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          target=Path(os.environ['RUNNER_TEMP'])/'catalog-service-account.json'
+          target.write_text(json.dumps(value)); target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+              f.write('GCLOUD_PROJECT=en-iyi-cekim-noktasi\n')
+          PYAUTH
+      - name: Update only the tested periodic catalog importer
+        run: firebase deploy --only functions:refreshPlaceCatalog --project en-iyi-cekim-noktasi --non-interactive --force

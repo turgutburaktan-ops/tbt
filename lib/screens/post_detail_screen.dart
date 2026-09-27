@@ -1,0 +1,554 @@
+import '../theme/app_theme.dart';
+import '../widgets/tbt_dialog.dart';
+import '../services/creator_service.dart';
+import '../widgets/creator_view_tracker.dart';
+import 'reels_screen.dart';
+import '../widgets/like_burst.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+import '../services/content_engagement_service.dart';
+import '../services/post_service.dart';
+import '../services/spot_repository.dart';
+import '../widgets/app_video_player.dart';
+import '../widgets/content_engagement_bar.dart';
+import '../widgets/firebase_media_image.dart';
+import '../widgets/expandable_caption.dart';
+import '../widgets/external_source_button.dart';
+import '../widgets/post_sound_chip.dart';
+import '../widgets/post_media_carousel.dart';
+import 'spot_detail_screen.dart';
+import 'user_profile_screen.dart';
+
+class PostDetailScreen extends StatefulWidget {
+  final Map<String, dynamic> post;
+  final bool embedded;
+  const PostDetailScreen({
+    super.key,
+    required this.post,
+    this.embedded = false,
+  });
+  @override
+  State<PostDetailScreen> createState() => _PostDetailScreenState();
+}
+
+class _PostDetailScreenState extends State<PostDetailScreen> {
+  late Map<String, dynamic> _post;
+  bool _openingSpot = false;
+  @override
+  void initState() {
+    super.initState();
+    _post = Map<String, dynamic>.from(widget.post);
+  }
+
+  bool get _isMine {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return uid != null && uid == (_post['userId'] ?? '').toString();
+  }
+
+  bool get _isVideo {
+    final type = (_post['mediaType'] ?? '').toString();
+    final url = (_post['videoUrl'] ?? '').toString();
+    return type == 'video' || url.isNotEmpty;
+  }
+
+  List<String> _strings(dynamic value) => value is Iterable
+      ? value.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
+      : const <String>[];
+  String _dateLabel(dynamic value) {
+    if (value is! Timestamp) return '';
+    final d = value.toDate().toLocal();
+    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+  }
+
+  void _openProfile() {
+    CreatorService.instance.recordProfileVisit(_post['id'].toString());
+    final uid = (_post['userId'] ?? '').toString().trim();
+    if (uid.isNotEmpty)
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => UserProfileScreen(userId: uid)),
+      );
+  }
+
+  Future<void> _doubleTapLike() async {
+    final id = (_post['id'] ?? '').toString();
+    if (id.isEmpty || FirebaseAuth.instance.currentUser == null) return;
+    try {
+      final liked = await ContentEngagementService.instance
+          .isLiked('posts', id)
+          .first;
+      if (!liked)
+        await ContentEngagementService.instance.toggleLike(
+          collection: 'posts',
+          likeOnly: true,
+          id: id,
+          ownerId: (_post['userId'] ?? '').toString(),
+          title: (_post['caption'] ?? '').toString(),
+          sourceType: 'post',
+        );
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _openSpot(String spotName) async {
+    if (_openingSpot || spotName.trim().isEmpty) return;
+    setState(() => _openingSpot = true);
+    try {
+      final results = await SpotRepository.instance.search(
+        spotName,
+        limit: 2000,
+      );
+      if (!mounted) return;
+      if (results.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bu çekim noktası kartı henüz bulunamadı.'),
+          ),
+        );
+        return;
+      }
+      final normalized = spotName.trim().toLowerCase();
+      final exact = results.where(
+        (s) => s.name.trim().toLowerCase() == normalized,
+      );
+      final spot = exact.isNotEmpty ? exact.first : results.first;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+      );
+    } finally {
+      if (mounted) setState(() => _openingSpot = false);
+    }
+  }
+
+  Future<void> _edit() async {
+    final captionController = TextEditingController(
+      text: (_post['caption'] ?? '').toString(),
+    );
+    final spotController = TextEditingController(
+      text: (_post['spotName'] ?? '').toString(),
+    );
+    final save = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (c) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          18,
+          20,
+          MediaQuery.of(c).viewInsets.bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Gönderiyi Düzenle',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: captionController,
+                minLines: 3,
+                maxLines: 6,
+                maxLength: 500,
+                decoration: const InputDecoration(labelText: 'Açıklama'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: spotController,
+                decoration: const InputDecoration(
+                  labelText: 'Konum / çekim noktası',
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(c, true),
+                  child: const Text('Kaydet'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (save == true) {
+      try {
+        await PostService.instance.updatePost(
+          postId: (_post['id'] ?? '').toString(),
+          caption: captionController.text,
+          spotName: spotController.text,
+        );
+        if (mounted)
+          setState(() {
+            _post['caption'] = captionController.text.trim();
+            _post['spotName'] = spotController.text.trim();
+          });
+      } catch (e) {
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+      }
+    }
+    captionController.dispose();
+    spotController.dispose();
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await showTbtDialog<bool>(
+      context: context,
+      builder: (c) => TbtDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Gönderiyi sil'),
+        content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await PostService.instance.deletePost(
+        postId: (_post['id'] ?? '').toString(),
+        storagePath: (_post['storagePath'] ?? '').toString(),
+        videoStoragePath: (_post['videoStoragePath'] ?? '').toString(),
+        thumbnailStoragePath: (_post['thumbnailStoragePath'] ?? '').toString(),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+    }
+  }
+
+  void _showMenu() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (c) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Düzenle'),
+              onTap: () {
+                Navigator.pop(c);
+                _edit();
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.delete_outline,
+                color: Colors.redAccent,
+              ),
+              title: const Text(
+                'Sil',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+              onTap: () {
+                Navigator.pop(c);
+                _delete();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rawMedia() {
+    final imageUrl = (_post['imageUrl'] ?? '').toString();
+    final storagePath = (_post['storagePath'] ?? '').toString();
+    final videoUrl = (_post['videoUrl'] ?? '').toString();
+    final thumbnailUrl = (_post['thumbnailUrl'] ?? imageUrl).toString();
+    final thumbnailStoragePath = (_post['thumbnailStoragePath'] ?? storagePath)
+        .toString();
+    final fallback = FirebaseMediaImage.postPaths(
+      (_post['userId'] ?? '').toString(),
+      (_post['id'] ?? '').toString(),
+    );
+    if (_isVideo && videoUrl.isNotEmpty)
+      return AppVideoPlayer.network(
+        url: videoUrl,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ReelsScreen(initialPost: _post)),
+        ),
+        autoplay: true,
+        muted: false,
+        loop: true,
+        showControls: true,
+        fit: BoxFit.contain,
+        loading: FirebaseMediaImage(
+          imageUrl: thumbnailUrl,
+          storagePath: thumbnailStoragePath,
+          fit: BoxFit.contain,
+        ),
+      );
+    var urls = _strings(_post['mediaUrls']);
+    var paths = _strings(_post['mediaStoragePaths']);
+    if (urls.isEmpty) urls = <String>[imageUrl];
+    if (paths.isEmpty) paths = <String>[storagePath];
+    return PostMediaCarousel(
+      imageUrls: urls,
+      storagePaths: paths,
+      fallbackStoragePaths: fallback,
+      fit: BoxFit.contain,
+      zoomEnabled: !widget.embedded,
+      onDoubleTap: null,
+    );
+  }
+
+  Widget _media() => LikeBurst(onLike: _doubleTapLike, child: _rawMedia());
+  @override
+  Widget build(BuildContext context) {
+    final caption = (_post['caption'] ?? '').toString().trim();
+    final spot =
+        (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '')
+            .toString()
+            .trim();
+    final userName = (_post['userName'] ?? 'Fotoğrafçı').toString();
+    final userPhoto = (_post['userPhotoUrl'] ?? _post['photoUrl'] ?? '')
+        .toString();
+    final userId = (_post['userId'] ?? '').toString();
+    final date = _dateLabel(_post['createdAt']);
+    final content = <Widget>[
+      Container(
+        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFF34383D)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            InkWell(
+              onTap: userId.trim().isEmpty ? null : _openProfile,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 14, 12),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 38,
+                      height: 38,
+                      child: ClipOval(
+                        child: FirebaseMediaImage(
+                          imageUrl: userPhoto,
+                          fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                            userId,
+                          ),
+                          fit: BoxFit.cover,
+                          errorWidget: const ColoredBox(
+                            color: AppColors.surface,
+                            child: Center(
+                              child: Icon(
+                                Icons.person_outline_rounded,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  userName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                              if (_isVideo) ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.videocam_rounded,
+                                  size: 17,
+                                  color: Colors.white54,
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (spot.isNotEmpty)
+                            InkWell(
+                              onTap: _openingSpot
+                                  ? null
+                                  : () => _openSpot(spot),
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on_rounded,
+                                      size: 14,
+                                      color: Colors.white54,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Flexible(
+                                      child: Text(
+                                        spot,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 11.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (widget.embedded && _isMine)
+                      IconButton(
+                        tooltip: 'Gönderi seçenekleri',
+                        onPressed: _showMenu,
+                        icon: const Icon(Icons.more_horiz),
+                      )
+                    else
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.white30,
+                        size: 19,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            ColoredBox(
+              color: Colors.black,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Stack(fit: StackFit.expand, children: [_media()]),
+              ),
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+        child: ContentEngagementBar(
+          collection: 'posts',
+          contentId: (_post['id'] ?? '').toString(),
+          ownerId: userId,
+          title: caption.isEmpty
+              ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
+              : caption,
+          sourceType: 'post',
+          showTagAction: false,
+        ),
+      ),
+      if (_isVideo) PostSoundChip(postId: (_post['id'] ?? '').toString()),
+      ExternalSourceButton(url: (_post['externalSourceUrl'] ?? '').toString()),
+      if (caption.isNotEmpty || date.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (caption.isNotEmpty)
+                ExpandableCaption(
+                  text: caption,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    height: 1.5,
+                    fontSize: 14.5,
+                  ),
+                  mentionStyle: const TextStyle(
+                    color: AppColors.textMuted,
+                    height: 1.5,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              if (date.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  date,
+                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                ),
+              ],
+            ],
+          ),
+        ),
+    ];
+    if (widget.embedded)
+      return CreatorViewTracker(
+        postId: _post['id'].toString(),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: content,
+          ),
+        ),
+      );
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        foregroundColor: Colors.white,
+        title: Text(_isVideo ? 'Video' : 'Paylaşım'),
+        actions: [
+          if (_isMine)
+            IconButton(
+              tooltip: 'Gönderi seçenekleri',
+              onPressed: _showMenu,
+              icon: const Icon(Icons.more_horiz),
+            ),
+        ],
+      ),
+      body: CreatorViewTracker(
+        postId: _post['id'].toString(),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 36),
+          children: content,
+        ),
+      ),
+    );
+  }
+}

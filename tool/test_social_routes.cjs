@@ -1,0 +1,52 @@
+const fs=require('node:fs');
+const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
+const {doc,setDoc,getDoc,updateDoc,serverTimestamp,Timestamp,collection,query,where,getDocs,deleteDoc}=require('firebase/firestore');
+const {ref,uploadBytes,getBytes}=require('firebase/storage');
+(async()=>{
+ const env=await initializeTestEnvironment({projectId:'demo-tbt',firestore:{host:'127.0.0.1',port:8080},storage:{host:'127.0.0.1',port:9199}});
+ const db=uid=>env.authenticatedContext(uid).firestore();
+ const st=uid=>env.authenticatedContext(uid).storage();
+ try{
+  await env.withSecurityRulesDisabled(async c=>{
+   await setDoc(doc(c.firestore(),'travel_plans/social'),{ownerId:'owner',memberIds:['owner','member'],spotIds:['one'],spotNames:['One'],stopSnapshots:[{id:'one',name:'One'}],title:'Gezi',isPublic:true,visibility:'public',hasSchedule:true,joinEnabled:true,startAt:Timestamp.fromMillis(Date.now()+3600000)});
+  });
+  await assertSucceeds(getDoc(doc(db('outside'),'travel_plans/social')));
+  const media={ownerId:'member',ownerName:'Member',storagePath:'route_albums/social/member/photo/media.jpg',thumbnailPath:'',kind:'image',allowExport:true,createdAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(db('member'),'travel_plans/social/album/photo'),media));
+  await assertFails(getDoc(doc(db('outside'),'travel_plans/social/album/photo')));
+  await assertFails(setDoc(doc(db('outside'),'travel_plans/social/album/fake'),{...media,ownerId:'outside'}));
+  await assertFails(updateDoc(doc(db('owner'),'travel_plans/social/album/photo'),{allowExport:false}));
+  await assertSucceeds(updateDoc(doc(db('member'),'travel_plans/social/album/photo'),{allowExport:false}));
+  const path='route_albums/social/member/photo/media.jpg';
+  await assertSucceeds(uploadBytes(ref(st('member'),path),new Uint8Array([255,216,255,217]),{contentType:'image/jpeg'}));
+  await assertSucceeds(getBytes(ref(st('owner'),path)));
+  await assertFails(getBytes(ref(st('outside'),path)));
+  await assertFails(uploadBytes(ref(st('owner'),'route_albums/social/member/fake/media.jpg'),new Uint8Array([1]),{contentType:'image/jpeg'}));
+  await assertFails(uploadBytes(ref(st('member'),'route_albums/social/member/bad/media.jpg'),new Uint8Array([1]),{contentType:'text/html'}));
+  await assertFails(updateDoc(doc(db('member'),'travel_plans/social'),{spotIds:['two'],spotNames:['Two'],stopSnapshots:[{id:'two',name:'Two'}]}));
+  await assertSucceeds(updateDoc(doc(db('owner'),'travel_plans/social'),{allowMemberEdits:true}));
+  await assertSucceeds(updateDoc(doc(db('member'),'travel_plans/social'),{spotIds:['two'],spotNames:['Two'],stopSnapshots:[{id:'two',name:'Two'}]}));
+  await assertFails(updateDoc(doc(db('member'),'travel_plans/social'),{memberIds:['owner','member','outside']}));
+  const poll=doc(db('member'),'travel_plans/social/polls/time');
+  await assertSucceeds(setDoc(poll,{authorId:'member',question:'Ne zaman?',options:['10','11'],closed:false,createdAt:serverTimestamp()}));
+  await assertSucceeds(setDoc(doc(db('owner'),'travel_plans/social/polls/time/votes/owner'),{choice:0,updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(db('member'),'travel_plans/social/polls/time/votes/owner'),{choice:1,updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(db('member'),'travel_plans/social/polls/time/votes/member'),{choice:2,updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(poll,{closed:true}));
+  await assertFails(setDoc(doc(db('owner'),'travel_plans/social/polls/time/votes/owner'),{choice:1,updatedAt:serverTimestamp()}));
+  for (const key of ['self','owner','other']) await assertSucceeds(setDoc(doc(db('member'),'travel_plans/social/proposals/'+key),{authorId:'member',text:'Harput',voterIds:[],createdAt:serverTimestamp()}));
+  await assertSucceeds(deleteDoc(doc(db('member'),'travel_plans/social/proposals/self')));
+  await assertSucceeds(deleteDoc(doc(db('owner'),'travel_plans/social/proposals/owner')));
+  await assertFails(deleteDoc(doc(db('outside'),'travel_plans/social/proposals/other')));
+  await assertSucceeds(updateDoc(doc(db('owner'),'travel_plans/social'),{memberIds:['owner']}));
+  await assertFails(getDoc(doc(db('member'),'travel_plans/social/album/photo')));
+  await assertFails(getBytes(ref(st('member'),path)));
+  await assertSucceeds(updateDoc(doc(db('owner'),'travel_plans/social'),{isPublic:false,visibility:'followers'}));
+  await assertFails(getDoc(doc(db('outside'),'travel_plans/social')));
+  await env.withSecurityRulesDisabled(c=>setDoc(doc(c.firestore(),'users/owner/followers/follower'),{userId:'follower'}));
+  await assertSucceeds(getDoc(doc(db('follower'),'travel_plans/social')));
+  await assertSucceeds(getDocs(query(collection(db('follower'),'travel_plans'),where('ownerId','==','owner'),where('visibility','==','followers'))));
+  await assertFails(getDoc(doc(db('follower'),'travel_plans/social/album/photo')));
+  console.log('PASS social routes: public vs member privacy, private Storage, revoked membership, sharing permission ownership, edit opt-in, private polls and votes, followers');
+ }finally{await env.cleanup();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

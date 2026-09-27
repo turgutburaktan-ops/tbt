@@ -1,0 +1,92 @@
+{
+  "project_info": {
+    "project_number": "330568532415",
+    "project_id": "en-iyi-cekim-noktasi",
+    "storage_bucket": "en-iyi-cekim-noktasi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330568532415:android:425699d143ec3eb041a10a",
+        "android_client_info": {
+          "package_name": "com.example.tbt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "330568532415-lpu7a2q44qvvhc3f34tedf3dodu05sji.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tbt",
+            "certificate_hash": "758ff21389033ed26375415fad30e11f9ad1f364"
+          }
+        },
+        {
+          "client_id": "330568532415-vlqf0000qkpp81oel35qv0aar36q5sq7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDoKy5YMP5-6UJqotfuUA7a74H-x-5miQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "330568532415-vlqf0000qkpp81oel35qv0aar36q5sq7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330568532415:android:bf2ffa0b4d9210ed41a10a",
+        "android_client_info": {
+          "package_name": "com.tbt.social"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "330568532415-5ggndj2u3nqs0qpldbd02f2jiou9ae2p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tbt.social",
+            "certificate_hash": "2b2a7552f8f36bc6b60947002c18723597762b99"
+          }
+        },
+        {
+          "client_id": "330568532415-8pi622ao0mi5tkkrk56df9dc3u5skbpg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tbt.social",
+            "certificate_hash": "89bb21db902be269874a39aca2deefb480563236"
+          }
+        },
+        {
+          "client_id": "330568532415-vlqf0000qkpp81oel35qv0aar36q5sq7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDoKy5YMP5-6UJqotfuUA7a74H-x-5miQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "330568532415-vlqf0000qkpp81oel35qv0aar36q5sq7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

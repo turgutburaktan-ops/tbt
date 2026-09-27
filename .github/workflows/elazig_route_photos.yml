@@ -1,0 +1,28 @@
+name: Add Elazig route cover photos
+on:
+  push:
+    branches: [codex/elazig-external-routes-20260925]
+    paths: ['functions/scripts/elazig_route_photos.json', 'functions/scripts/publish_elazig_route_photos.cjs', '.github/workflows/elazig_route_photos.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tbt-elazig-external-routes
+  cancel-in-progress: false
+jobs:
+  photos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node functions/scripts/publish_elazig_route_photos.cjs
+      - run: npm install --prefix /tmp/tbt-route-photos firebase-admin@13.0.0
+      - name: Upload covers and verify live route photos
+        env:
+          NODE_PATH: /tmp/tbt-route-photos/node_modules
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PUBLISH_ROUTE_PHOTOS: 'true'
+        run: node functions/scripts/publish_elazig_route_photos.cjs

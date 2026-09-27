@@ -1,0 +1,20 @@
+name: Inspect Google Play release status
+on:
+  push:
+    branches: [codex/ios-logo-release-20260922]
+    paths: ['.github/workflows/play_release_status.yml', 'tool/play_release_status.cjs']
+permissions:
+  contents: read
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read Play tracks and bundles without committing changes
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/play_release_status.cjs

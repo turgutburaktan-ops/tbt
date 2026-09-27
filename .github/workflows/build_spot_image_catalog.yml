@@ -1,0 +1,46 @@
+name: Build Nationwide Spot Image Catalog
+
+on:
+  push:
+    paths:
+      - 'tools/build_spot_image_catalog.py'
+      - '.github/workflows/build_spot_image_catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build licensed image catalog
+        run: python3 tools/build_spot_image_catalog.py
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: stable
+
+      - name: Format generated Dart
+        run: dart format lib/data/spot_image_auto_registry.dart lib/widgets/spot_image.dart lib/services/spot_image_search_service.dart
+
+      - name: Validate Flutter code
+        run: flutter pub get && flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Commit localized images and registry
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/data/spot_image_auto_registry.dart assets/spots tools/spot_image_catalog_report.json lib/widgets/spot_image.dart lib/services/spot_image_search_service.dart
+          if git diff --cached --quiet; then
+            echo 'No image catalog changes to commit'
+          else
+            git commit -m 'Localize nationwide photo spot images'
+            git push
+          fi

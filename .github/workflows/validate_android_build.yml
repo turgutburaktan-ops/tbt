@@ -1,0 +1,58 @@
+name: Validate Android Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare temporary Android scaffold
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp android/app/src/main/AndroidManifest.xml /tmp/tbt-AndroidManifest.xml
+          rm -rf android
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text().replace('${MAPS_API_KEY}', 'ci-placeholder-maps-key')
+          manifest.write_text(text)
+          gradle = Path('android/app/build.gradle.kts')
+          text = gradle.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 26').replace('com.tbt.best_photo_spot', 'com.tbt.social')
+          gradle.write_text(text)
+          for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
+              activity.write_text(activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social'))
+          PY
+      - name: Verify package identity
+        shell: bash
+        run: |
+          grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
+          grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
+          main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
+          grep -q '^package com.tbt.social$' "$main_activity"
+      - name: Configure notification replies
+        run: python3 tool/configure_notifications.py android
+      - name: Build debug APK
+        run: flutter build apk --debug
+      - name: Upload validation APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-android-debug-validation-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 3

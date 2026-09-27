@@ -1,0 +1,151 @@
+import '../screens/route_deep_link_screen.dart';
+import '../screens/creator_welcome_screen.dart';
+import '../screens/role_invite_screen.dart';
+
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+import '../screens/community_profile_screen.dart';
+import '../screens/event_deep_link_screen.dart';
+import '../screens/post_deep_link_screen.dart';
+import '../screens/spot_deep_link_screen.dart';
+import '../screens/user_profile_screen.dart';
+import 'invite_link_service.dart';
+import '../widgets/chat_collaboration_controls.dart';
+
+class DeepLinkService {
+  DeepLinkService._();
+  static final DeepLinkService instance = DeepLinkService._();
+
+  final AppLinks _appLinks = AppLinks();
+  StreamSubscription<Uri>? _subscription;
+  final Set<String> _recent = <String>{};
+  GlobalKey<NavigatorState>? _navigatorKey;
+  bool _started = false;
+
+  void start(GlobalKey<NavigatorState> navigatorKey) {
+    _navigatorKey = navigatorKey;
+    if (_started) return;
+    _started = true;
+
+    _subscription = _appLinks.uriLinkStream.listen(
+      (uri) => _open(uri),
+      onError: (Object error, StackTrace stackTrace) {
+        if (kDebugMode) {
+          debugPrint('Deep link stream error: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      },
+      cancelOnError: false,
+    );
+    unawaited(_openInitialLink());
+  }
+
+  Future<void> _openInitialLink() async {
+    try {
+      final uri = await _appLinks.getInitialLink().timeout(
+        const Duration(seconds: 3),
+      );
+      if (uri != null) _open(uri);
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Initial deep link skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+  }
+
+  void dispose() {
+    _subscription?.cancel();
+    _subscription = null;
+    _navigatorKey = null;
+    _started = false;
+    _recent.clear();
+  }
+
+  Future<void> openSharedLink(Uri uri) => _open(uri);
+
+  Future<void> _open(Uri uri) async {
+    final navigatorKey = _navigatorKey;
+    if (navigatorKey == null) return;
+    final target = InviteLinkService.instance.parse(uri);
+    if (target == null) return;
+
+    final key = '${target.type}/${target.role}/${target.id}';
+    if (_recent.contains(key)) return;
+    _recent.add(key);
+    Future<void>.delayed(const Duration(seconds: 2), () => _recent.remove(key));
+
+    await WidgetsBinding.instance.endOfFrame;
+    {
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) return;
+
+      switch (target.type) {
+        case 'route':
+          await navigator.push(MaterialPageRoute(builder: (_) => RouteDeepLinkScreen(routeId: target.id)));
+          break;
+        case 'role-invite':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  RoleInviteScreen(role: target.role, code: target.id),
+            ),
+          );
+          break;
+        case 'creator':
+        case 'creator-profile':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => CreatorWelcomeScreen(
+                id: target.id,
+                enrollment: target.type == 'creator',
+              ),
+            ),
+          );
+          break;
+        case 'group':
+          startGroupChat(navigator.context, join: true, initialCode: target.id);
+          break;
+        case 'community':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => CommunityProfileScreen(communityId: target.id),
+            ),
+          );
+          break;
+        case 'event':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => EventDeepLinkScreen(eventId: target.id),
+            ),
+          );
+          break;
+        case 'profile':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => UserProfileScreen(userId: target.id),
+            ),
+          );
+          break;
+        case 'post':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => PostDeepLinkScreen(postId: target.id),
+            ),
+          );
+          break;
+        case 'spot':
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => SpotDeepLinkScreen(spotId: target.id),
+            ),
+          );
+          break;
+      }
+    }
+  }
+}

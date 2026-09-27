@@ -1,0 +1,47 @@
+// TBT Reels native ad factory. MediaView owns video playback and SDK controls.
+class TBTReelsAdFactory(private val context: android.content.Context) : io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin.NativeAdFactory {
+    override fun createNativeAd(ad: com.google.android.gms.ads.nativead.NativeAd, customOptions: MutableMap<String, Any>?): com.google.android.gms.ads.nativead.NativeAdView {
+        val view = com.google.android.gms.ads.nativead.NativeAdView(context)
+        view.setBackgroundColor(android.graphics.Color.BLACK)
+        val column = android.widget.LinearLayout(context).apply { orientation = android.widget.LinearLayout.VERTICAL }
+        view.addView(column, android.widget.FrameLayout.LayoutParams(-1, -1))
+        fun dp(n: Int) = (n * context.resources.displayMetrics.density).toInt()
+        fun text(value: String?, size: Float, color: Int = android.graphics.Color.WHITE) = android.widget.TextView(context).apply {
+            text = value; textSize = size; setTextColor(color); maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setPadding(dp(8), dp(6), dp(8), dp(6))
+        }
+        val badge = text("Reklam", 12f).apply { setTypeface(null, android.graphics.Typeface.BOLD) }
+        // Reserve space for the SDK's top-right AdChoices overlay.
+        badge.setPadding(dp(8), dp(6), dp(48), dp(6))
+        column.addView(badge, android.widget.LinearLayout.LayoutParams(-1, dp(36)))
+        val media = com.google.android.gms.ads.nativead.MediaView(context)
+        media.setImageScaleType(android.widget.ImageView.ScaleType.FIT_CENTER)
+        column.addView(media, android.widget.LinearLayout.LayoutParams(-1, 0, 1f))
+        view.mediaView = media
+        ad.mediaContent?.let { media.mediaContent = it }
+        val identity = android.widget.LinearLayout(context).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
+        val icon = android.widget.ImageView(context).apply { setImageDrawable(ad.icon?.drawable); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER }
+        if (ad.icon != null) identity.addView(icon, android.widget.LinearLayout.LayoutParams(dp(44), dp(44)))
+        view.iconView = icon
+        val headline = text(ad.headline, 18f).apply { setTypeface(null, android.graphics.Typeface.BOLD) }
+        identity.addView(headline, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+        column.addView(identity)
+        view.headlineView = headline
+        val advertiser = text(ad.advertiser, 12f, android.graphics.Color.LTGRAY)
+        if (!ad.advertiser.isNullOrBlank()) column.addView(advertiser)
+        view.advertiserView = advertiser
+        val body = text(ad.body, 14f, android.graphics.Color.LTGRAY)
+        if (!ad.body.isNullOrBlank()) column.addView(body)
+        view.bodyView = body
+        val action = android.widget.Button(context).apply {
+            text = ad.callToAction; isAllCaps = false
+            setTextColor(android.graphics.Color.BLACK)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.rgb(85,224,210))
+        }
+        if (!ad.callToAction.isNullOrBlank()) column.addView(action, android.widget.LinearLayout.LayoutParams(-1, dp(52)))
+        view.callToActionView = action
+        view.setNativeAd(ad)
+        return view
+    }
+}

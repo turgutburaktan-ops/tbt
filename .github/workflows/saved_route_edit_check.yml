@@ -1,0 +1,20 @@
+name: Verify preserved route editing
+on:
+  push:
+    branches: [codex/preserve-route-edit-20260925]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/route_create_screen.dart lib/services/route_geometry.dart
+      - run: flutter test test/saved_route_edit_test.dart test/route_create_test.dart test/route_geometry_test.dart test/ready_route_event_test.dart

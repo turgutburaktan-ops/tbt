@@ -1,0 +1,36 @@
+name: Publish TBT 1.0.30 (58) crash fixes to both stores
+on:
+  push:
+    branches: [codex/store-release58-crash-fix-20260920]
+permissions:
+  contents: read
+concurrency:
+  group: tbt-store-release58
+  cancel-in-progress: false
+jobs:
+  rules:
+    uses: ./.github/workflows/deploy_firestore_rules.yml
+    secrets: inherit
+  android:
+    needs: rules
+    uses: ./.github/workflows/android_play_release58.yml
+    secrets: inherit
+  ios:
+    needs: rules
+    uses: ./.github/workflows/ios_testflight_release58.yml
+    secrets: inherit
+  submit-ios:
+    needs: ios
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Submit iOS 1.0.30 (58) to App Review
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build58.cjs

@@ -1,0 +1,20 @@
+name: Check personal profile identity
+on:
+  push:
+    branches: [codex/personal-profile-default]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/models/profile_identity.dart lib/screens/register_screen.dart lib/screens/settings_screen.dart lib/screens/profile_page_v2.dart lib/screens/user_profile_screen.dart lib/widgets/public_achievement_badges.dart
+      - run: flutter test test/profile_identity_test.dart test/profile_content_navigation_test.dart

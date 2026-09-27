@@ -1,0 +1,23 @@
+name: Publish TBT Starter Music
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-starter-music]
+permissions:
+  contents: read
+concurrency:
+  group: tbt-starter-music
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/publish_starter_music.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

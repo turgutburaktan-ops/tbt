@@ -1,0 +1,72 @@
+[
+  {
+    "id": "tbt_ready_firat_malatya_malatya_merkez_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_9c433713-0f52-4d7e-8c35-284428a189c12N4A0057.CR2-min.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/malatya/malatya-merkez-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "a3b423ba2de6a0d05ec7b0fd5657f767efb88aa33921d4692a9c8fbcf5387ef5"
+  },
+  {
+    "id": "tbt_ready_firat_malatya_yesilyurt_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_ac897fa8-c9f6-4b34-b78b-224645c78ebaDSC_5099.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/malatya/yesilyurt-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "6f1d82c01435b80e0a984514474d3be20ba0fa28b8c89d8ff840ea56f572f708"
+  },
+  {
+    "id": "tbt_ready_firat_malatya_girmana_kanyonu_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_60a19a04-b5cd-4961-9ad9-2c9abb8629412N4A0004.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/malatya/girmana-kanyonu-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "decbe50f1444ce54ff0f0cd958647d82403b519b5313bba100652bff0e0894c6"
+  },
+  {
+    "id": "tbt_ready_firat_tunceli_merkez_anafatma_rotasi",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_4e06c1ac-b054-429b-8e8f-0393d701bbceEkran%20Al%C4%B1nt%C4%B1s%C4%B1.PNG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/tunceli/merkez-anafatma-rotasi",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "7da32db26952026487ebe98f65946f0443c51c85d145ebd331c1b74aa9cb17ef"
+  },
+  {
+    "id": "tbt_ready_firat_tunceli_merkez_kutuderesi_rotasi",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_9648a790-213f-41ed-af60-f1f126acb71cEkran%20Al%C4%B1nt%C4%B1s%C4%B1.PNG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/tunceli/merkez-kutuderesi-rotasi",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "b854b8ca844ad932f60d6bc8b2f947ebd2e622874d2c65ff38e6c611a43e9845"
+  },
+  {
+    "id": "tbt_ready_firat_bingol_eski_koy_celal_zeynep_koyu_bisiklet_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_92ca8ee4-5b1c-4106-b01d-eda2e9366fb5Ekran%20Al%C4%B1nt%C4%B1s%C4%B1.PNG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/bingol/eski-koy-celal-zeynep-koyu-bisiklet-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "4d80cba1cfdfa0e87c726b2306c2f9fbfb22a626236cdab9f5d7f6cbb1a733c6"
+  },
+  {
+    "id": "tbt_ready_firat_bingol_elmali_koyu_soguk_cesme_bisiklet_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_7141c443-6ff2-422b-8d1c-c61e239cd8f2Ekran%20Al%C4%B1nt%C4%B1s%C4%B1.PNG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/bingol/elmali-koyu-soguk-cesme-bisiklet-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "a4553618483690bf35793c51cc9ca8a21e805b4961a65f201d69b7d33a4307a9"
+  },
+  {
+    "id": "tbt_ready_firat_bingol_aftor_celtiksuyu_murat_nehri_bisiklet_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_d013ad2a-fab0-4565-8b1a-c99d718f9ccbEkran%20Al%C4%B1nt%C4%B1s%C4%B1.PNG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/bingol/aftor-celtiksuyu-murat-nehri-bisiklet-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "ae497e12cfeb8f6c5f256b07a0aa26257fc497a295f50016a6632cd1256cdeb3"
+  },
+  {
+    "id": "tbt_ready_kral_diyarbakir_cinar_karacadag_lav_rotasi",
+    "sourceUrl": "https://diyarbakirkralyolu.com/wp-content/uploads/2026/02/CYnar_KaracadaY_Lav_RotasY_10.jpg",
+    "sourcePage": "https://diyarbakirkralyolu.com/rota/cinar-karacadag-lav-rotasi/",
+    "credit": "Diyarbakır Kral Yolu",
+    "sha256": "a7935f2bc06fad3076f4e3daf35e3e86d2e4c6b92cfd343a63a98d3999d3674a"
+  },
+  {
+    "id": "tbt_ready_kral_diyarbakir_cinar_zerzevan_kalesi_cemeres_rotasi",
+    "sourceUrl": "https://diyarbakirkralyolu.com/wp-content/uploads/2026/02/CYnar_Zerzevan_Kalesi_-_CemereY_RotasY_8.jpeg",
+    "sourcePage": "https://diyarbakirkralyolu.com/rota/cinar-zerzevan-kalesi-cemeres-rotasi/",
+    "credit": "Diyarbakır Kral Yolu",
+    "sha256": "d9d54d00f80e4259497c9a6a6a485445a66fdc328d17c64d242742f68b84cf75"
+  }
+]

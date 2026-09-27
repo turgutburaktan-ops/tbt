@@ -1,0 +1,44 @@
+[
+  {
+    "id": "tbt_ready_firat_elazig_buzluk_magarasi_bisiklet_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_7d828f4d-6596-450b-b5a2-ad7157887332IMG_7917.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/elazig/buzluk-magarasi-bisiklet-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "5f5c3015feb352babc9463f10bd8e2f76850de218dc5b655c2ff455d9e74b47b"
+  },
+  {
+    "id": "tbt_ready_firat_elazig_elazig_merkez_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_eaba2bfd-6eb0-4362-8567-cc3f48e3b9ffIMG_9821.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/elazig/elazig-merkez-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "ef2fdab22a45cafcf04400b559872c4ab0f034603ede8a4ba9edcfce08a24edd"
+  },
+  {
+    "id": "tbt_ready_firat_elazig_hazarbaba_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_199612a8-fd7c-47ba-9568-e8364fd57b2cIMG_1062-min.JPG",
+    "sourcePage": "https://firatikesfet.com/tr/detail/elazig/hazarbaba-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "912247ecdb5790302d9ffe4234be0579e4cc8f38d388528a10b3b82e989dd548"
+  },
+  {
+    "id": "tbt_ready_firat_elazig_suluklu_gol_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_403bafef-2bf4-4059-8f79-6a9f22ac67fcIMG_3715.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/elazig/suluklu-gol-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "f028e3bb36c1764183f494b9fa5e0d1f83da0ed47b11ee1c7b82368d233c51ff"
+  },
+  {
+    "id": "tbt_ready_firat_elazig_kurk_dedeyolu_yuruyus_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_07fd3ec9-0fb7-4d82-8d3c-5a24caefad88IMG_1935.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/elazig/kurk-dedeyolu-yuruyus-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "946cbe8c8503b73ae24dc786ffd1ddecfa296186d1e66f6eb0e5df0a292b1072"
+  },
+  {
+    "id": "tbt_ready_firat_elazig_sarili_bisiklet_parkuru",
+    "sourceUrl": "https://firatikesfet.com/BackOffice/UploadImage/gallery/orj_3c862979-7b8c-4a41-ba21-0bd9e248c665IMG_0106.jpg",
+    "sourcePage": "https://firatikesfet.com/tr/detail/elazig/sarili-bisiklet-parkuru",
+    "credit": "Fırat’ı Keşfet",
+    "sha256": "b106a3938b0d4ed1ffcda6bea587dc69d96ac73857760c31a29f4408ec46a594"
+  }
+]

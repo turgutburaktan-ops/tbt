@@ -1,0 +1,47 @@
+{
+  "batch": "first-videos-20260908",
+  "posts": [
+    {
+      "id": "tbt-rehber-video-01",
+      "key": "kapadokya",
+      "sourcePage": "https://www.pexels.com/video/27373143/",
+      "src": "https://videos.pexels.com/video-files/27373143/12127045_1080_1920_60fps.mp4",
+      "sha256": "5add0f889892312c79dac298a76d46ad699ea8d235d5aa3cc8efe20ee952e195",
+      "author": "İbrahim Çelik",
+      "title": "Gökyüzünde renkler",
+      "caption": "Bazen birkaç saniye yukarı bakmak yeter. Kapadokya semalarında balonlarla kısa bir mola. Sen gün doğumunu mu, gün batımını mı seversin?",
+      "city": "Nevşehir",
+      "place": "Kapadokya",
+      "license": "Pexels License",
+      "licenseUrl": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "tbt-rehber-video-02",
+      "key": "pamukkale",
+      "sourcePage": "https://www.pexels.com/video/27467547/",
+      "src": "https://videos.pexels.com/video-files/27467547/12149895_2560_1440_30fps.mp4",
+      "sha256": "f625c30e6e8a6ddb1e3df45c907f63d9caef81f50c17574c4cbe53b3e7372178",
+      "author": "A.S. Kacar",
+      "title": "Doğanın renk paleti",
+      "caption": "Beyazın içinde turkuaz bir mola. Pamukkale’den bu kısa görüntüde en çok hangi ayrıntı dikkatini çekti?",
+      "city": "Denizli",
+      "place": "Pamukkale",
+      "license": "Pexels License",
+      "licenseUrl": "https://www.pexels.com/license/"
+    },
+    {
+      "id": "tbt-rehber-video-03",
+      "key": "istanbul",
+      "sourcePage": "https://www.pexels.com/video/35928513/",
+      "src": "https://videos.pexels.com/video-files/35928513/15243060_2560_1440_30fps.mp4",
+      "sha256": "d7f3f195576f49453efcb776a4d33dd0cd02260190400317ebda306a3e3c47d4",
+      "author": "Sururi Ballıdağ Director",
+      "title": "Şehir akıp giderken",
+      "caption": "Vapurlar, suyun üzerindeki izler ve İstanbul silüeti. Şehrin hareketine birkaç saniyelik bir mola. Senin şehrini anlatan manzara hangisi?",
+      "city": "İstanbul",
+      "place": "İstanbul",
+      "license": "Pexels License",
+      "licenseUrl": "https://www.pexels.com/license/"
+    }
+  ]
+}

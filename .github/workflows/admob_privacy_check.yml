@@ -1,0 +1,22 @@
+name: Verify Android and iOS ad privacy
+on:
+  push:
+    branches: [codex/admob-privacy-20260925]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/main.dart lib/services/ad_consent_service.dart lib/services/reels_ad_loader.dart lib/widgets/sponsored_native_ad.dart lib/screens/settings_screen.dart test/ad_consent_service_test.dart
+      - run: flutter test test/ad_consent_service_test.dart test/reels_ad_pager_test.dart
+      - run: python3 test/admob_privacy_config_test.py
+      - run: flutter build bundle --debug

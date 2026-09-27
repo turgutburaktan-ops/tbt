@@ -1,0 +1,37 @@
+name: Audit Photo Spot Quality
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/data/**'
+      - 'lib/services/spot_repository.dart'
+      - 'lib/services/nationwide_candidate_spot_resolver.dart'
+      - 'lib/services/spot_quality_gate.dart'
+      - 'tool/audit_spot_coordinates.py'
+      - '.github/workflows/audit_spot_quality.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Audit coordinates
+        run: python3 tool/audit_spot_coordinates.py
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: photo-spot-coordinate-audit
+          path: build/spot_quality/coordinate_audit.json
+          if-no-files-found: error
+          retention-days: 14

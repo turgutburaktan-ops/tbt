@@ -1,0 +1,93 @@
+name: iOS App Store Screenshots V4
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    name: Capture iPhone 6.9-inch Screenshots
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Prepare lightweight screenshot app
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf screenshot_runner
+          flutter create --platforms=ios --org com.tbt --project-name tbt_store_shots screenshot_runner
+          mkdir -p screenshot_runner/lib/theme screenshot_runner/assets/spot_thumbnails
+          cp lib/app_store_screenshots.dart screenshot_runner/lib/main.dart
+          cp lib/theme/app_theme.dart screenshot_runner/lib/theme/app_theme.dart
+          cp assets/spot_thumbnails/*.webp screenshot_runner/assets/spot_thumbnails/
+          printf '%s\n' \
+            'name: tbt_store_shots' \
+            'description: TBT App Store screenshot renderer.' \
+            'publish_to: "none"' \
+            'version: 1.0.0+1' \
+            'environment:' \
+            '  sdk: ">=3.7.0 <4.0.0"' \
+            'dependencies:' \
+            '  flutter:' \
+            '    sdk: flutter' \
+            '  flutter_localizations:' \
+            '    sdk: flutter' \
+            'flutter:' \
+            '  uses-material-design: true' \
+            '  assets:' \
+            '    - assets/spot_thumbnails/' \
+            > screenshot_runner/pubspec.yaml
+          if [[ -f screenshot_runner/ios/Podfile ]]; then
+            sed -i '' -E "s/^#?[[:space:]]*platform :ios, '[^']+'/platform :ios, '15.0'/" screenshot_runner/ios/Podfile
+          fi
+          sed -i '' 's/com\.tbt\.tbtStoreShots/com.tbt.social.screenshots/g' screenshot_runner/ios/Runner.xcodeproj/project.pbxproj
+          cd screenshot_runner
+          flutter config --no-enable-swift-package-manager
+          flutter pub get
+      - name: Build lightweight screenshot app
+        working-directory: screenshot_runner
+        run: flutter build ios --simulator --debug --no-pub
+      - name: Boot iPhone and capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for v in d.values() for x in v if x["name"]=="iPhone 16 Pro Max"))')
+          xcrun simctl boot "$UDID" || true
+          open -a Simulator
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
+          xcrun simctl install "$UDID" screenshot_runner/build/ios/iphonesimulator/Runner.app
+          mkdir -p screenshot_runner/build/app-store-screenshots
+          for screen in home places detail plan nearby profile; do
+            xcrun simctl terminate "$UDID" com.tbt.social.screenshots || true
+            sleep 2
+            SIMCTL_CHILD_APP_STORE_SCREEN="$screen" xcrun simctl launch "$UDID" com.tbt.social.screenshots
+            sleep 8
+            xcrun simctl io "$UDID" screenshot "screenshot_runner/build/app-store-screenshots/${screen}.png"
+          done
+          for image in screenshot_runner/build/app-store-screenshots/*.png; do
+            width=$(sips -g pixelWidth "$image" | awk '/pixelWidth/ {print $2}')
+            height=$(sips -g pixelHeight "$image" | awk '/pixelHeight/ {print $2}')
+            case "${width}x${height}" in
+              1260x2736|1290x2796|1320x2868) ;;
+              *) echo "Unexpected App Store screenshot size: ${width}x${height}"; exit 1 ;;
+            esac
+            sips -s format png "$image" --out "$image" >/dev/null
+            echo "$(basename "$image") ${width}x${height}"
+          done
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-app-store-iphone-6.9-screenshots
+          path: screenshot_runner/build/app-store-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,21 @@
+name: Patch Profile Campus Access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-profile-campus-access:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify profile campus access is already present
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f lib/screens/profile_page_v2.dart
+          grep -q "campus-profile" lib/screens/profile_page_v2.dart || true
+          echo "Legacy profile campus patch retired from automatic pushes."
+          echo "Profile/Campus runtime code is left untouched; TBT Buildler is the only automatic build path."

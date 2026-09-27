@@ -1,0 +1,32 @@
+name: Check TBT invitation domains
+on:
+  push:
+    branches: [codex/invite-app-links]
+permissions:
+  contents: read
+jobs:
+  domains:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/check_app_link_domains.cjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/deep_link_service.dart lib/services/invite_link_service.dart
+      - run: flutter test test/chat_invite_link_test.dart test/creator_link_test.dart test/invite_fallback_link_test.dart
+      - run: flutter build bundle --debug

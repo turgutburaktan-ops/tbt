@@ -1,0 +1,64 @@
+// TBT protected photo viewer
+private final class TBTPrivatePhotoGuard {
+  static var instance: TBTPrivatePhotoGuard?
+  private let channel: FlutterMethodChannel
+  private var enabled = false
+  private var cover: UIWindow?
+  private var observers: [NSObjectProtocol] = []
+  private var inactive = false
+  init(_ messenger: FlutterBinaryMessenger) {
+    channel = FlutterMethodChannel(name: "tbt/private_photo", binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self, call.method == "setActive",
+            let args = call.arguments as? [String: Any],
+            let active = args["active"] as? Bool else {
+        result(FlutterMethodNotImplemented); return
+      }
+      self.enabled = active
+      self.updateCover()
+      result(["captured": self.captured])
+    }
+    let center = NotificationCenter.default
+    observers.append(center.addObserver(forName: UIScreen.capturedDidChangeNotification,
+      object: nil, queue: .main) { [weak self] _ in
+        self?.updateCover()
+        if self?.enabled == true && self?.captured == true {
+          self?.channel.invokeMethod("captured", arguments: nil)
+        }
+      })
+    observers.append(center.addObserver(forName: UIApplication.userDidTakeScreenshotNotification,
+      object: nil, queue: .main) { [weak self] _ in
+        if self?.enabled == true { self?.channel.invokeMethod("captured", arguments: nil) }
+      })
+    observers.append(center.addObserver(forName: UIApplication.willResignActiveNotification,
+      object: nil, queue: .main) { [weak self] _ in
+        self?.inactive = true; self?.updateCover()
+      })
+    observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification,
+      object: nil, queue: .main) { [weak self] _ in
+        self?.inactive = false; self?.updateCover()
+      })
+  }
+  private var captured: Bool { UIScreen.screens.contains { $0.isCaptured } }
+  private func updateCover() {
+    if inactive && cover != nil { return }
+    guard enabled && (captured || inactive) else {
+      cover?.isHidden = true; cover = nil; return
+    }
+    guard cover == nil,
+      let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+        .first(where: { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive })
+      else { return }
+    let window = UIWindow(windowScene: scene)
+    window.windowLevel = .alert + 1
+    let controller = UIViewController()
+    controller.view.backgroundColor = .black
+    window.rootViewController = controller
+    window.isHidden = false
+    cover = window
+  }
+}
+private func registerTBTPrivatePhoto(_ registry: FlutterPluginRegistry) {
+  guard let registrar = registry.registrar(forPlugin: "TBTPrivatePhoto") else { return }
+  TBTPrivatePhotoGuard.instance = TBTPrivatePhotoGuard(registrar.messenger())
+}

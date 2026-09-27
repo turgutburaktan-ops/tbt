@@ -1,0 +1,152 @@
+[
+  {
+    "id": "tbt_ready_elazig_harput",
+    "city": "Elazığ",
+    "title": "Harput tarih yürüyüşü",
+    "transport": "Yürüyüş",
+    "stops": [
+      "wd-q8195601-harput",
+      "wd-q6023683-harput-ulu-camii"
+    ],
+    "description": "Elazığ için yürüyüş rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_elazig_merkez",
+    "city": "Elazığ",
+    "title": "Elazığ merkezden Harput’a",
+    "transport": "Araç",
+    "stops": [
+      "wd-q28221529-izzet-pasa-camii",
+      "wd-q8195601-harput",
+      "wd-q6023683-harput-ulu-camii"
+    ],
+    "description": "Elazığ için araç rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_elazig_palu",
+    "city": "Elazığ",
+    "title": "Harput ve Palu kültür gezisi",
+    "transport": "Araç",
+    "stops": [
+      "wd-q8195601-harput",
+      "wd-q131738523-palu-hamami"
+    ],
+    "description": "Elazığ için araç rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_malatya_merkez",
+    "city": "Malatya",
+    "title": "Malatya kent belleği",
+    "transport": "Yürüyüş",
+    "stops": [
+      "wd-q18410359-malatya-muzesi",
+      "wd-q6018307-tashoron-kilisesi"
+    ],
+    "description": "Malatya için yürüyüş rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_malatya_darende",
+    "city": "Malatya",
+    "title": "Darende ve Günpınar",
+    "transport": "Araç",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  },
+  {
+    "id": "tbt_ready_malatya_battalgazi",
+    "city": "Malatya",
+    "title": "Battalgazi tarih gezisi",
+    "transport": "Yürüyüş",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  },
+  {
+    "id": "tbt_ready_diyarbakir_sur",
+    "city": "Diyarbakır",
+    "title": "Sur’un hanları ve müzeleri",
+    "transport": "Yürüyüş",
+    "stops": [
+      "wd-q6098185-hasan-pasa-hani",
+      "wd-q3675546-ulu-camii",
+      "wd-q30624100-cahit-sitki-taranci-muzesi",
+      "wd-q30624138-ziya-gokalp-muzesi"
+    ],
+    "description": "Diyarbakır için yürüyüş rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_diyarbakir_ickale",
+    "city": "Diyarbakır",
+    "title": "İçkale kültür yürüyüşü",
+    "transport": "Yürüyüş",
+    "stops": [
+      "wd-q63372680-dagkapi-meydani",
+      "wd-q5688442-hazreti-suleyman-camii",
+      "wd-q6997172-diyarbakir-arkeoloji-muzesi",
+      "wd-q86315166-saint-george-kilisesi"
+    ],
+    "description": "Diyarbakır için yürüyüş rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_diyarbakir_parklar",
+    "city": "Diyarbakır",
+    "title": "Diyarbakır parkları bisiklet turu",
+    "transport": "Bisiklet",
+    "stops": [
+      "wd-q31790697-sumer-park",
+      "wd-q31790703-kosuyolu-parki",
+      "wd-q31790693-parkorman"
+    ],
+    "description": "Diyarbakır için bisiklet rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_tunceli_merkez",
+    "city": "Tunceli",
+    "title": "Tunceli müze ve kent yürüyüşü",
+    "transport": "Yürüyüş",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  },
+  {
+    "id": "tbt_ready_tunceli_munzur",
+    "city": "Tunceli",
+    "title": "Munzur vadisi doğa gezisi",
+    "transport": "Araç",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  },
+  {
+    "id": "tbt_ready_tunceli_pertek",
+    "city": "Tunceli",
+    "title": "Pertek kıyısı ve tarih",
+    "transport": "Yürüyüş",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  },
+  {
+    "id": "tbt_ready_bingol_solhan",
+    "city": "Bingöl",
+    "title": "Bingöl’den Yüzen Adalar’a",
+    "transport": "Araç",
+    "stops": [
+      "wd-q25473210-33-sehit-aniti",
+      "wd-q20472614-bingol-solhan-yuzen-adalari"
+    ],
+    "description": "Bingöl için araç rotası. Duraklarda ziyaret molaları verebilir, rotayı kendine kopyalayıp düzenleyebilirsin."
+  },
+  {
+    "id": "tbt_ready_bingol_merkez",
+    "city": "Bingöl",
+    "title": "Bingöl kent yürüyüşü",
+    "transport": "Yürüyüş",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  },
+  {
+    "id": "tbt_ready_bingol_haserek",
+    "city": "Bingöl",
+    "title": "Haserek doğa gezisi",
+    "transport": "Araç",
+    "stops": [],
+    "description": "Doğrulanmış durak ve güzergâh bekleyen taslak."
+  }
+]

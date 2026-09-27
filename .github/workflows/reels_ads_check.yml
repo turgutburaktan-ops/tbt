@@ -1,0 +1,116 @@
+name: Reels native ads verification
+on:
+  push:
+    branches: [codex/reels-native-ads-20260921]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reels-ads-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/reels_ad_pager_test.dart test/video_playback_test.dart
+  build-ios:
+    name: Build iOS Simulator
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Show toolchain
+        run: |
+          flutter --version
+          dart --version
+          xcodebuild -version
+      - name: Use CocoaPods plugin integration
+        run: flutter config --no-enable-swift-package-manager
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare clean iOS host
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ios/Podfile')
+          s = p.read_text()
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
+              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
+          else:
+            s = "platform :ios, '15.0'\n" + s
+          p.write_text(s)
+          info = Path('ios/Runner/Info.plist')
+          plist = info.read_text()
+          if 'GADApplicationIdentifier' not in plist:
+              plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
+              info.write_text(plist)
+          PY
+          rm -rf ios/Pods ios/Podfile.lock
+
+      - name: Configure production native hooks
+        env:
+          IOS_MAPS_API_KEY: ${{ secrets.IOS_MAPS_API_KEY }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          python3 tool/configure_notifications.py ios
+          python3 tool/configure_route_album.py ios
+          python3 tool/configure_ios_maps.py
+          python3 tool/configure_reels_ads.py ios
+
+      - name: Fix iOS rear camera mirroring
+        run: python3 tool/patch_ios_camera_mirroring.py
+
+      - name: Build iOS simulator
+        run: >-
+          flutter build ios --simulator --debug --no-pub
+          --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
+          --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
+          --dart-define=IOS_BUNDLE_ID=com.tbt.social
+      - name: Verify simulator app bundle
+        run: test -d build/ios/iphonesimulator/Runner.app
+  build-android:
+    name: Build Android with native crash reporting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Prepare Android host
+        run: |
+          rm -rf android
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          p = Path('android/app/build.gradle.kts')
+          p.write_text(p.read_text().replace('com.tbt.best_photo_spot', 'com.tbt.social').replace('minSdk = flutter.minSdkVersion', 'minSdk = 26'))
+          PYTHON
+          python3 tool/configure_android_crashlytics.py
+          python3 tool/configure_notifications.py android
+          python3 tool/configure_reels_ads.py android
+          python3 tool/patch_receive_sharing_intent.py
+      - run: flutter build apk --debug
