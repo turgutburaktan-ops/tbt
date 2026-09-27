@@ -15,7 +15,10 @@ async function denied(url) {
 async function main() {
  const client = await new GoogleAuth({scopes:['https://www.googleapis.com/auth/cloud-platform']}).getClient();
  const get = async name => (await client.request({url:BASE+name})).data;
- const expected = JSON.parse(fs.readFileSync('tool/security_base_hashes.json','utf8'));
+ const mode=process.argv[2];
+ const prepared='/tmp/security-live-baseline.json';
+ const expected = mode==='prepare' ? {} : JSON.parse(fs.readFileSync(prepared,'utf8'));
+ const patches=JSON.parse(fs.readFileSync('tool/security_rules_patch.json','utf8'));
  const policies = [['firestore','cloud.firestore'],['storage','firebase.storage/'+BUCKET]];
  // Verify both originals before changing either release. Re-runs accept the exact new policy.
  const pending=[];
@@ -23,12 +26,24 @@ async function main() {
   const path=PROJECT+'/releases/'+release;
   const live=await get(path), rules=await get(live.rulesetName);
   if(rules.source.files.length!==1) throw Error('Unexpected live policy layout');
-  const content=fs.readFileSync(name+'.rules','utf8');
-  const hash=digest(rules.source.files[0].content);
+  let content=fs.readFileSync(name+'.rules','utf8');
+  const original=rules.source.files[0].content;
+  const hash=digest(original);
+  if(mode==='prepare') {
+   content=original;
+   for(const [i,patch] of patches[name].entries()) {
+    if(content.includes(patch.new))continue;
+    if(content.split(patch.old).length!==2)throw Error(name+' live policy does not match reviewed patch '+i);
+    content=content.replace(patch.old,patch.new);
+   }
+   expected[name]=hash;
+   fs.writeFileSync(name+'.rules',content);
+  }
   if(![expected[name]].flat().includes(hash) && hash!==digest(content)) throw Error(name+' live rules changed; refusing overwrite');
   pending.push({name,path,live,content,changed:hash!==digest(content)});
  }
- if(process.argv[2]==='check') {console.log('LIVE_RULE_BASE_VERIFIED');return;}
+ if(mode==='prepare') {fs.writeFileSync(prepared,JSON.stringify(expected));console.log('LIVE_RULE_PATCH_PREPARED');return;}
+ if(mode==='check') {console.log('LIVE_RULE_BASE_VERIFIED');return;}
  if(process.argv[2]!=='deploy') throw Error('Expected check or deploy');
  for(const p of pending) {
   if(p.changed) {

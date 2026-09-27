@@ -64,6 +64,16 @@ jobs:
           path.write_text(json.dumps(account));path.chmod(0o600)
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
           PY
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - run: node tool/deploy_security_hardening.cjs prepare
+      - name: Verify patched live policies without replacing unrelated live changes
+        env:
+          NODE_PATH: /tmp/security-tests/node_modules
+        run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs" --non-interactive
       - run: node tool/deploy_security_hardening.cjs check
       - name: Deploy evidence and private media controls
         run: /tmp/security-deploy/node_modules/.bin/firebase deploy --only functions:submitBusinessClaimV2,functions:finalizePrivateMedia,functions:sealPendingChatMedia,functions:pushOnNotificationCreated,functions:trustedDirectMessage,functions:trustedFollow,functions:trustedPostLike,functions:trustedPostComment,functions:trustedEventAttendance,functions:trustedStoryInteraction,functions:trustedStoryMention,functions:trustedEventMemory,functions:trustedPostTag --project en-iyi-cekim-noktasi --non-interactive
