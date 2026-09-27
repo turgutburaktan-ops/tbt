@@ -36,6 +36,7 @@ function fixture(storageFails=false) {
     };
   }
   const db = {collection: name => query(name), collectionGroup: name => query(name, true),
+    runTransaction: async work => work({get: r => r.get(), set: (r, data) => r.set(data), delete: r => r.delete()}),
     recursiveDelete: async item => {
       for (const key of records.keys()) if (key === item.path || key.startsWith(`${item.path}/`)) records.delete(key);
     }};
@@ -46,6 +47,7 @@ function fixture(storageFails=false) {
     if (id === 'firebase-admin/firestore') return {getFirestore: () => db, FieldValue: {serverTimestamp: () => 1}};
     if (id === 'firebase-admin/auth') return {getAuth: () => ({deleteUser: async uid => deletedAuth.push(uid)})};
     if (id === 'firebase-admin/storage') return {getStorage: () => ({bucket: () => ({deleteFiles: async () => {if(storageFails)throw Error('Storage unavailable');}, getFiles: async()=>[[...['private_chat/t/customer/m/media.jpg','private_chat/t/other/m/media.jpg'].map(name=>({name,delete:async()=>deletedFiles.push(name)}))],null]})})};
+    if (id === './account_lifecycle_guard') return require('../account_lifecycle_guard');
     return require(id);
   };
   const source = path.join(__dirname, '../account_lifecycle.js');

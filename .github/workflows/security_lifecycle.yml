@@ -1,0 +1,53 @@
+name: Account lifecycle security verification and deployment
+on:
+  push:
+    branches: [codex/store-release62-security-20260927]
+    paths:
+      - .github/workflows/security_lifecycle.yml
+      - functions/account_lifecycle.js
+      - functions/account_lifecycle_guard.js
+      - functions/test/account_lifecycle*.test.js
+permissions:
+  contents: read
+concurrency:
+  group: tbt-security-hardening
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions
+      - run: node --test test/private_route_media_security.cjs test/trusted_notifications.cjs functions/test/*.test.js
+      - run: npm audit --prefix functions --omit=dev --audit-level=moderate
+      - run: node -e "require('./functions/bootstrap'); console.log('BOOTSTRAP_OK')"
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm ci --prefix functions
+          npm install --prefix /tmp/lifecycle-deploy firebase-tools@latest
+      - name: Authenticate existing deployment identity
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'lifecycle.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - name: Deploy verified account lifecycle functions
+        run: /tmp/lifecycle-deploy/node_modules/.bin/firebase deploy --only functions:freezeAccount,functions:unfreezeAccount,functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
