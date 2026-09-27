@@ -27,4 +27,4 @@ jobs:
           path.write_text(json.dumps(account));path.chmod(0o600)
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
           PY
-          node tool/app_check_readiness.cjs
+      - run: node tool/app_check_readiness.cjs
