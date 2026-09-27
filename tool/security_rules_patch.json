@@ -43,6 +43,50 @@
     {
       "old": "      allow delete: if isAdmin() || isSelf(uid);\n      match /chat_preferences",
       "new": "      allow delete: if isAdmin();\n      match /chat_preferences"
+    },
+    {
+      "old": "    function signedIn() { return request.auth != null; }",
+      "new": "    function signedIn() { return request.auth != null; }\n    function contentLifecycleCreate() {\n      let user = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;\n      return signedIn() && user.get('accountStatus', 'active') == 'active' &&\n        user.get('disabled', false) == false && user.get('banned', false) == false &&\n        request.resource.data.get('accountFrozen', false) == false &&\n        !request.resource.data.keys().hasAny(['accountFrozenAt']);\n    }\n    function contentLifecycleUnchanged() {\n      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['accountFrozen','accountFrozenAt']);\n    }"
+    },
+    {
+      "old": "      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.get('sharedPostId', '') == '' && request.resource.data.expiresAt > request.time && validMusicFields(request.resource.data, 15000);",
+      "new": "      allow create: if contentLifecycleCreate() && signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.get('sharedPostId', '') == '' && request.resource.data.expiresAt > request.time && validMusicFields(request.resource.data, 15000);"
+    },
+    {
+      "old": "      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.status == 'open' && paidCreateValid() && privacyValid() && validCommunityHost();",
+      "new": "      allow create: if contentLifecycleCreate() && signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.status == 'open' && paidCreateValid() && privacyValid() && validCommunityHost();"
+    },
+    {
+      "old": "      allow read: if memoryVisible(resource.data); allow create: if validMemoryCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);",
+      "new": "      allow read: if memoryVisible(resource.data); allow create: if contentLifecycleCreate() && validMemoryCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);"
+    },
+    {
+      "old": "      allow create: if validPostCreate() && validBusinessPost() && validPostMusic(postId);",
+      "new": "      allow create: if contentLifecycleCreate() && validPostCreate() && validBusinessPost() && validPostMusic(postId);"
+    },
+    {
+      "old": "      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false && request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);",
+      "new": "      allow create: if contentLifecycleCreate() && signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false && request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);"
+    },
+    {
+      "old": "      allow create: if !planId.matches('tbt_ready_.*') && signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&",
+      "new": "      allow create: if contentLifecycleCreate() && !planId.matches('tbt_ready_.*') && signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&"
+    },
+    {
+      "old": "      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && request.resource.data.get('sharedPostId', '') == '' && resource.data.get('sharedPostId', '') == '' && validMusicFields(request.resource.data, 15000);",
+      "new": "      allow update: if contentLifecycleUnchanged() && signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && request.resource.data.get('sharedPostId', '') == '' && resource.data.get('sharedPostId', '') == '' && validMusicFields(request.resource.data, 15000);"
+    },
+    {
+      "old": "      allow read: if memoryVisible(resource.data); allow create: if contentLifecycleCreate() && validMemoryCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);",
+      "new": "      allow read: if memoryVisible(resource.data);\n      allow create: if contentLifecycleCreate() && validMemoryCreate();\n      allow update: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && contentLifecycleUnchanged());\n      allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);"
+    },
+    {
+      "old": "      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == resource.data.ownerId && request.resource.data.verified == resource.data.verified && request.resource.data.verificationStatus == resource.data.verificationStatus);",
+      "new": "      allow update: if isAdmin() || (contentLifecycleUnchanged() && signedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == resource.data.ownerId && request.resource.data.verified == resource.data.verified && request.resource.data.verificationStatus == resource.data.verificationStatus);"
+    },
+    {
+      "old": "      allow update: if signedIn() && validSharing() && (selfJoin() || declineInvitation() ||",
+      "new": "      allow update: if contentLifecycleUnchanged() && signedIn() && validSharing() && (selfJoin() || declineInvitation() ||"
     }
   ],
   "storage": [

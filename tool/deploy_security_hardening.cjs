@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const crypto = require('node:crypto');
+const {applyStrictPatches} = require('./strict_rule_patches.cjs');
 const {GoogleAuth} = require('../functions/node_modules/google-auth-library');
 const {Storage} = require('../functions/node_modules/@google-cloud/storage');
 const {_sealChatFile, _privatePath} = require('../functions/chat_media_security');
@@ -56,11 +57,7 @@ async function main() {
   if(mode==='prepare') {
    content=original;
    if(name==='storage') content=patchStorage(content);
-   for(const [i,patch] of (name==='storage'?[]:patches[name]).entries()) {
-    if(content.includes(patch.new))continue;
-    if(content.split(patch.old).length!==2)throw Error(name+' live policy does not match reviewed patch '+i);
-    content=content.replace(patch.old,patch.new);
-   }
+   content=applyStrictPatches(content,name==='storage'?[]:patches[name]);
    expected[name]=hash;
    fs.writeFileSync(name+'.rules',content);
   }

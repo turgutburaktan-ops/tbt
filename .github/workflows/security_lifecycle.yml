@@ -7,6 +7,12 @@ on:
       - functions/account_lifecycle.js
       - functions/account_lifecycle_guard.js
       - functions/test/account_lifecycle*.test.js
+      - functions/test/strict_rule_patches.test.js
+      - firestore.rules
+      - test/content_lifecycle_rules.cjs
+      - tool/security_rules_patch.json
+      - tool/strict_rule_patches.cjs
+      - tool/deploy_security_hardening.cjs
 permissions:
   contents: read
 concurrency:
@@ -21,7 +27,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
       - run: npm ci --prefix functions
+      - run: npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - name: Verify content state and access rules
+        env:
+          NODE_PATH: /tmp/security-tests/node_modules
+        run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs test/content_lifecycle_rules.cjs test/route_access_rules.cjs" --non-interactive
       - run: node --test test/private_route_media_security.cjs test/trusted_notifications.cjs functions/test/*.test.js
       - run: npm audit --prefix functions --omit=dev --audit-level=moderate
       - run: node -e "require('./functions/bootstrap'); console.log('BOOTSTRAP_OK')"
@@ -49,5 +64,18 @@ jobs:
           path.write_text(json.dumps(account));path.chmod(0o600)
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
           PY
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - run: node tool/deploy_security_hardening.cjs prepare
+      - name: Verify patched live policies
+        env:
+          NODE_PATH: /tmp/security-tests/node_modules
+        run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/general_security_audit.cjs test/content_lifecycle_rules.cjs test/route_access_rules.cjs" --non-interactive
+      - run: node tool/deploy_security_hardening.cjs check
       - name: Deploy verified account lifecycle functions
         run: /tmp/lifecycle-deploy/node_modules/.bin/firebase deploy --only functions:freezeAccount,functions:unfreezeAccount,functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
+      - name: Publish verified rules and verify private media isolation
+        run: node tool/deploy_security_hardening.cjs deploy
