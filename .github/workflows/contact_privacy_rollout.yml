@@ -1,6 +1,12 @@
 name: Release-gated contact privacy migration
 on:
   workflow_dispatch:
+    inputs:
+      android_store_install_verified:
+        description: 'Verify that build 62 can actually be installed from Google Play closed testing (a submitted edit is not proof of availability)'
+        type: boolean
+        required: true
+        default: false
   push:
     branches: [codex/store-release62-security-20260927]
     paths: ['.github/workflows/contact_privacy_rollout.yml', 'tool/contact_privacy_rules.cjs', 'tool/deploy_contact_privacy.cjs', 'tool/migrate_private_contacts.cjs']
@@ -22,6 +28,7 @@ jobs:
       - name: Verify client availability on both stores
         id: check
         env:
+          ANDROID_STORE_INSTALL_VERIFIED: ${{ inputs.android_store_install_verified || false }}
           PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
@@ -39,10 +46,11 @@ jobs:
           android=any(t.get('track')=='alpha' and any(r.get('status')=='completed' and '62' in r.get('versionCodes',[]) for r in t.get('releases',[])) for t in play.get('tracks',[]))
           ios=any(v.get('version')=='1.0.34' and v.get('state') in ['READY_FOR_SALE','READY_FOR_DISTRIBUTION'] for v in apple.get('versions',[]))
           ios=ios and any(b.get('version')=='1.0.34' and b.get('build')=='62' and b.get('state')=='VALID' for b in apple.get('builds',[]))
-          ready=android and ios
-          print('CONTACT_ROLLOUT_GATE',json.dumps({'androidAvailable':android,'iosAvailable':ios,'ready':ready}))
+          installed=os.environ.get('ANDROID_STORE_INSTALL_VERIFIED')=='true'
+          ready=android and ios and installed
+          print('CONTACT_ROLLOUT_GATE',json.dumps({'androidAvailable':android,'iosAvailable':ios,'androidStoreInstallVerified':installed,'ready':ready}))
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('ready='+str(ready).lower()+'\n')
-          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('Contact migration: '+('store availability confirmed' if ready else 'waiting for security client availability on both stores; live contacts and policies were not changed')+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write('Contact migration: '+('store availability confirmed' if ready else 'waiting for security client availability and verification of installation from Google Play; live contacts and policies were not changed')+'\n')
           PY
   verify:
     runs-on: ubuntu-latest
