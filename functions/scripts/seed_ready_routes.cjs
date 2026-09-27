@@ -1,14 +1,17 @@
 'use strict';
-const admin = require('firebase-admin');
+const {initializeApp,cert,deleteApp}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {getFirestore,FieldValue,Timestamp}=require('firebase-admin/firestore');
+const {getStorage}=require('firebase-admin/storage');
 const fs = require('node:fs');
 const {spotRow} = require('../catalog/schema');
 const definitions = require('./ready_routes.json');
 async function main() {
   const credential = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   if (credential.project_id !== 'en-iyi-cekim-noktasi') throw Error('Unexpected project');
-  admin.initializeApp({credential: admin.credential.cert(credential)});
-  const db = admin.firestore();
-  const owner = await admin.auth().getUserByEmail('turgutburaktan@gmail.com');
+  initializeApp({credential: cert(credential)});
+  const db = getFirestore();
+  const owner = await getAuth().getUserByEmail('turgutburaktan@gmail.com');
   const plans = [], report = [];
   for (const definition of definitions) {
     try {
@@ -40,7 +43,7 @@ async function main() {
         dayPlan.difficultyEstimated = true;
         dayPlan.description += ' Zorluk yalnızca mesafeye göre tahmin edilmiştir; eğim ve zemin henüz değerlendirilmedi.';
       }
-      const now=admin.firestore.Timestamp.now();
+      const now=Timestamp.now();
       plans.push({id:definition.id,data:{ownerId:owner.uid,ownerName:'TBT',title:definition.title,city:definition.city,area:'',mealPreferences:[],durationHours:Math.max(1,Math.ceil((travelMinutes+45*stops.length)/60)),budget:'Orta',transport:definition.transport,interests:['Gezi'],spotIds:stops.map(s=>s.id),spotNames:stops.map(s=>s.name),stopSnapshots:stops,memberIds:[],distanceKm,travelMinutes,estimatedBudget:0,weatherSummary:'',dayPlan,visibility:'public',status:'planned',hasSchedule:false,allowMemberEdits:false,isPublic:true,discoverPublished:true,accessVersion:2,joinEnabled:false,joinAudience:'private',joinRequiresApproval:true,invitedIds:[],routeOrigin:{},startAt:now,createdAt:now,updatedAt:now,readySeedVersion:1}});
       report.push({id:definition.id,title:definition.title,status:'verified',distanceKm,travelMinutes});
     } catch(e) {report.push({id:definition.id,title:definition.title,status:'pending',reason:e.message});}

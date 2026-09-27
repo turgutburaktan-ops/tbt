@@ -1,10 +1,13 @@
-const admin=require('firebase-admin');
+const {initializeApp,cert,deleteApp}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {getFirestore,FieldValue,Timestamp}=require('firebase-admin/firestore');
+const {getStorage}=require('firebase-admin/storage');
 const {spotRow}=require('../catalog/schema');
 (async()=>{
  const credential=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
  if(credential.project_id!=='en-iyi-cekim-noktasi')throw Error('Unexpected project');
- admin.initializeApp({credential:admin.credential.cert(credential)});
- const db=admin.firestore();
+ initializeApp({credential:cert(credential)});
+ const db=getFirestore();
  for(const city of ['Elazığ','Malatya','Diyarbakır','Tunceli','Bingöl']){
    const docs=await db.collection('photo_spots').where('city','==',city).get();
    let count=0;

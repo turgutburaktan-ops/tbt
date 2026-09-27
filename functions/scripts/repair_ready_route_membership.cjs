@@ -1,12 +1,15 @@
 'use strict';
-const admin = require('firebase-admin');
+const {initializeApp,cert,deleteApp}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {getFirestore,FieldValue,Timestamp}=require('firebase-admin/firestore');
+const {getStorage}=require('firebase-admin/storage');
 const definitions = require('./ready_routes.json');
 (async()=>{
  const account=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
  if(account.project_id!=='en-iyi-cekim-noktasi') throw Error('Unexpected project');
- admin.initializeApp({credential:admin.credential.cert(account)});
- const db=admin.firestore();
- const owner=await admin.auth().getUserByEmail('turgutburaktan@gmail.com');
+ initializeApp({credential:cert(account)});
+ const db=getFirestore();
+ const owner=await getAuth().getUserByEmail('turgutburaktan@gmail.com');
  const refs=definitions.filter(d=>d.stops.length>=2).map(d=>db.collection('travel_plans').doc(d.id));
  await db.runTransaction(async tx=>{
   const docs=await tx.getAll(...refs);
@@ -15,7 +18,7 @@ const definitions = require('./ready_routes.json');
    const d=doc.data();
    if(d.readySeedVersion!==1 || d.ownerId!==owner.uid || d.hasSchedule!==false || d.joinEnabled!==false ||
       d.memberIds.some(id=>id!==owner.uid) || (d.invitedIds||[]).length) throw Error('Route was changed; refusing automatic repair: '+doc.id);
-   tx.update(doc.ref,{memberIds:[],isPublic:true,visibility:'public',discoverPublished:true,updatedAt:admin.firestore.FieldValue.serverTimestamp()});
+   tx.update(doc.ref,{memberIds:[],isPublic:true,visibility:'public',discoverPublished:true,updatedAt:FieldValue.serverTimestamp()});
   }
  });
  const docs=await db.getAll(...refs);

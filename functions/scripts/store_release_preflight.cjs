@@ -42,14 +42,14 @@ async function checkReadiness({env = process.env, adminSdk, fetcher = fetch, log
     issues.push('Missing configured secret: FIREBASE_SERVICE_ACCOUNT');
   } else {
     let app;
+    const sdk = adminSdk || {...require('firebase-admin/app'), ...require('firebase-admin/auth')};
     try {
       const certificate = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
       if (certificate.project_id !== 'en-iyi-cekim-noktasi') {
         throw new Error('Unexpected Firebase project');
       }
-      const sdk = adminSdk || require('firebase-admin');
-      app = sdk.initializeApp({credential: sdk.credential.cert(certificate)});
-      const user = await app.auth().getUserByEmail(ADMIN_EMAIL);
+      app = sdk.initializeApp({credential: sdk.cert(certificate)});
+      const user = await sdk.getAuth(app).getUserByEmail(ADMIN_EMAIL);
       if (user.disabled || !isNamedAdmin({uid: user.uid, token: {
         ...user.customClaims, email: user.email, email_verified: user.emailVerified,
       }})) issues.push('Owner account does not meet verified-email/admin access policy');
@@ -58,7 +58,7 @@ async function checkReadiness({env = process.env, adminSdk, fetcher = fetch, log
       // Firebase errors can contain identifiers or request details. Do not dump.
       issues.push('Could not verify owner access using the configured Firebase connection');
     } finally {
-      if (app) await app.delete();
+      if (app) await sdk.deleteApp(app);
     }
   }
 

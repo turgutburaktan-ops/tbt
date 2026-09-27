@@ -18,13 +18,16 @@ async function main() {
   if (process.env.PUBLISH_ROUTE_PHOTOS !== 'true') {
     console.log('VERIFIED_ROUTE_PHOTO_MANIFEST '+photos.length); return;
   }
-  const admin = require('firebase-admin');
+  const {initializeApp,cert,deleteApp}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {getFirestore,FieldValue,Timestamp}=require('firebase-admin/firestore');
+const {getStorage}=require('firebase-admin/storage');
   const account = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   assert.equal(account.project_id,'en-iyi-cekim-noktasi');
   const bucketName='en-iyi-cekim-noktasi.firebasestorage.app';
-  admin.initializeApp({credential:admin.credential.cert(account),storageBucket:bucketName});
-  const db=admin.firestore(), bucket=admin.storage().bucket();
-  const owner=await admin.auth().getUserByEmail('turgutburaktan@gmail.com');
+  initializeApp({credential:cert(account),storageBucket:bucketName});
+  const db=getFirestore(), bucket=getStorage().bucket();
+  const owner=await getAuth().getUserByEmail('turgutburaktan@gmail.com');
   const prepared=[];
   // Verify every download before changing any route document.
   for (const p of photos) {
@@ -76,7 +79,7 @@ async function main() {
         stopSnapshots:data.stopSnapshots.map((s,n)=>n===0?{...s,imageUrl:photo.imageUrl}:s),
         'dayPlan.description':definition.dayPlan.description+creditLine(photo),
         externalRoutePhoto:{...photo,role:'route-cover',version:1},
-        updatedAt:admin.firestore.Timestamp.now()
+        updatedAt:Timestamp.now()
       });
     }
   });

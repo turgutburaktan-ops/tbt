@@ -26,9 +26,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Install server dependencies
-        run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+        run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
       - name: Check configured release prerequisites without changing production
         env:
           RELEASE_PLATFORM: ${{ inputs.platform || 'all' }}

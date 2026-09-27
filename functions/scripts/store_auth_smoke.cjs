@@ -3,7 +3,10 @@
 // Exercise the deployed username login with an isolated, temporary account.
 // Never impersonate a real user or log passwords/tokens. Remove only records
 // created by this invocation; do not create a public profile or send messages.
-const admin = require('firebase-admin');
+const {initializeApp,cert,deleteApp}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {getFirestore,FieldValue,Timestamp}=require('firebase-admin/firestore');
+const {getStorage}=require('firebase-admin/storage');
 const {randomBytes, createHash} = require('node:crypto');
 const API_KEY = 'AIzaSyBDoKy5YMP5-6UJqotfuUA7a74H-x-5miQ';
 const BASE = 'https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/';
@@ -19,8 +22,8 @@ async function post(url, body, token) {
 async function main() {
   const credential = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
   if (credential.project_id !== 'en-iyi-cekim-noktasi') throw new Error();
-  app = admin.initializeApp({credential: admin.credential.cert(credential)});
-  const auth = app.auth(), db = app.firestore();
+  app = initializeApp({credential: cert(credential)});
+  const auth = getAuth(app), db = getFirestore(app);
   const username = `release_smoke_${randomBytes(6).toString('hex')}`;
   const password = randomBytes(32).toString('base64url');
   const ref = db.collection('usernames').doc(username);
@@ -31,7 +34,7 @@ async function main() {
       displayName: 'TBT Release Smoke Test'});
     createdUser = true;
     await ref.create({uid: username, username, normalized: username,
-      releaseSmokeTest: true, createdAt: admin.firestore.FieldValue.serverTimestamp()});
+      releaseSmokeTest: true, createdAt: FieldValue.serverTimestamp()});
     createdReservation = true;
 
     stage = 'verify deployed username/password login';
@@ -101,4 +104,4 @@ async function main() {
 main().catch(() => {
   console.error(`::error::Live authentication check failed at: ${stage}`);
   process.exitCode = 1;
-}).finally(async () => { if (app) await app.delete(); });
+}).finally(async () => { if (app) await deleteApp(app); });

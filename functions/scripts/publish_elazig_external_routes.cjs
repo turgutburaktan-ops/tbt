@@ -51,12 +51,15 @@ async function publish() {
   if (process.env.PUBLISH_EXTERNAL_ROUTES !== 'true') {
     console.log('VERIFIED_EXTERNAL_ROUTES '+definitions.length); return;
   }
-  const admin = require('firebase-admin');
+  const {initializeApp,cert,deleteApp}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {getFirestore,FieldValue,Timestamp}=require('firebase-admin/firestore');
+const {getStorage}=require('firebase-admin/storage');
   const credential = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   assert.equal(credential.project_id,'en-iyi-cekim-noktasi');
-  admin.initializeApp({credential:admin.credential.cert(credential)});
-  const db=admin.firestore();
-  const owner=await admin.auth().getUserByEmail('turgutburaktan@gmail.com');
+  initializeApp({credential:cert(credential)});
+  const db=getFirestore();
+  const owner=await getAuth().getUserByEmail('turgutburaktan@gmail.com');
   const refs=definitions.map(r=>db.collection('travel_plans').doc(r.id));
   await db.runTransaction(async tx=>{
     const existing=await tx.getAll(...refs);
@@ -68,7 +71,7 @@ async function publish() {
         continue;
       }
       const {id,...content}=r;
-      const now=admin.firestore.Timestamp.now();
+      const now=Timestamp.now();
       tx.create(refs[i],{...content,ownerId:owner.uid,ownerName:'TBT',area:'',mealPreferences:[],
         budget:'Orta',interests:['Gezi'],memberIds:[],estimatedBudget:0,weatherSummary:'',
         visibility:'public',status:'planned',hasSchedule:false,allowMemberEdits:false,

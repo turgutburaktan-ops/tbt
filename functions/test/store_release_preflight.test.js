@@ -12,11 +12,11 @@ function fixture() {
     ADMOB_NATIVE_ANDROID: 'ca-app-pub-1234567890123456/1234567890'};
   for (const name of ['PLAY_KEYSTORE_BASE64', 'PLAY_KEYSTORE_PASSWORD',
     'PLAY_KEY_ALIAS', 'PLAY_KEY_PASSWORD', 'MAPS_API_KEY']) env[name] = 'test-secret';
-  const adminSdk = {credential: {cert: value => value}, initializeApp: () => ({
-    auth: () => ({getUserByEmail: async email => {
+  const adminSdk = {cert: value => value, initializeApp: () => ({}),
+    getAuth: () => ({getUserByEmail: async email => {
       assert.equal(email, 'turgutburaktan@gmail.com'); return user;
-    }}), delete: async () => {},
-  })};
+    }}), deleteApp: async () => {},
+  };
   const fetcher = async (url, options) => {
     calls.push(url);
     assert.equal(options.body, '{"data":{}}');
