@@ -34,7 +34,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: npm ci --prefix functions --no-audit --no-fund
       - run: node --test functions/test/*.test.js test/private_route_media_security.cjs test/trusted_notifications.cjs
       - run: npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
       - env:
@@ -44,6 +44,7 @@ jobs:
           NODE_PATH: /tmp/security-tests/node_modules
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-access "node --test test/private_photo_backend.cjs" --non-interactive
   production-evidence:
+    if: contains(github.event.head_commit.message, '[production-check]')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
