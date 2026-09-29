@@ -1,7 +1,8 @@
+const fromFunctions = require('node:module').createRequire(require.resolve('../functions/package.json'));
 // Run only after the contact-free client release is available to every supported client.
 // Copy and delete occur in one transaction; no contact values are printed.
-const {initializeApp}=require('../functions/node_modules/firebase-admin/app');
-const {getFirestore,FieldValue}=require('../functions/node_modules/firebase-admin/firestore');
+const {initializeApp}=fromFunctions('firebase-admin/app');
+const {getFirestore,FieldValue}=fromFunctions('firebase-admin/firestore');
 initializeApp({projectId:'en-iyi-cekim-noktasi'});
 const {GoogleAuth}=require('../functions/node_modules/google-auth-library');
 const {patchContactRules}=require('./contact_privacy_rules.cjs');

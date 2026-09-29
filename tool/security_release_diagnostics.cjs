@@ -1,8 +1,9 @@
+const fromFunctions = require('node:module').createRequire(require.resolve('../functions/package.json'));
 // Read-only production diagnosis. No contact values, tokens or credentials leave
 // this process. Never grant IAM access or mutate update policy from this tool.
 const {GoogleAuth} = require('../functions/node_modules/google-auth-library');
-const {initializeApp} = require('../functions/node_modules/firebase-admin/app');
-const {getFirestore} = require('../functions/node_modules/firebase-admin/firestore');
+const {initializeApp} = fromFunctions('firebase-admin/app');
+const {getFirestore} = fromFunctions('firebase-admin/firestore');
 const fs = require('node:fs');
 const project = 'en-iyi-cekim-noktasi';
 async function main() {
