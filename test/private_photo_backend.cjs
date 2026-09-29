@@ -81,6 +81,8 @@ test('blocks, deletion, removed membership and expiry all revoke access', async 
   await assert.rejects(call('reader','open',{},Date.now()+8*86400000));
 });
 test('group quotas are per original recipient, not shared or given to newcomers', async () => {
+  await db.doc('users/second').set({displayName:'Second'});
+  await db.doc('users/new').set({displayName:'New'});
   await db.doc('chat_threads/thread').update({type:'group',memberIds:['sender','reader','second']});
   await send();
   await call('reader','open');
@@ -103,4 +105,28 @@ test('anonymous, unsupported modes, invalid ids and oversized content are reject
   await assert.rejects(call('sender','send',{mode:'unlimited',bytes:photo}));
   await assert.rejects(call('sender','send',{mode:'once',bytes:'A'.repeat(800000)}));
   await assert.rejects(call('sender','open',{messageId:'../bad'}));
+});
+test('encrypted one-view photo stays opaque and never falls back to plaintext',async()=>{
+ const ciphertext=Buffer.alloc(60,9).toString('base64');
+ const packet={version:1,senderId:'sender',envelopes:{reader:{type:3,body:Buffer.alloc(100,8).toString('base64')}}};
+ await call('sender','send',{mode:'once',bytes:ciphertext,e2ee:packet});
+ const stored=(await db.doc('chat_private_photos/photo1').get()).data();
+ assert.equal(stored.bytes,ciphertext);
+ const message=(await db.doc('chat_threads/thread/messages/photo1').get()).data();
+ assert.equal(message.e2ee,undefined);
+ assert.equal(message.e2eeVersion,1);
+ const opened=await call('reader','open');
+ assert.equal(opened.bytes,ciphertext);assert.deepEqual(opened.e2ee,packet);
+ await assert.rejects(call('reader','open'));
+ await assert.rejects(handler({auth:{uid:'sender'},data:{action:'send',threadId:'thread',messageId:'plain',mode:'once',bytes:photo}},db));
+});
+
+test('frozen accounts cannot send or open private photos',async()=>{
+ await db.doc('users/sender').update({accountStatus:'frozen'});
+ await assert.rejects(send());
+ await db.doc('users/sender').update({accountStatus:'active'});
+ await send();
+ await db.doc('users/reader').update({accountStatus:'frozen'});
+ await assert.rejects(call('reader','open'));
+ assert.equal((await db.doc('chat_private_photos/photo1').get()).data().views.reader,undefined);
 });

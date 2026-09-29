@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
+import 'e2ee_service.dart';
 
 enum ChatPhotoMode { once, replay, keep }
 
@@ -33,14 +34,21 @@ class PrivatePhotoService {
   static Future<Map<String, dynamic>> call(Map<String, dynamic> data) async {
     final result = await _functions.httpsCallable('chatPrivatePhoto',
       options: HttpsCallableOptions(timeout: const Duration(seconds: 35))).call(data);
-    return Map<String, dynamic>.from(result.data as Map);
+    final value=Map<String,dynamic>.from(result.data as Map);
+    if(data['action']=='open' && value['e2ee'] != null) {
+      final clear=await E2eeService.instance.openPrivatePhoto(data['threadId'] as String,data['messageId'] as String,value);
+      try {value['bytes']=base64Encode(clear);} finally {clear.fillRange(0,clear.length,0);}
+      value.remove('e2ee');
+    }
+    return value;
   }
 
   static Future<void> send(String threadId, Uint8List bytes, ChatPhotoMode mode) async {
     final prepared = await compute(preparePrivatePhoto, bytes);
     final messageId = FirebaseFirestore.instance.collection('chat_threads').doc().id;
-    await call({'action': 'send', 'threadId': threadId, 'messageId': messageId,
-      'mode': mode.name, 'bytes': base64Encode(prepared)});
-    prepared.fillRange(0, prepared.length, 0);
+    try {
+      final encrypted=await E2eeService.instance.preparePrivatePhoto(threadId,messageId,prepared);
+      await call({'action':'send','threadId':threadId,'messageId':messageId,'mode':mode.name,...encrypted});
+    } finally {prepared.fillRange(0,prepared.length,0);}
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -41,19 +44,25 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
           });
         return;
       }
-      final data = await AdminConsoleService.instance.insights();
+      final data = await AdminConsoleService.instance.insights().timeout(const Duration(seconds: 30));
       if (mounted)
         setState(() {
           _allowed = true;
           _data = data;
           _loading = false;
         });
-    } catch (_) {
+    } catch (error) {
       if (mounted)
         setState(() {
           _allowed = true;
           _loading = false;
-          _error = 'Sistem verileri şu anda yüklenemedi.';
+          _error = switch (error) {
+            TimeoutException() => 'İstek zaman aşımına uğradı. Tekrar deneyin.',
+            FirebaseFunctionsException(code: 'permission-denied') => 'Yönetici yetkisi doğrulanamadı.',
+            FirebaseFunctionsException(code: 'unauthenticated') => 'Oturum doğrulanamadı. Yeniden giriş yapın.',
+            FirebaseFunctionsException(code: 'not-found') => 'Sistem sağlığı servisine ulaşılamadı.',
+            _ => 'Sistem verileri yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.',
+          };
         });
     }
   }
@@ -90,14 +99,18 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
             children: [
               const _HeaderCard(),
               const SizedBox(height: 14),
+              if (_error != null && _data != null)
+                _RetryCard(onRetry: _load, message: 'Yenilenemedi; önceki veriler gösteriliyor. $_error'),
               if (_loading && _data == null)
                 const SizedBox(
                   height: 220,
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (_error != null && _data == null)
-                _RetryCard(onRetry: _load)
+                _RetryCard(onRetry: _load, message: _error!)
               else if (_data != null) ...[
+                if (_data!.unavailable.isNotEmpty)
+                  _RetryCard(onRetry: _load, message: 'Bazı veriler alınamadı. Eksik sayaçlar Veri yok olarak gösteriliyor.'),
                 _MetricsGrid(data: _data!),
                 const SizedBox(height: 20),
                 _VerificationEmailPanel(data: _data!),
@@ -112,7 +125,9 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
                   ),
                 ),
                 const SizedBox(height: 9),
-                if (_data!.errors.isEmpty)
+                if (_data!.unavailable.contains('errors'))
+                  const Text('Uygulama hata kayıtları alınamadı.')
+                else if (_data!.errors.isEmpty)
                   const _HealthyCard()
                 else
                   ..._data!.errors.take(20).map((e) => _ErrorTile(data: e)),
@@ -206,7 +221,9 @@ class _VerificationEmailPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          if (deliveries.isEmpty)
+          if (data.unavailable.contains('verificationEmails'))
+            const Text('E-posta kayıtları alınamadı.')
+          else if (deliveries.isEmpty)
             const Text(
               'Henüz özel sistem üzerinden gönderim yapılmadı.',
               style: TextStyle(color: Colors.white60),
@@ -435,7 +452,8 @@ class _ErrorTile extends StatelessWidget {
 
 class _RetryCard extends StatelessWidget {
   final VoidCallback onRetry;
-  const _RetryCard({required this.onRetry});
+  final String message;
+  const _RetryCard({required this.onRetry, required this.message});
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
@@ -444,9 +462,9 @@ class _RetryCard extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_off_rounded, size: 40, color: Colors.white54),
           const SizedBox(height: 10),
-          const Text(
-            'Sistem verileri yüklenemedi',
-            style: TextStyle(fontWeight: FontWeight.w900),
+          Text(
+            message,
+            style: const TextStyle(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(

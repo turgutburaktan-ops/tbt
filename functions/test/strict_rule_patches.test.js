@@ -17,3 +17,10 @@ test('current security rules are an idempotent result of all reviewed patches', 
   const patches = JSON.parse(fs.readFileSync(path.join(root, 'tool/security_rules_patch.json'), 'utf8')).firestore;
   assert.equal(applyStrictPatches(current, patches), current);
 });
+test('reviewed encrypted-storage addition is idempotent and rejects a missing anchor',()=>{
+ const root=path.resolve(__dirname,'../..');
+ const current=fs.readFileSync(path.join(root,'storage.rules'),'utf8');
+ const patches=JSON.parse(fs.readFileSync(path.join(root,'tool/security_rules_patch.json'),'utf8')).e2eeStorage;
+ assert.equal(applyStrictPatches(current,patches),current);
+ assert.throws(()=>applyStrictPatches('unreviewed policy',patches),/does not match/);
+});

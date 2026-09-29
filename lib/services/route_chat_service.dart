@@ -1,14 +1,15 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:io';
-import 'video_media_service.dart';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// Route attachments use participant-only Storage paths, never public user URLs.
+import 'e2ee_service.dart';
+import 'video_media_service.dart';
+
 class RouteChatService {
   RouteChatService._();
   static final instance = RouteChatService._();
@@ -20,30 +21,35 @@ class RouteChatService {
     Map<String, dynamic>? reply,
   ) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('Giriş yapmalısın.');
+    if (user == null) throw StateError('Giriş yapmalısın.');
     return {
       'senderId': user.uid,
-      'senderName': user.displayName?.trim().isNotEmpty == true
-          ? user.displayName!.trim()
-          : 'Katılımcı',
+      'senderName': user.displayName ?? 'Katılımcı',
       'senderPhoto': user.photoURL ?? '',
       'text': text,
       'type': type,
       if (reply != null) 'reply': reply,
-      'createdAt': FieldValue.serverTimestamp(),
     };
   }
 
+  Future<void> _send(
+    String id,
+    Map<String, dynamic> content, {
+    String? messageId,
+  }) => E2eeService.instance.send(
+    id,
+    messageId ?? plan(id).collection('messages').doc().id,
+    content,
+    scope: 'route',
+  );
   Future<void> send(
     String id,
     String text, {
     Map<String, dynamic>? reply,
   }) async {
     if (text.trim().isEmpty || text.trim().length > 1000)
-      throw Exception('Mesaj 1–1000 karakter olmalı.');
-    await plan(id)
-        .collection('messages')
-        .add(envelope(text.trim(), 'text', reply));
+      throw StateError('Mesaj 1–1000 karakter olmalı.');
+    await _send(id, envelope(text.trim(), 'text', reply));
   }
 
   Future<void> location(
@@ -52,18 +58,11 @@ class RouteChatService {
     double latitude,
     double longitude, {
     Map<String, dynamic>? reply,
-  }) async {
-    await plan(id).collection('messages').add({
-      ...envelope(
-        label.isEmpty ? 'Paylaşılan konum' : label,
-        'location',
-        reply,
-      ),
-      'latitude': latitude,
-      'longitude': longitude,
-    });
-  }
-
+  }) => _send(id, {
+    ...envelope(label.isEmpty ? 'Paylaşılan konum' : label, 'location', reply),
+    'latitude': latitude,
+    'longitude': longitude,
+  });
   Future<void> audio(
     String id,
     Uint8List bytes,
@@ -71,20 +70,20 @@ class RouteChatService {
     Map<String, dynamic>? reply,
   }) async {
     if (bytes.isEmpty || bytes.length > 20 * 1024 * 1024)
-      throw Exception('Ses kaydı en fazla 20 MB olabilir.');
-    final data = envelope('Sesli mesaj', 'audio', reply);
-    final doc = plan(id).collection('messages').doc();
-    final ref = FirebaseStorage.instance.ref(
-      'route_chat/$id/${data['senderId']}/${doc.id}/audio.m4a',
+      throw StateError('Ses kaydı en fazla 20 MB olabilir.');
+    final message = plan(id).collection('messages').doc().id;
+    final path = await E2eeService.instance.upload(
+      id,
+      message,
+      bytes,
+      contentType: 'audio/mp4',
+      scope: 'route',
     );
-    await ref.putData(bytes, SettableMetadata(contentType: 'audio/mp4'));
-    await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
-    // Keep uploaded bytes on an ambiguous Firestore failure: the write may have committed.
-    await doc.set({
-      ...data,
-      'storagePath': ref.fullPath,
+    await _send(id, {
+      ...envelope('Sesli mesaj', 'audio', reply),
+      'storagePath': path,
       'durationMs': durationMs,
-    });
+    }, messageId: message);
   }
 
   Future<void> media(
@@ -94,8 +93,11 @@ class RouteChatService {
     required bool allowExport,
     Map<String, dynamic>? reply,
   }) async {
-    final ext = file.path.split('.').last.toLowerCase();
-    final video = ['mp4', 'mov'].contains(ext);
+    final ext = file.path.split('.').last.toLowerCase(),
+        video = [
+          'mp4',
+          'mov',
+        ].contains(file.path.split('.').last.toLowerCase());
     if (![
       'jpg',
       'jpeg',
@@ -106,47 +108,65 @@ class RouteChatService {
       'mp4',
       'mov',
     ].contains(ext))
-      throw Exception('Bu dosya türü desteklenmiyor.');
+      throw StateError('Bu dosya türü desteklenmiyor.');
     final size = await file.length();
     if (size == 0 || size > (video ? 100 : 15) * 1024 * 1024)
-      throw Exception(
-        video
-            ? 'Video en fazla 100 MB olabilir.'
-            : 'Fotoğraf en fazla 15 MB olabilir.',
-      );
-    final type = video ? 'video' : 'image';
-    final data = envelope(video ? 'Video' : 'Fotoğraf', type, reply);
-    final root = plan(id);
-    final doc = root.collection('messages').doc();
+      throw StateError('Dosya boyutu sınırı aşıldı.');
     final prepared = video
-        ? await VideoMediaService.instance.prepare(File(file.path), maxDuration: null)
+        ? await VideoMediaService.instance.prepare(
+            File(file.path),
+            maxDuration: null,
+          )
         : null;
-    final extension = video ? 'mp4' : (ext == 'jpeg' ? 'jpg' : ext);
-    final mime = video
-        ? 'video/mp4'
-        : 'image/${ext == 'jpg' ? 'jpeg' : ext}';
-    final ref = FirebaseStorage.instance.ref(
-      'route_albums/$id/${data['senderId']}/${doc.id}/media.$extension',
-    );
-    await ref.putFile(prepared?.video ?? File(file.path), SettableMetadata(contentType: mime));
-    await FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('finalizePrivateMedia').call({'storagePath': ref.fullPath});
-    final batch = FirebaseFirestore.instance.batch();
-    batch.set(doc, {
+    final source = prepared?.video ?? File(file.path),
+        mime = video ? 'video/mp4' : 'image/${ext == 'jpg' ? 'jpeg' : ext}';
+    final doc = plan(id).collection('messages').doc(),
+        data = envelope(
+          video ? 'Video' : 'Fotoğraf',
+          video ? 'video' : 'image',
+          reply,
+        );
+    final bytes = await source.readAsBytes();
+    final String encrypted;
+    try {
+      encrypted = await E2eeService.instance.upload(
+        id,
+        doc.id,
+        bytes,
+        contentType: mime,
+        scope: 'route',
+      );
+    } finally {
+      bytes.fillRange(0, bytes.length, 0);
+    }
+    await _send(id, {
       ...data,
-      'storagePath': ref.fullPath,
+      'storagePath': encrypted,
       'inAlbum': addToAlbum,
-    });
-    if (addToAlbum)
-      batch.set(root.collection('album').doc(doc.id), {
+    }, messageId: doc.id);
+    // An explicit album share is separate from the encrypted chat. Never place
+    // the encrypted attachment descriptor (which contains its key) in an album.
+    if (addToAlbum) {
+      final ref = FirebaseStorage.instance.ref(
+        'route_albums/$id/${data['senderId']}/${doc.id}/media.${video
+            ? 'mp4'
+            : ext == 'jpeg'
+            ? 'jpg'
+            : ext}',
+      );
+      await ref.putFile(source, SettableMetadata(contentType: mime));
+      await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('finalizePrivateMedia')
+          .call({'storagePath': ref.fullPath});
+      await plan(id).collection('album').doc(doc.id).set({
         'ownerId': data['senderId'],
         'ownerName': data['senderName'],
         'storagePath': ref.fullPath,
         'thumbnailPath': '',
-        'kind': type,
+        'kind': data['type'],
         'allowExport': allowExport,
         'createdAt': FieldValue.serverTimestamp(),
       });
-    await batch.commit();
+    }
   }
 }
-

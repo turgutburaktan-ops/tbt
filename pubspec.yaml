@@ -7,6 +7,10 @@ environment:
   sdk: ">=3.7.0 <4.0.0"
 
 dependencies:
+  libsignal_protocol_dart: 0.8.2
+  flutter_secure_storage: 10.3.4
+  cryptography: 2.9.0
+  crypto: ^3.0.6
   in_app_update: 5.0.0
   package_info_plus: 9.0.1
   app_tracking_transparency: ^2.0.7

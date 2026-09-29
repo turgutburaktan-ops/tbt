@@ -3,6 +3,7 @@ const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
 const {isNamedAdmin} = require('./broadcast_policy');
 const {adminUserEmails} = require('./admin_user_contacts');
+const {insightsQueries, totalOrUnavailable} = require('./insights_queries');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
@@ -92,9 +93,11 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
   const since7d = Timestamp.fromMillis(now - 7 * 24 * 60 * 60 * 1000);
   const since30d = Timestamp.fromMillis(now - 30 * 24 * 60 * 60 * 1000);
   const count = async (query) => (await query.count().get()).data().count || 0;
-  const safeCount = (query) => count(query);
+  const {read, unavailable} = insightsQueries();
+  const healthOnly = request.data?.scope === 'health';
 
   const countEntries = {
+    deleteRequests: db.collection('account_delete_requests'),
     totalUsers: db.collection('users'),
     newUsers24h: db.collection('users').where('createdAt', '>=', since24h),
     newUsers7d: db.collection('users').where('createdAt', '>=', since7d),
@@ -113,25 +116,26 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
     appErrors: db.collection('app_errors'),
     trustReports: db.collectionGroup('trust_reports').where('status', '==', 'open'),
   };
-  const entries = Object.entries(countEntries);
-  const values = await Promise.all(entries.map(([, query]) => safeCount(query)));
+  const healthKeys = ['deleteRequests', 'openReports', 'analyticsEvents', 'appErrors', 'trustReports'];
+  const entries = Object.entries(countEntries).filter(([key]) => !healthOnly || healthKeys.includes(key));
+  const values = await Promise.all(entries.map(([key, query]) => read(key, () => count(query))));
   const counts = Object.fromEntries(entries.map(([key], index) => [key, values[index]]));
   const additionalReports = await Promise.all([
-    count(db.collectionGroup('reports').where('status', '==', 'open')),
-    count(db.collection('user_reports').where('status', '==', 'pending')),
-    count(db.collection('review_reports').where('status', '==', 'pending')),
+    read('eventReports', () => count(db.collectionGroup('reports').where('status', '==', 'open'))),
+    read('userReports', () => count(db.collection('user_reports').where('status', '==', 'pending'))),
+    read('reviewReports', () => count(db.collection('review_reports').where('status', '==', 'pending'))),
   ]);
-  counts.openReports += additionalReports.reduce((a,b)=>a+b,0) + counts.trustReports;
+  counts.openReports = totalOrUnavailable([counts.openReports, counts.trustReports, ...additionalReports]);
 
 
   const [recentUsersSnap, topPostsSnap, errorSnap, verificationEmailSnap] = await Promise.all([
-    db.collection('users').orderBy('createdAt', 'desc').limit(12).get(),
-    db.collection('posts').orderBy('likesCount', 'desc').limit(8).get(),
-    db.collection('app_errors').orderBy('createdAt', 'desc').limit(20).get(),
-    db.collection('verification_email_deliveries').orderBy('createdAt', 'desc').limit(40).get(),
+    healthOnly ? {docs: []} : read('recentUsers', () => db.collection('users').orderBy('createdAt', 'desc').limit(12).get(), {docs: []}),
+    healthOnly ? {docs: []} : read('topPosts', () => db.collection('posts').orderBy('likesCount', 'desc').limit(8).get(), {docs: []}),
+    read('errors', () => db.collection('app_errors').orderBy('createdAt', 'desc').limit(20).get(), {docs: []}),
+    read('verificationEmails', () => db.collection('verification_email_deliveries').orderBy('createdAt', 'desc').limit(40).get(), {docs: []}),
   ]);
 
-  const contactEmails = await adminUserEmails(recentUsersSnap.docs.map(doc => doc.id));
+  const contactEmails = await read('contactEmails', () => adminUserEmails(recentUsersSnap.docs.map(doc => doc.id)), new Map());
   const recentUsers = recentUsersSnap.docs.map((doc) => {
     const d = doc.data() || {};
     return {
@@ -179,7 +183,11 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
   counts.verificationEmailProblems = verificationEmails.filter((item) =>
     ['failed', 'bounced', 'complained', 'suppressed'].includes(item.status)).length;
 
+  if (unavailable.includes('verificationEmails')) {
+    for (const key of ['verificationEmails', 'verificationEmails24h', 'verificationEmailsDelivered', 'verificationEmailProblems']) counts[key] = null;
+  }
   return {
+    unavailable,
     generatedAtMs: now,
     counts,
     recentUsers,

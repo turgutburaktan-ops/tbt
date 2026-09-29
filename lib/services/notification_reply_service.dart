@@ -1,8 +1,11 @@
+import 'package:crypto/crypto.dart';
+
+import 'e2ee_service.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -17,7 +20,14 @@ import 'chat_notification_identity.dart';
 Future<void> notificationReplyBackground(NotificationResponse response) async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
-  await NotificationReplyService.reply(response);
+  // Background isolates must never race the foreground Signal ratchet.
+  final data = NotificationReplyService.decode(response.payload);
+  if (data != null) {
+    await NotificationReplyService.show(
+      data,
+      status: 'Şifreli yanıt için sohbeti aç.',
+    );
+  }
 }
 
 class NotificationReplyService {
@@ -28,7 +38,7 @@ class NotificationReplyService {
     'tbt_reply',
     'Yanıtla',
     inputs: [AndroidNotificationActionInput(label: 'Mesaj')],
-    showsUserInterface: false,
+    showsUserInterface: true,
     cancelNotification: false,
   );
   static bool get supported =>
@@ -70,7 +80,10 @@ class NotificationReplyService {
                   'Yanıtla',
                   buttonTitle: 'Gönder',
                   placeholder: 'Mesaj',
-                  options: {DarwinNotificationActionOption.authenticationRequired},
+                  options: {
+                    DarwinNotificationActionOption.authenticationRequired,
+                    DarwinNotificationActionOption.foreground,
+                  },
                 ),
               ],
             ),
@@ -105,8 +118,14 @@ class NotificationReplyService {
 
   static Future<void> _showQueue = Future<void>.value();
 
-  static Future<void> show(Map<String, dynamic> data, {String? status, bool sent = false}) {
-    final task = _showQueue.then((_) => _show(data, status: status, sent: sent));
+  static Future<void> show(
+    Map<String, dynamic> data, {
+    String? status,
+    bool sent = false,
+  }) {
+    final task = _showQueue.then(
+      (_) => _show(data, status: status, sent: sent),
+    );
     _showQueue = task.then<void>((_) {}, onError: (Object _, StackTrace __) {});
     return task;
   }
@@ -118,9 +137,7 @@ class NotificationReplyService {
   }) async {
     if (!supported || !isChat(data)) return;
     if (Firebase.apps.isEmpty)
-      await Firebase.initializeApp(
-        options: AppFirebaseOptions.currentPlatform,
-      );
+      await Firebase.initializeApp(options: AppFirebaseOptions.currentPlatform);
     final auth = FirebaseAuth.instance;
     final user =
         auth.currentUser ??
@@ -129,24 +146,43 @@ class NotificationReplyService {
     await initialize();
     final android = defaultTargetPlatform == TargetPlatform.android;
     final tag = chatNotificationIdentity(data);
-    final id = android ? notificationNumber(tag) : notificationNumber('${data['notificationId']}');
+    final id = android
+        ? notificationNumber(tag)
+        : notificationNumber('${data['notificationId']}');
     MessagingStyleInformation? history;
     final preferences = SharedPreferencesAsync();
     final latestKey = 'notification.latest.$tag';
     if (android) {
-      history = await _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      history = await _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.getActiveNotificationMessagingStyle(id, tag: tag);
       final previousId = await preferences.getString(latestKey);
       // A delayed reply must never replace a newer incoming message's action.
-      if (status != null && previousId != null && previousId != data['notificationId']) return;
-      if (status == null && history != null && previousId == data['notificationId']) return;
+      if (status != null &&
+          previousId != null &&
+          previousId != data['notificationId'])
+        return;
+      if (status == null &&
+          history != null &&
+          previousId == data['notificationId'])
+        return;
     }
     final messages = <Message>[
       ...?history?.messages,
-      if (status == null) Message('${data['body'] ?? ''}', DateTime.now(), Person(
-        key: '${data['actorId'] ?? ''}',
-        name: '${data['title'] ?? 'Kullanıcı'}'.replaceFirst(RegExp(r' sana mesaj gönderdi$'), ''),
-      )),
+      if (status == null)
+        Message(
+          '${data['body'] ?? ''}',
+          DateTime.now(),
+          Person(
+            key: '${data['actorId'] ?? ''}',
+            name: '${data['title'] ?? 'Kullanıcı'}'.replaceFirst(
+              RegExp(r' sana mesaj gönderdi$'),
+              '',
+            ),
+          ),
+        ),
     ];
     await _plugin.show(
       id,
@@ -167,9 +203,13 @@ class NotificationReplyService {
               ? BigTextStyleInformation(status)
               : MessagingStyleInformation(
                   Person(name: 'Sen', key: '${data['recipientId']}'),
-                  conversationTitle: data['type'] == 'group_message' ? '${data['title'] ?? 'Grup'}' : null,
+                  conversationTitle: data['type'] == 'group_message'
+                      ? '${data['title'] ?? 'Grup'}'
+                      : null,
                   groupConversation: data['type'] == 'group_message',
-                  messages: messages.length > 10 ? messages.sublist(messages.length - 10) : messages,
+                  messages: messages.length > 10
+                      ? messages.sublist(messages.length - 10)
+                      : messages,
                 ),
         ),
         iOS: DarwinNotificationDetails(
@@ -201,16 +241,14 @@ class NotificationReplyService {
           );
       if (user == null || user.uid != data['recipientId'])
         throw StateError('account-changed');
-      await FirebaseFunctions.instanceFor(region: 'europe-west1')
-          .httpsCallable(
-            'replyToNotification',
-            options: HttpsCallableOptions(timeout: const Duration(seconds: 20)),
-          )
-          .call({
-            'threadId': data['sourceId'],
-            'notificationId': data['notificationId'],
-            'text': text,
-          });
+      final threadId = data['sourceId'] as String;
+      final messageId =
+          'nr_${sha256.convert(utf8.encode('${user.uid}:${data['notificationId']}'))}';
+      await E2eeService.instance.send(threadId, messageId, {
+        'type': 'text',
+        'text': text,
+        'senderName': user.displayName ?? 'Üye',
+      });
       await show(data, status: 'Yanıt gönderildi', sent: true);
     } catch (_) {
       await show(
@@ -221,4 +259,3 @@ class NotificationReplyService {
     }
   }
 }
-

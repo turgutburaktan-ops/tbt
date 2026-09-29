@@ -8,10 +8,10 @@ service cloud.firestore {
       return signedIn() && user.get('accountStatus', 'active') == 'active' &&
         user.get('disabled', false) == false && user.get('banned', false) == false &&
         request.resource.data.get('accountFrozen', false) == false &&
-        !request.resource.data.keys().hasAny(['accountFrozenAt']);
+        !request.resource.data.keys().hasAny(['accountFrozenAt','e2eeVersion']);
     }
     function contentLifecycleUnchanged() {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['accountFrozen','accountFrozenAt']);
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['accountFrozen','accountFrozenAt','e2eeVersion']);
     }
     function isAdmin() { return signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com'; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
@@ -323,6 +323,9 @@ service cloud.firestore {
       allow update: if signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid && request.resource.data.normalized == usernameId;
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
+    match /e2ee_identities/{uid} { allow read, write: if false; match /{path=**} { allow read, write: if false; } }
+    match /e2ee_key_limits/{uid} { allow read, write: if false; }
+    match /e2ee_send_limits/{uid} { allow read, write: if false; }
     match /chat_threads/{threadId} {
       // A deterministic DM id is checked before its document exists. Permit
       // that empty get, while keeping existing threads private to members.
@@ -331,10 +334,10 @@ service cloud.firestore {
         resource.data.memberIds.hasAny([request.auth.uid])
       );
       allow list: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
-      allow create: if validDirectThreadCreate();
-      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type && threadUnblocked(threadId) && request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasOnly([request.auth.uid]) && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('showReadReceipts', true) != false || !request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasAny([request.auth.uid])) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['requestStatus','requestRecipientId','requestSenderId','requestRespondedAt']) && (resource.data.type == 'direct' || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageId','lastMessage','lastSenderId','lastMessageAt','updatedAt','lastReadAt','typingAt','lastDeliveredAt']) && request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasOnly([request.auth.uid]) && request.resource.data.get('lastDeliveredAt', {}).diff(resource.data.get('lastDeliveredAt', {})).affectedKeys().hasOnly([request.auth.uid]) && request.resource.data.get('typingAt', {}).diff(resource.data.get('typingAt', {})).affectedKeys().hasOnly([request.auth.uid]) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastSenderId']) || request.resource.data.lastSenderId == request.auth.uid)));
+      allow create: if validDirectThreadCreate() && !request.resource.data.keys().hasAny(['e2eeVersion']);
+      allow update: if request.resource.data.get('e2eeVersion',0) == resource.data.get('e2eeVersion',0) && (resource.data.get('e2eeVersion',0) != 1 || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastMessage','lastMessageId','lastSenderId','lastMessageAt'])) && signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type && threadUnblocked(threadId) && request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasOnly([request.auth.uid]) && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('showReadReceipts', true) != false || !request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasAny([request.auth.uid])) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['requestStatus','requestRecipientId','requestSenderId','requestRespondedAt']) && (resource.data.type == 'direct' || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageId','lastMessage','lastSenderId','lastMessageAt','updatedAt','lastReadAt','typingAt','lastDeliveredAt']) && request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasOnly([request.auth.uid]) && request.resource.data.get('lastDeliveredAt', {}).diff(resource.data.get('lastDeliveredAt', {})).affectedKeys().hasOnly([request.auth.uid]) && request.resource.data.get('typingAt', {}).diff(resource.data.get('typingAt', {})).affectedKeys().hasOnly([request.auth.uid]) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastSenderId']) || request.resource.data.lastSenderId == request.auth.uid)));
       allow delete: if false;
-      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && threadUnblocked(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false && request.resource.data.get('type','text') in ['text','image','audio','share'] && request.resource.data.get('reactions',{}) == {} && request.resource.data.get('votes',{}) == {}; allow update, delete: if false; }
+      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if get(/databases/$(database)/documents/chat_threads/$(threadId)).data.get('e2eeVersion',0) != 1 && threadMember(threadId) && threadUnblocked(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false && request.resource.data.get('type','text') in ['text','image','audio','share'] && request.resource.data.get('reactions',{}) == {} && request.resource.data.get('votes',{}) == {}; allow update, delete: if false; }
     }
     match /music_tracks/{trackId} {
       allow read: if true;
@@ -420,7 +423,7 @@ service cloud.firestore {
              (type == 'video' && d.storagePath in [path+'media.mp4',path+'media.mov'] && !d.keys().hasAny(['durationMs','latitude','longitude'])));
         }
         allow read: if eventChatMember(eventId);
-        allow create: if eventChatMember(eventId) && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open' && validChat();
+        allow create: if get(/databases/$(database)/documents/social_events/$(eventId)).data.get('e2eeVersion',0) != 1 && eventChatMember(eventId) && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open' && validChat();
         allow update: if false;
         allow delete: if eventChatMember(eventId) && (resource.data.senderId == request.auth.uid || get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid);
       }
@@ -677,7 +680,7 @@ service cloud.firestore {
       }
       match /messages/{messageId} {
         allow read: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
-        allow create: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]) &&
+        allow create: if get(/databases/$(database)/documents/travel_plans/$(planId)).data.get('e2eeVersion',0) != 1 && signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]) &&
           request.resource.data.senderId == request.auth.uid && request.resource.data.text is string &&
           request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
         allow update, delete: if false;

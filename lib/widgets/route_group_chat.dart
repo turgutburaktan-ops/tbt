@@ -1,3 +1,4 @@
+import '../services/e2ee_service.dart';
 import '../theme/app_theme.dart';
 import '../models/nearby_venue.dart';
 import '../screens/business_profile_screen.dart';
@@ -592,8 +593,10 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
     );
   }
 
-  Widget _message(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-    final d = doc.data(), mine = doc.data()['senderId'] == _uid;
+  Widget _message(QueryDocumentSnapshot<Map<String, dynamic>> doc, {Map<String,dynamic>? decoded}) {
+    final d = decoded ?? doc.data();
+    if(decoded==null && d['type']=='e2ee') return FutureBuilder<Map<String,dynamic>>(future:E2eeService.instance.decode(widget.plan.id,doc.id,d,scope:'route'),builder:(_,s)=>s.hasData?_message(doc,decoded:s.data):const ListTile(title:Text('Şifreli mesaj açılıyor…')));
+    final mine = doc.data()['senderId'] == _uid;
     final reply = d['reply'];
     if (d['type'] == 'update')
       return Padding(

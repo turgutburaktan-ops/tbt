@@ -45,6 +45,7 @@ exports.finalizeChatMedia=onCall({region:'europe-west1',maxInstances:10},
 const privateNamespaces = ['private_chat/', 'route_albums/', 'route_chat/', 'event_chat/', 'users/'];
 function privatePath(path) {
   return /^(private_chat|route_albums|route_chat|event_chat)\/[^/]+\/[^/]+\/[^/]+\/[^/]+$/.test(path) ||
+    /^users\/[^/]+\/chat\/[^/]+\/[^/]+$/.test(path) ||
     /^users\/[^/]+\/business_claims\/[^/]+\/evidence\.(jpg|png|webp)$/.test(path);
 }
 async function finalizePrivateMediaHandler(request, db = getFirestore(), bucket = getStorage().bucket(BUCKET)) {
@@ -95,4 +96,3 @@ exports.sealPendingChatMedia=onSchedule({schedule:'every 5 minutes',region:'euro
 exports._sealPendingChatMediaHandler=sealPendingChatMediaHandler;
 exports._finalizeChatMediaHandler=finalizeChatMediaHandler;
 exports._sealChatFile=sealFile;
-

@@ -177,7 +177,7 @@ exports.deleteAccountNow = onCall(
       const bucket=getStorage().bucket();
       // Fail closed: never delete Auth while private uploaded files remain.
       await bucket.deleteFiles({prefix: `users/${uid}/`, force: false});
-      for (const prefix of ['private_chat/', 'route_albums/', 'route_chat/', 'event_chat/']) {
+      for (const prefix of ['private_chat/', 'e2ee_chat/', 'e2ee_route/', 'e2ee_event/', 'route_albums/', 'route_chat/', 'event_chat/']) {
         let query={prefix,maxResults:100,autoPaginate:false};
         while(query) {
           const [files,next]=await bucket.getFiles(query);
@@ -189,7 +189,7 @@ exports.deleteAccountNow = onCall(
         }
       }
       await db.recursiveDelete(db.collection('private_users').doc(uid));
-      await settleAll(['creator_profiles', 'creator_stats', 'notification_reply_limits'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
+      await settleAll(['creator_profiles', 'creator_stats', 'notification_reply_limits', 'e2ee_identities', 'e2ee_key_limits', 'e2ee_send_limits'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
       await db.recursiveDelete(userRef);
       await db.collection('account_delete_requests').doc(uid).delete().catch(() => {});
       await getAuth().deleteUser(uid).catch((error) => {

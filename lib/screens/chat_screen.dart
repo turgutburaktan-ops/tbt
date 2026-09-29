@@ -1,3 +1,4 @@
+import '../services/e2ee_service.dart';
 import '../widgets/private_chat_image.dart';
 import '../services/private_photo_service.dart';
 import 'private_photo_screen.dart';
@@ -1472,6 +1473,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  Future<void> _showEncryptionKeys() async {
+    if (_threadId == null) return;
+    try {
+      final thread=await FirebaseFirestore.instance.doc('chat_threads/$_threadId').get();
+      final peers=List<String>.from(thread.data()?['memberIds'] ?? []);
+      final codes=await E2eeService.instance.safetyCodes(peers);
+      if(!mounted)return;
+      await showDialog<void>(context:context,builder:(context)=>AlertDialog(
+        title:const Text('Mesaj güvenlik kodları'),
+        content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+          const Text('Kodu karşı tarafla başka bir kanaldan karşılaştır. Aynı olması, kullandığınız anahtarların eşleştiğini doğrular. Eski mesajlar geriye dönük şifrelenmez. Anahtarlar bu cihazda saklanır; cihaz değişiminde aktarım henüz desteklenmiyor.'),
+          for(final entry in codes.entries) Padding(padding:const EdgeInsets.only(top:16),child:SelectableText('${entry.key}\n${entry.value}')),
+        ])),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Kapat'))]));
+    } catch (_) {
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Güvenlik kodları açılamadı.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
@@ -1498,6 +1517,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     child: _conversationHeader(),
                   ),
             actions: [
+              if (_threadId != null) IconButton(tooltip:'Mesaj güvenlik kodları',icon:const Icon(Icons.lock_outline),onPressed:_showEncryptionKeys),
               if (_threadId != null)
                 ChatPreferencesButton(threadId: _threadId!),
               if (widget.groupThreadId != null && _threadId != null)

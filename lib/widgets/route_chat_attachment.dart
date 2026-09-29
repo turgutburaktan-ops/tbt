@@ -1,3 +1,4 @@
+import '../services/e2ee_service.dart';
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -49,12 +50,13 @@ class _RouteChatAttachmentState extends State<RouteChatAttachment> {
       final audio = d['type'] == 'audio';
       final prefix =
           '${audio ? 'route_chat' : 'route_albums'}/${widget.planId}/${d['senderId']}/${widget.messageId}/';
-      if (!path.startsWith(prefix) ||
+      final encrypted=path.startsWith('tbt-e2ee:');
+      if (!encrypted && (!path.startsWith(prefix) ||
           path.substring(prefix.length).contains('/') ||
-          path.contains('..'))
+          path.contains('..')))
         throw Exception('Dosya yolu geçersiz.');
-      final ref = FirebaseStorage.instance.ref(path);
-      final metadata = await ref.getMetadata();
+      final ref = encrypted ? null : FirebaseStorage.instance.ref(path);
+      final metadata = await ref?.getMetadata();
       final limit =
           (audio
               ? 20
@@ -63,13 +65,16 @@ class _RouteChatAttachmentState extends State<RouteChatAttachment> {
               : 15) *
           1024 *
           1024;
-      if ((metadata.size ?? 0) > limit)
+      if ((metadata?.size ?? 0) > limit)
         throw Exception('Dosya boyutu desteklenen sınırı aşıyor.');
       directory = await (await getTemporaryDirectory()).createTemp(
         'route_chat_',
       );
-      final file = File('${directory.path}/${path.split('/').last}');
-      await ref.writeToFile(file);
+      final file = File('${directory.path}/${encrypted?(audio?'audio.m4a':d['type']=='video'?'video.mp4':'image.jpg'):path.split('/').last}');
+      if(encrypted) {
+        final bytes=await E2eeService.readAttachment(path,maxBytes:limit);
+        try {await file.writeAsBytes(bytes,flush:true);} finally {bytes.fillRange(0,bytes.length,0);}
+      } else {await ref!.writeToFile(file);}
       if (!mounted) {
         await directory.delete(recursive: true);
         return;

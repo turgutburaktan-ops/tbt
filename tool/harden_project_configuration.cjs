@@ -1,4 +1,5 @@
 const {GoogleAuth}=require('../functions/node_modules/google-auth-library');
+const {configurationVerified}=require('./project_security_status.cjs');
 (async()=>{
  const client=await new GoogleAuth({scopes:['https://www.googleapis.com/auth/cloud-platform']}).getClient();
  const project='en-iyi-cekim-noktasi';
@@ -54,4 +55,8 @@ const {GoogleAuth}=require('../functions/node_modules/google-auth-library');
   summary.appCheck.services=(services.services||[]).map(s=>({name:s.name,enforcementMode:s.enforcementMode}));
  }catch(e){summary.appCheck.serviceReadStatus=e.response?.status||e.code;}
  console.log('CONFIG_HARDENING '+JSON.stringify(summary));
+ if(!configurationVerified(summary)) {
+  console.error('Configuration hardening incomplete: password policy or database recovery was not verified.');
+  process.exitCode=1;
+ }
 })().catch(e=>{console.error('Configuration hardening failed',e.response?.status||e.code||e.message);process.exitCode=1;});

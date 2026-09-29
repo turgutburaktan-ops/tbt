@@ -18,6 +18,27 @@ service firebase.storage {
       allow delete: if eventChatParticipant() && request.auth.uid == uid;
     }
 
+    match /e2ee_chat/{threadId}/{uid}/{messageId}/payload.bin {
+      function member() { return request.auth != null && firestore.get(/databases/(default)/documents/chat_threads/$(threadId)).data.memberIds.hasAny([request.auth.uid]); }
+      allow get: if member() && firestore.get(/databases/(default)/documents/chat_threads/$(threadId)/messages/$(messageId)).data.get('deleted',false) == false && firestore.get(/databases/(default)/documents/chat_threads/$(threadId)/messages/$(messageId)).data.type == 'e2ee';
+      allow create: if member() && request.auth.uid == uid && request.resource.contentType == 'application/octet-stream' && request.resource.size > 28 && request.resource.size <= 20*1024*1024+28 && !firestore.exists(/databases/(default)/documents/chat_threads/$(threadId)/messages/$(messageId));
+      allow list, update: if false;
+      allow delete: if member() && request.auth.uid == uid;
+    }
+    match /e2ee_event/{parentId}/{uid}/{messageId}/payload.bin {
+      function member() { let p = firestore.get(/databases/(default)/documents/social_events/$(parentId)).data; return request.auth != null && (p.hostId == request.auth.uid || p.get('participantIds',[]).hasAny([request.auth.uid])); }
+      allow get: if member() && firestore.get(/databases/(default)/documents/social_events/$(parentId)/chat/$(messageId)).data.type == 'e2ee' && firestore.get(/databases/(default)/documents/social_events/$(parentId)/chat/$(messageId)).data.get('deleted',false) == false;
+      allow create: if member() && request.auth.uid == uid && request.resource.contentType == 'application/octet-stream' && request.resource.size > 28 && request.resource.size <= 100*1024*1024+28 && !firestore.exists(/databases/(default)/documents/social_events/$(parentId)/chat/$(messageId));
+      allow list, update: if false;
+      allow delete: if member() && request.auth.uid == uid;
+    }
+    match /e2ee_route/{parentId}/{uid}/{messageId}/payload.bin {
+      function member() { let p = firestore.get(/databases/(default)/documents/travel_plans/$(parentId)).data; return request.auth != null && p.memberIds.hasAny([request.auth.uid]); }
+      allow get: if member() && firestore.get(/databases/(default)/documents/travel_plans/$(parentId)/messages/$(messageId)).data.type == 'e2ee' && firestore.get(/databases/(default)/documents/travel_plans/$(parentId)/messages/$(messageId)).data.get('deleted',false) == false;
+      allow create: if member() && request.auth.uid == uid && request.resource.contentType == 'application/octet-stream' && request.resource.size > 28 && request.resource.size <= 100*1024*1024+28 && !firestore.exists(/databases/(default)/documents/travel_plans/$(parentId)/messages/$(messageId));
+      allow list, update: if false;
+      allow delete: if member() && request.auth.uid == uid;
+    }
     function signedIn() {
       return request.auth != null;
     }

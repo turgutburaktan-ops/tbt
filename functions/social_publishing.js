@@ -50,11 +50,15 @@ async function source(db, postId, uid, tx = {get: ref => ref.get()}) {
 }
 function preview(postId, data) {
   const {post, owner, ownerId} = data;
+  const mediaUrls = Array.isArray(post.mediaUrls)
+    ? post.mediaUrls.filter(value => typeof value === 'string' && value.trim())
+      .slice(0, 10).map(value => text(value, 4000)) : [];
   // Only public display fields; never return account email or storage paths.
   return {id: postId, userId: ownerId, userName: text(owner.displayName || owner.username || 'TBT kullanıcısı', 80),
     userPhotoUrl: text(owner.photoUrl, 2000), caption: text(post.caption, 500), mediaType: post.mediaType || 'image',
     videoUrl: post.mediaType === 'video' || post.mediaType === 'reel' || post.mediaType === 'reels' ? text(post.videoUrl, 4000) : '',
     imageUrl: text(post.thumbnailUrl || post.imageUrl || post.coverUrl || (post.mediaUrls || [])[0], 2000),
+    mediaUrls,
     title: text(post.routeTitle || post.caption || 'TBT paylaşımı', 120), travelPlanId: post.travelPlanId || '',
     eventId:post.eventId||'', guideNote:text(post.guideNote,1500), spotName: text(post.spotName, 120)};
 }
@@ -273,4 +277,3 @@ exports.creatorStudio=onCall({region:'europe-west1'},r=>studio(r));
 exports._publishing=publishing;
 exports._studio=studio;
 exports._publicContent=publicContent;
-

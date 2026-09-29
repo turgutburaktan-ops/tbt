@@ -102,3 +102,7 @@ const trustedNotifications = require('./trusted_notifications');
 for (const [name, handler] of Object.entries(trustedNotifications)) {
   if (!name.startsWith('_')) exports[name] = handler;
 }
+
+// Public bundles and opaque Signal packets only; private keys remain on devices.
+const e2eeChat = require('./e2ee_chat');
+Object.assign(exports, {registerE2eeIdentity:e2eeChat.registerE2eeIdentity, claimE2eePreKey:e2eeChat.claimE2eePreKey, sendE2eeMessage:e2eeChat.sendE2eeMessage});

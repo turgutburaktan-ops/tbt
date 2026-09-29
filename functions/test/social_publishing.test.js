@@ -48,3 +48,21 @@ test('photo reshares never use a stale video URL', async () => {
   assert.equal((await f.resolve()).post.videoUrl, '');
 });
 
+test('profile resolution preserves ordered album photos without exposing storage paths', async () => {
+  const f = fixture();
+  const urls = ['https://example.com/first.jpg', 'https://example.com/second.jpg', 'https://example.com/third.jpg'];
+  Object.assign(f.records.get('posts/post'), {mediaUrls: urls, mediaStoragePaths: ['private/first', 'private/second']});
+  const result = await f.resolve();
+  assert.deepEqual(result.post.mediaUrls, urls);
+  assert.equal('mediaStoragePaths' in result.post, false);
+  f.records.get('posts/post').hidden = true;
+  await assert.rejects(f.resolve(), {code: 'not-found'});
+});
+test('legacy single photos and malformed album metadata resolve safely', async () => {
+  const f = fixture();
+  assert.deepEqual((await f.resolve()).post.mediaUrls, []);
+  f.records.get('posts/post').mediaUrls = [null, '', {}, ' https://example.com/photo.jpg '];
+  assert.deepEqual((await f.resolve()).post.mediaUrls, ['https://example.com/photo.jpg']);
+  f.records.get('posts/post').mediaUrls = Array.from({length: 12}, (_, i) => `https://example.com/${i}.jpg`);
+  assert.equal((await f.resolve()).post.mediaUrls.length, 10);
+});

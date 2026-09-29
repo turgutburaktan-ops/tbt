@@ -16,7 +16,7 @@ async function directMessage(event,db=getFirestore()) {
  const m=event.data?.data();if(!m||m.deleted||m.type==='private_photo'||m.source==='notification_reply'||!key(m.senderId))return;
  const t=(await db.doc(`chat_threads/${event.params.threadId}`).get()).data();
  if(t?.type!=='direct'||!Array.isArray(t.memberIds)||t.memberIds.length!==2||!t.memberIds.includes(m.senderId))return;
- const body=m.type==='text'?String(m.text||''):m.type==='audio'?'Sesli mesaj':m.type==='image'?'Fotoğraf':'Paylaşılan içerik';
+ const body=m.type==='e2ee'?'Şifreli mesaj':m.type==='text'?String(m.text||''):m.type==='audio'?'Sesli mesaj':m.type==='image'?'Fotoğraf':'Paylaşılan içerik';
  await deliver(db,{target:t.memberIds.find(u=>u!==m.senderId),actor:m.senderId,type:'message',source:event.params.threadId,title:n=>`${n} sana mesaj gönderdi`,body,eventId:event.id});
 }
 exports.trustedDirectMessage=onDocumentCreated('chat_threads/{threadId}/messages/{messageId}',event=>directMessage(event));

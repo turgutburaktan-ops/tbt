@@ -181,8 +181,8 @@ class ChatMessage {
   bool get isShare => type == 'share' || isLegacyShare;
   bool get hasReply => (replyToId?.isNotEmpty ?? false);
 
-  factory ChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data() ?? const <String, dynamic>{};
+  factory ChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc, {Map<String, dynamic>? decrypted}) {
+    final data = decrypted ?? doc.data() ?? const <String, dynamic>{};
     final rawReactions = data['reactions'];
     final reactions = <String, String>{};
     if (rawReactions is Map) {

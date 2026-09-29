@@ -1,3 +1,4 @@
+import '../widgets/post_album_badge.dart';
 import '../widgets/profile_post_feed.dart';
 import '../widgets/route_management_menu.dart';
 import '../services/user_facing_error.dart';
@@ -297,6 +298,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           final isRoute =
                               (data['mediaType'] ?? '').toString() == 'route';
                           return _PostTile(
+                            post: data,
                             imageUrl: imageUrl,
                             storagePath: storagePath,
                             fallbackStoragePaths: FirebaseMediaImage.postPaths(
@@ -1188,6 +1190,7 @@ class _ProfileRoutesSection extends StatelessWidget {
 }
 
 class _PostTile extends StatelessWidget {
+  final Map<String, dynamic> post;
   final String imageUrl;
   final String storagePath;
   final List<String> fallbackStoragePaths;
@@ -1195,6 +1198,7 @@ class _PostTile extends StatelessWidget {
   final bool isRoute;
   final VoidCallback onTap;
   const _PostTile({
+    required this.post,
     required this.imageUrl,
     required this.storagePath,
     required this.fallbackStoragePaths,
@@ -1229,6 +1233,7 @@ class _PostTile extends StatelessWidget {
                 child: Icon(Icons.image_outlined, color: Colors.white30),
               ),
             ),
+          PostAlbumBadge(post: post),
           if (isVideo)
             const Positioned(
               right: 6,

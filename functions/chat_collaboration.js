@@ -87,6 +87,7 @@ async function chatActionHandler(request, db = getFirestore()) {
   return db.runTransaction(async tx => {
     const t = (await tx.get(ref)).data();
     if (!t || !t.memberIds.includes(uid)) throw new HttpsError('permission-denied', 'Bu sohbete erişimin yok.');
+    if(t.e2eeVersion===1&&['edit','poll'].includes(action)) fail('Bu işlem şifreli sohbette henüz desteklenmiyor.');
     const admin = t.type === 'group' && t.adminIds.includes(uid);
     const requireAdmin = () => { if (!admin) throw new HttpsError('permission-denied', 'Yönetici yetkisi gerekli.'); };
     if (t.type === 'direct' && !['preferences','hide','deleteConversation','accept'].includes(action)) {
@@ -188,12 +189,12 @@ async function chatActionHandler(request, db = getFirestore()) {
           if (t.pinnedMessageId === msgRef.id) tx.update(ref, {pinnedMessageId: FieldValue.delete()});
         }
       } else if (action === 'vote' || action === 'closePoll') {
-        if (m.type !== 'poll' || m.deleted) fail('Anket bulunamadı.');
+        if ((m.type !== 'poll' && !(m.type==='e2ee'&&m.encryptedKind==='poll')) || m.deleted) fail('Anket bulunamadı.');
         if (action === 'closePoll') {
           if (m.senderId !== uid && !admin) fail('Anketi oluşturan veya yönetici kapatabilir.');
           tx.update(msgRef, {closed: true});
         } else {
-          if (m.closed || !Number.isInteger(d.option) || d.option < 0 || d.option >= m.options.length) fail('Bu ankete oy verilemiyor.');
+          if (m.closed || !Number.isInteger(d.option) || d.option < 0 || d.option >= (m.pollOptionCount || m.options.length)) fail('Bu ankete oy verilemiyor.');
           tx.update(msgRef, {[`votes.${uid}`]: d.option});
         }
       } else throw new HttpsError('invalid-argument', 'Bilinmeyen işlem.');

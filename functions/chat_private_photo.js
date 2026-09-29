@@ -8,7 +8,10 @@ const key = value => {
     fail('invalid-argument', 'Geçersiz kimlik.');
   return value;
 };
-const MAX_BYTES = 512 * 1024;
+const {_validatePacket}=require('./e2ee_chat');
+const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+const active=p=>p&&!p.disabled&&!p.banned&&!['frozen','deleting','deleted'].includes(p.accountStatus);
+const MAX_BYTES = 512 * 1024 + 28;
 const SESSION_MS = 120000;
 
 async function privatePhotoHandler(request, db = getFirestore(), now = Date.now()) {
@@ -28,11 +31,11 @@ async function privatePhotoHandler(request, db = getFirestore(), now = Date.now(
         data.bytes.length > Math.ceil(MAX_BYTES / 3) * 4)
       fail('invalid-argument', 'Fotoğraf veya görüntüleme seçimi geçersiz.');
     const bytes = Buffer.from(data.bytes, 'base64');
-    if (bytes.length < 4 || bytes.length > MAX_BYTES || bytes[0] !== 255 ||
-        bytes[1] !== 216 || bytes[bytes.length - 2] !== 255 || bytes[bytes.length - 1] !== 217)
+    if (bytes.length < 4 || bytes.length > MAX_BYTES || (!data.e2ee && (bytes[0] !== 255 ||
+        bytes[1] !== 216 || bytes[bytes.length - 2] !== 255 || bytes[bytes.length - 1] !== 217)))
       fail('invalid-argument', 'Fotoğraf JPEG olarak hazırlanamadı.');
     encoded = bytes.toString('base64');
-    hash = createHash('sha256').update(bytes).digest('hex');
+    hash = createHash('sha256').update(bytes).update(data.e2ee?JSON.stringify(canonical(data.e2ee)):'').digest('hex');
   }
   return db.runTransaction(async tx => {
     const [threadSnap, messageSnap, privateSnap] = await Promise.all([
@@ -41,6 +44,10 @@ async function privatePhotoHandler(request, db = getFirestore(), now = Date.now(
     const thread = threadSnap.data(), message = messageSnap.data(), photo = privateSnap.data();
     if (!thread?.memberIds?.includes(uid))
       fail('permission-denied', 'Bu sohbete erişimin yok.');
+    if(data.action==='send') {
+      if(thread.e2eeVersion===1&&!data.e2ee) fail('failed-precondition','Bu sohbet yalnız şifreli fotoğraf kabul eder.');
+      if(data.e2ee) _validatePacket(data.e2ee,uid,thread.memberIds);
+    }
     if (data.action === 'close') {
       if (photo?.threadId === threadId && photo.sessions?.[uid]?.token === data.session) {
         const sessions = {...photo.sessions}; delete sessions[uid];
@@ -51,6 +58,8 @@ async function privatePhotoHandler(request, db = getFirestore(), now = Date.now(
     const peers = data.action === 'send' ? thread.memberIds.filter(id => id !== uid) : [photo?.senderId];
     if (!peers.length || peers.length > 49 || peers.some(id => !id))
       fail('failed-precondition', 'Fotoğraf artık açılamıyor.');
+    const profiles=await Promise.all([uid,...peers].map(id=>tx.get(db.doc(`users/${id}`))));
+    if(thread.accountFrozen||profiles.some(p=>!active(p.data())))fail('permission-denied','Hesap kullanılamıyor.');
     const blocks = await Promise.all(peers.flatMap(other => [
       tx.get(db.doc(`users/${uid}/blocked/${other}`)),
       tx.get(db.doc(`users/${other}/blocked/${uid}`)),
@@ -69,17 +78,17 @@ async function privatePhotoHandler(request, db = getFirestore(), now = Date.now(
       const maxViews = data.mode === 'once' ? 1 : 2;
       const label = data.mode === 'once' ? '① Bir kez görüntülenebilen fotoğraf' : '② Tekrar açılabilen fotoğraf';
       tx.create(privateRef, {threadId, senderId: uid, recipients: peers,
-        bytes: encoded, hash, mode: data.mode, maxViews, views: {}, sessions: {},
+        bytes: encoded, ...(data.e2ee?{e2ee:data.e2ee}:{}), hash, mode: data.mode, maxViews, views: {}, sessions: {},
         expiresAt: Timestamp.fromMillis(now + 7 * 86400000)});
       tx.create(messageRef, {senderId: uid, senderName: sender?.displayName || sender?.name || 'Üye',
-        type: 'private_photo', photoMode: data.mode, photoViews: {}, text: label,
+        type: 'private_photo', ...(data.e2ee?{e2eeVersion:1}:{}), photoMode: data.mode, photoViews: {}, text: label,
         mediaUrl: null, deleted: false, createdAt: FieldValue.serverTimestamp()});
-      tx.update(threadRef, {lastMessageId: messageId, lastMessage: label, lastSenderId: uid,
+      tx.update(threadRef, {...(data.e2ee?{e2eeVersion:1}:{}),lastMessageId: messageId, lastMessage: data.e2ee?'Şifreli mesaj':label, lastSenderId: uid,
         lastMessageAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
       if (thread.type === 'direct') {
         tx.create(db.doc(`users/${peers[0]}/notifications/chat_${messageId}`),
           {type: 'message', sourceId: threadId, actorId: uid, title: 'Yeni fotoğraf',
-            body: label, read: false, createdAt: FieldValue.serverTimestamp()});
+            body: data.e2ee?'Şifreli mesaj':label, read: false, createdAt: FieldValue.serverTimestamp()});
       }
       return {messageId};
     }
@@ -99,7 +108,7 @@ async function privatePhotoHandler(request, db = getFirestore(), now = Date.now(
     tx.update(privateRef, {views, sessions, ...(exhausted ? {bytes: FieldValue.delete()} : {})});
     tx.update(messageRef, {photoViews: views});
     // The transaction consumes the right before returning bytes, also across devices.
-    return {bytes: photo.bytes, session, remaining: photo.maxViews - used - 1, sessionMs: SESSION_MS};
+    return {bytes: photo.bytes, ...(photo.e2ee?{e2ee:photo.e2ee}:{}), session, remaining: photo.maxViews - used - 1, sessionMs: SESSION_MS};
   });
 }
 

@@ -4,13 +4,12 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/chat_message.dart';
-import 'app_notification_service.dart';
 import 'auth_switch_stream.dart';
 import 'chat_history_filter.dart';
 import 'content_moderation_service.dart';
+import 'e2ee_service.dart';
 
 class ChatService {
   ChatService._();
@@ -19,7 +18,6 @@ class ChatService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   final Map<String, DateTime> _delivered = {};
   final List<DateTime> _recentSends = <DateTime>[];
@@ -223,9 +221,18 @@ class ChatService {
           return snapshot.docs.where((doc) => visibleAfterChatDeletion(
             (doc.data()['createdAt'] as Timestamp?)?.toDate(), cutoff,
             pending: doc.metadata.hasPendingWrites,
-          )).map(ChatMessage.fromDocument).toList(growable: false);
+          )).toList(growable: false);
         },
-      ),
+      ).asyncMap((docs) async {
+        final result = <ChatMessage>[];
+        // Serialized vault operations also preserve ratchet state for fast snapshots.
+        for (final doc in docs.reversed) {
+          final decoded = await E2eeService.instance.decode(threadId,doc.id,doc.data());
+          if (_auth.currentUser?.uid != user.uid) return <ChatMessage>[];
+          result.add(ChatMessage.fromDocument(doc,decrypted:decoded));
+        }
+        return result.reversed.toList();
+      }),
     );
   }
 
@@ -241,9 +248,14 @@ class ChatService {
           final cutoff = (preferences.data()?['deletedAt'] as Timestamp?)?.toDate();
           if (!visibleAfterChatDeletion(
               (message.data()?['createdAt'] as Timestamp?)?.toDate(), cutoff)) return null;
-          return ChatMessage.fromDocument(message);
+          return message;
         },
-      ),
+      ).asyncMap((doc) async {
+        if (doc == null) return null;
+        final decoded = await E2eeService.instance.decode(threadId,doc.id,doc.data()!);
+        if (_auth.currentUser?.uid != user.uid) return null;
+        return ChatMessage.fromDocument(doc,decrypted:decoded);
+      }),
     );
   }
 
@@ -252,6 +264,19 @@ class ChatService {
   }
 
   Future<Map<String, dynamic>> action(String action, Map<String, dynamic> data) async {
+    if(action=='edit') {
+      await E2eeService.instance.edit(data['threadId'] as String,data['messageId'] as String,data['text'] as String);
+      return {'ok':true};
+    }
+    if(action=='poll') {
+      final options=List<String>.from(data['options'] as List);
+      final question=(data['question'] as String).trim();
+      if(question.isEmpty||question.length>200||options.length<2||options.length>6||options.toSet().length!=options.length||options.any((s)=>s.isEmpty||s.length>120))throw StateError('2–6 farklı seçenek ve bir soru yaz.');
+      final threadId=data['threadId'] as String;
+      final messageId=_firestore.collection('chat_threads').doc(threadId).collection('messages').doc().id;
+      await E2eeService.instance.send(threadId,messageId,{'type':'poll','text':question,'options':options,'senderName':_auth.currentUser?.displayName??'Üye'});
+      return {'ok':true};
+    }
     final result = await FirebaseFunctions.instance.httpsCallable('chatAction').call({'action': action, ...data});
     return Map<String, dynamic>.from(result.data as Map);
   }
@@ -286,6 +311,9 @@ class ChatService {
   }
 
   Future<void> refreshPresence() async {
+    if (_auth.currentUser != null) {
+      unawaited(E2eeService.instance.initialize().catchError((Object _) {}));
+    }
     _lastPresenceValue = null;
     _lastPresenceAt = null;
     await setPresence(true);
@@ -394,7 +422,7 @@ class ChatService {
     String contentType = 'image/jpeg',
     ChatMessage? replyTo,
   }) async {
-    final user = await _requiredUser();
+    await _requiredUser();
     if (bytes.isEmpty) throw Exception('Fotoğraf okunamadı.');
     if (bytes.lengthInBytes > 15 * 1024 * 1024) {
       throw Exception('Fotoğraf en fazla 15 MB olabilir.');
@@ -407,37 +435,8 @@ class ChatService {
         .doc(threadId)
         .collection('messages')
         .doc();
-    final ext = contentType.contains('png')
-        ? 'png'
-        : contentType.contains('webp')
-        ? 'webp'
-        : 'jpg';
-    final storageRef = _storage.ref(
-      'private_chat/$threadId/${user.uid}/${messageRef.id}/media.$ext',
-    );
-    try {
-      await storageRef
-          .putData(bytes, SettableMetadata(contentType: contentType))
-          .timeout(const Duration(seconds: 25));
-      final finalized = await FirebaseFunctions.instanceFor(region: 'europe-west1')
-          .httpsCallable('finalizeChatMedia').call({
-            'threadId': threadId, 'messageId': messageRef.id,
-            'fileName': storageRef.name,
-          });
-      final mediaUrl = (finalized.data as Map)['storageUrl'] as String;
-      await _sendPreparedMessage(
-        threadId: threadId,
-        otherUserId: otherUserId,
-        text: '📷 Fotoğraf',
-        type: 'image',
-        mediaUrl: mediaUrl,
-        replyTo: replyTo,
-        forcedMessageRef: messageRef,
-      );
-    } catch (error) {
-      unawaited(_deleteStorageQuietly(storageRef));
-      rethrow;
-    }
+    final mediaUrl = await E2eeService.instance.upload(threadId,messageRef.id,bytes,contentType:contentType);
+    await _sendPreparedMessage(threadId:threadId,otherUserId:otherUserId,text:'📷 Fotoğraf',type:'image',mediaUrl:mediaUrl,replyTo:replyTo,forcedMessageRef:messageRef);
   }
 
   Future<void> sendAudioMessage({
@@ -447,7 +446,7 @@ class ChatService {
     int? durationMs,
     ChatMessage? replyTo,
   }) async {
-    final user = await _requiredUser();
+    await _requiredUser();
     if (bytes.isEmpty) throw Exception('Ses kaydı okunamadı.');
     if (bytes.lengthInBytes > 20 * 1024 * 1024) {
       throw Exception('Sesli mesaj en fazla 20 MB olabilir.');
@@ -460,39 +459,8 @@ class ChatService {
         .doc(threadId)
         .collection('messages')
         .doc();
-    final storageRef = _storage.ref(
-      'private_chat/$threadId/${user.uid}/${messageRef.id}/audio.m4a',
-    );
-    try {
-      await storageRef
-          .putData(bytes, SettableMetadata(contentType: 'audio/mp4'))
-          .timeout(const Duration(seconds: 30));
-      final finalized = await FirebaseFunctions.instanceFor(region: 'europe-west1')
-          .httpsCallable('finalizeChatMedia').call({
-            'threadId': threadId, 'messageId': messageRef.id,
-            'fileName': storageRef.name,
-          });
-      final mediaUrl = (finalized.data as Map)['storageUrl'] as String;
-      await _sendPreparedMessage(
-        threadId: threadId,
-        otherUserId: otherUserId,
-        text: '🎙️ Sesli mesaj',
-        type: 'audio',
-        mediaUrl: mediaUrl,
-        durationMs: durationMs,
-        replyTo: replyTo,
-        forcedMessageRef: messageRef,
-      );
-    } catch (error) {
-      unawaited(_deleteStorageQuietly(storageRef));
-      rethrow;
-    }
-  }
-
-  Future<void> _deleteStorageQuietly(Reference ref) async {
-    try {
-      await ref.delete().timeout(const Duration(seconds: 5));
-    } catch (_) {}
+    final mediaUrl = await E2eeService.instance.upload(threadId,messageRef.id,bytes,contentType:'audio/mp4');
+    await _sendPreparedMessage(threadId:threadId,otherUserId:otherUserId,text:'🎙️ Sesli mesaj',type:'audio',mediaUrl:mediaUrl,durationMs:durationMs,replyTo:replyTo,forcedMessageRef:messageRef);
   }
 
   Future<void> sendSharedContent({
@@ -577,74 +545,11 @@ class ChatService {
       'deleted': false,
     };
 
-    final existing = await messageRef.get();
-    if (!existing.exists) {
-      await messageRef.set(messageData).timeout(const Duration(seconds: 8));
-    } else if (existing.data()?['senderId'] != user.uid) {
-      throw Exception('Geçersiz mesaj kimliği.');
-    }
-
-    final lastMessage = type == 'image'
-        ? '📷 Fotoğraf'
-        : type == 'audio'
-        ? '🎙️ Sesli mesaj'
-        : text;
-    unawaited(_afterMessageSent(
-      threadRef: threadRef,
-      threadId: threadId,
-      messageId: messageRef.id,
-      otherUserId: otherUserId,
-      user: user,
-      lastMessage: lastMessage,
-      type: type,
-      text: text,
-    ));
-  }
-
-  Future<void> _afterMessageSent({
-    required DocumentReference<Map<String, dynamic>> threadRef,
-    required String threadId,
-    required String otherUserId,
-    required User user,
-    required String messageId,
-    required String lastMessage,
-    required String type,
-    required String text,
-  }) async {
-    try {
-      await threadRef.set({
-        'lastMessageId': messageId,
-        'lastMessage': lastMessage,
-        'lastSenderId': user.uid,
-        'lastMessageAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
-    } catch (_) {}
-
+    // Firebase receives neither the payload nor a plaintext preview.
+    messageData.remove('createdAt');
+    await E2eeService.instance.send(threadId,messageRef.id,messageData);
     unawaited(markThreadRead(threadId));
-    unawaited(setTyping(threadId, false));
-
-    if (otherUserId.isEmpty) return;
-    final senderName = (user.displayName ?? '').trim().isNotEmpty
-        ? user.displayName!.trim()
-        : 'Bir kullanıcı';
-    final preview = type == 'image'
-        ? 'Sana bir fotoğraf gönderdi'
-        : type == 'audio'
-        ? 'Sana bir sesli mesaj gönderdi'
-        : type == 'share'
-        ? 'Seninle bir içerik paylaştı'
-        : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
-    try {
-      await AppNotificationService.instance.notifyUser(
-        userId: otherUserId,
-        type: 'message',
-        title: '$senderName sana mesaj gönderdi',
-        body: preview,
-        sourceId: threadId,
-        actorId: user.uid,
-      ).timeout(const Duration(seconds: 6));
-    } catch (_) {}
+    unawaited(setTyping(threadId,false));
   }
 
   Future<void> blockUser(String otherUserId) async {

@@ -153,7 +153,7 @@ class AdminConsoleService {
 
   Future<AdminInsightsData> insights() async {
     await _ensureFreshAdminAuth();
-    final result = await _functions.httpsCallable('getAdminInsights').call();
+    final result = await _functions.httpsCallable('getAdminInsights').call({'scope': 'health'});
     final data = Map<String, dynamic>.from(result.data as Map);
     final counts = Map<String, dynamic>.from(
       (data['counts'] as Map?) ?? const {},
@@ -166,6 +166,7 @@ class AdminConsoleService {
             .map((item) => Map<String, dynamic>.from(item as Map))
             .toList();
     return AdminInsightsData(
+      unavailable: List<String>.from(data['unavailable'] as List? ?? const []),
       counts: counts,
       errors: errors,
       verificationEmails: verificationEmails,
@@ -201,11 +202,13 @@ class AdminConsoleService {
 }
 
 class AdminInsightsData {
+  final List<String> unavailable;
   final Map<String, dynamic> counts;
   final List<Map<String, dynamic>> errors;
   final List<Map<String, dynamic>> verificationEmails;
 
   const AdminInsightsData({
+    this.unavailable = const [],
     required this.counts,
     required this.errors,
     required this.verificationEmails,

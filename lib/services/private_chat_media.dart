@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
+import 'e2ee_service.dart';
 
 // Legacy token URLs are parsed only to identify an object, never fetched as URLs.
 bool isPrivateChatPath(String path) =>
@@ -29,7 +30,9 @@ class PrivateChatMedia {
   static Future<Uint8List> read(String value, {int maxBytes=15*1024*1024}) async {
     final uid=FirebaseAuth.instance.currentUser?.uid;
     if (uid==null) throw Exception('Giriş yapmalısın.');
-    final data=await reference(value).getData(maxBytes).timeout(const Duration(seconds:30));
+    final data=value.startsWith('tbt-e2ee:')
+      ? await E2eeService.readAttachment(value,maxBytes:maxBytes)
+      : await reference(value).getData(maxBytes).timeout(const Duration(seconds:30));
     if (FirebaseAuth.instance.currentUser?.uid != uid || data==null) {
       data?.fillRange(0,data.length,0);
       throw Exception('Medya erişimi sona erdi.');

@@ -1,3 +1,4 @@
+import '../services/e2ee_service.dart';
 import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -54,8 +55,10 @@ class _EventChatScreenState extends State<EventChatScreen> {
       }
     } catch (e) { _error(e); }
   }
-  Widget _message(QueryDocumentSnapshot<Map<String, dynamic>> doc, bool canWrite) {
-    final d = doc.data(), uid = FirebaseAuth.instance.currentUser?.uid;
+  Widget _message(QueryDocumentSnapshot<Map<String, dynamic>> doc, bool canWrite, {Map<String,dynamic>? decoded}) {
+    final d=decoded ?? doc.data();
+    if(decoded==null && d['type']=='e2ee')return FutureBuilder<Map<String,dynamic>>(future:E2eeService.instance.decode(widget.event.id,doc.id,d,scope:'event'),builder:(_,s)=>s.hasData?_message(doc,canWrite,decoded:s.data):const ListTile(title:Text('Şifreli mesaj açılıyor…')));
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     final mine = d['senderId'] == uid, name = '${d['senderName'] ?? 'Katılımcı'}', text = '${d['text'] ?? ''}';
     final at = d['createdAt'];
     final date = at is Timestamp ? at.toDate().toLocal() : null;

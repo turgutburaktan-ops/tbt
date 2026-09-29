@@ -3,16 +3,11 @@ const crypto = require('node:crypto');
 const {applyStrictPatches} = require('./strict_rule_patches.cjs');
 const {GoogleAuth} = require('../functions/node_modules/google-auth-library');
 const {Storage} = require('../functions/node_modules/@google-cloud/storage');
-const {_sealChatFile, _privatePath} = require('../functions/chat_media_security');
+const {revokePrivateMedia} = require('./revoke_private_media.cjs');
 const PROJECT = 'projects/en-iyi-cekim-noktasi';
 const BUCKET = 'en-iyi-cekim-noktasi.firebasestorage.app';
 const BASE = 'https://firebaserules.googleapis.com/v1/';
 const digest = s => crypto.createHash('sha256').update(s).digest('hex');
-async function denied(url) {
-  const r=await fetch(url,{headers:{Range:'bytes=0-0','Cache-Control':'no-cache'}});
-  await r.body?.cancel();
-  if(![401,403,404].includes(r.status)) throw Error('Anonymous access check failed: '+r.status);
-}
 function patchStorage(source) {
  const marker='match /users/{uid}/{category}/{allPaths=**} {';
  const start=source.indexOf(marker);
@@ -57,7 +52,7 @@ async function main() {
   if(mode==='prepare') {
    content=original;
    if(name==='storage') content=patchStorage(content);
-   content=applyStrictPatches(content,name==='storage'?[]:patches[name]);
+   content=applyStrictPatches(content,name==='storage'?(patches.e2eeStorage||[]):patches[name]);
    expected[name]=hash;
    fs.writeFileSync(name+'.rules',content);
   }
@@ -76,24 +71,7 @@ async function main() {
   }
   console.log('SECURITY_RULES_ACTIVE '+p.name);
  }
- const bucket=new Storage().bucket(BUCKET);let objects=0,tokens=0;
- for(const prefix of ['route_albums/','route_chat/','event_chat/','users/']) {
-  let query={prefix,maxResults:100,autoPaginate:false};
-  while(query) {
-   const [files,next]=await bucket.getFiles(query);
-   for(const f of files) {
-    if(!_privatePath(f.name))continue;
-    const [before]=await f.getMetadata();
-    const old=(before.metadata?.firebaseStorageDownloadTokens||'').split(',').filter(Boolean);
-    await _sealChatFile(f);
-    const url='https://firebasestorage.googleapis.com/v0/b/'+BUCKET+'/o/'+encodeURIComponent(f.name)+'?alt=media';
-    await denied(url);
-    for(const token of old)await denied(url+'&token='+encodeURIComponent(token));
-    objects++;tokens+=old.length;
-   }
-   query=next;
-  }
- }
- console.log('PRIVATE_MEDIA_SEALED '+JSON.stringify({objects,revokedTokens:tokens,anonymousAccess:'denied'}));
+ const result=await revokePrivateMedia(new Storage().bucket(BUCKET));
+ console.log('PRIVATE_MEDIA_SEALED '+JSON.stringify(result));
 }
 main().catch(e=>{console.error('Security deployment stopped',e.response?.status||e.code||e.message);process.exitCode=1;});

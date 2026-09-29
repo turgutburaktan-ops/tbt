@@ -1,3 +1,4 @@
+import '../widgets/post_album_badge.dart';
 import '../widgets/profile_post_feed.dart';
 import '../theme/app_theme.dart';
 import 'follow_list_screen.dart';
@@ -484,7 +485,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     ProfilePostFeed(postIds: docs.map((p) => p.id).toList(), initialIndex: index),
                               ),
                             ),
-                            child: Container(
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [Container(
                               color: AppColors.surface,
                               child: imageUrl.isEmpty && storagePath.isEmpty
                                   ? const Icon(
@@ -502,6 +505,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                         ),
                                       ),
                                     ),
+                              ),
+                              PostAlbumBadge(post: post),
+                              ],
                             ),
                           );
                         }, childCount: docs.length),
