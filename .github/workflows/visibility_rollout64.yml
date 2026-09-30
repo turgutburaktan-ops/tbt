@@ -1,0 +1,46 @@
+name: Deploy backward-compatible content visibility prerequisites
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/visibility_rollout64.yml']
+permissions:
+  contents: read
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Authenticate existing deployment identity
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'preflight.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - name: Verify migration and lifecycle behavior
+        run: node --test functions/test/content_visibility.test.js functions/test/post_visibility_backfill.test.js functions/test/frozen_media.test.js
+      - name: Install Firebase deployment CLI
+        run: npm install --prefix /tmp/firebase-deploy firebase-tools@14.12.0
+      - name: Deploy transition triggers before backfilling
+        run: >-
+          /tmp/firebase-deploy/node_modules/.bin/firebase deploy --project en-iyi-cekim-noktasi --non-interactive
+          --only functions:initializePostVisibility,functions:initializeVisibility_stories,functions:initializeVisibility_post_reposts,functions:initializeVisibility_social_events,functions:initializeVisibility_event_memories,functions:initializeVisibility_travel_plans,functions:initializeVisibility_communities
+      - name: Add and verify visibility indexes
+        run: node tool/ensure_visibility_indexes.cjs
+      - name: Add visibility flags transactionally
+        run: node tool/content_visibility_backfill.cjs --apply
+      - name: Verify every migrated collection
+        run: node tool/verify_visibility_rollout.cjs
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/preflight.json"
