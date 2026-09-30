@@ -24,3 +24,17 @@ The user explicitly approved pushing the fixes to `turgutburaktan-ops/tbt`, remo
 The release gate remains in place. Private contact migration, frozen-content read protection, real-device E2EE verification/key recovery, and App Check compatibility/enforcement remain unresolved. The two skipped emulator tests are the contact and frozen-content findings, not successful checks.
 
 The Firebase deployment identity needs authorized database-configuration access to finish recovery setup. Real-device evidence and the remaining implementation/migration work are still required before store submission and mandatory updates. No pending or blocked check was marked verified merely because this workflow ran.
+
+## Follow-up diagnosis and migration correction
+
+Read-only production diagnosis succeeded: https://github.com/turgutburaktan-ops/tbt/actions/runs/36591329471
+
+- The deployment identity has `datastore.databases.getMetadata` and `datastore.databases.list`; it lacks `datastore.databases.update`. This is the specific configuration-write blocker; no IAM grant was attempted.
+- Database readback explicitly shows PITR and deletion protection disabled.
+- All 36 user profiles were counted; 34 still contain at least one of the three legacy public contact fields. No contact values or user IDs were included in the report. Migration has not run.
+- Frozen-content counts were zero for posts, stories, social events, event memories, travel plans and communities. Zero current documents does not resolve the frozen-content access-control design flaw.
+- Migration now preserves existing private values (including intentional null/empty values), removes public values in the same transaction, is idempotent, and does not recreate a deleted profile. Three dedicated tests passed, including read-failure behavior.
+- Fixed the migration/diagnostic scripts' Firebase Admin package loading to use exported subpaths via `createRequire`; direct filesystem subpath imports failed on a clean CI installation.
+- The first remote verification of the migration changes completed successfully: https://github.com/turgutburaktan-ops/tbt/actions/runs/36591171762
+
+Still required: authorized database-update permission, compatible-client/store-device evidence for private-contact rollout, frozen-content read/media migration implementation, and the remaining real-device E2EE/App Check verification. Update enforcement and store submission remain unchanged.
