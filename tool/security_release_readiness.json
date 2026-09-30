@@ -8,7 +8,7 @@
     {
       "id": "frozen-content-reads",
       "status": "pending",
-      "reason": "Dondurulmuş içeriklerin belge ve medya erişim koruması tamamlanmadı."
+      "reason": "Gönderi, hikâye, etkinlik, anı, topluluk, yeniden paylaşım ve rota erişim korumaları aday kodda test edildi. 224 canlı kayıt görünürlük geçişini bekliyor; kurallar, URL iptali ve geç yükleme koruması canlıda doğrulanmadan kapı açılmaz."
     },
     {
       "id": "end-to-end-encryption",
@@ -18,7 +18,7 @@
     {
       "id": "app-check",
       "status": "blocked",
-      "reason": "Gerçek mağaza cihazlarında geçerli doğrulama teyit edilmeden zorunlu denetim açılmadı."
+      "reason": "30 Eylül salt okunur ölçümünde geçerli App Check serisi görülmedi; geçersiz/eksik doğrulamalar var. Callable doğrulama günlükleri 403 verdi. Gerçek mağaza cihazı doğrulanmadan zorunlu denetim açılmadı."
     },
     {
       "id": "database-recovery",

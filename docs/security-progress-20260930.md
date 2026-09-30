@@ -14,7 +14,7 @@ Post document and nested likes/comments/tags reads now deny frozen content. Publ
 
 **Deployment ordering is required:** deploy/build the new query indexes and initializePostVisibility trigger, complete and verify the visibility backfill, deliver compatible clients, then enforce the new read/create policy. The trigger maintains the field for older server writers during the transition. Do not deploy the policy to old clients or launch the new filtered feed before backfilling older documents. The dry-run/apply tool reads post and owner in the same transaction and never thaws a frozen post or recreates a deleted document.
 
-Still open: equivalent read/query protection for stories, events, memories, communities and routes; token coverage for media outside users/{uid}/ and production URL/CDN verification; concurrent server-upload handling. The overall frozen-content gate remains pending.
+Read/query protection now also covers stories, social events, event memories, communities, reposts and routes, including nested route/event reads. Storage route/event reads check parent visibility. Client queries, root constructors, transition triggers and indexes were updated together. A late-upload finalization guard rechecks restricted accounts; private chat/business-claim tokens are permanently revoked and never restored during unfreeze. These are candidate changes, not production evidence. Still open: live rollout, external/cached media URL verification and validation of the asynchronous finalization window. The overall frozen-content gate remains pending.
 
 ## E2EE and publication
 
@@ -33,3 +33,13 @@ GitHub Actions run https://github.com/turgutburaktan-ops/tbt/actions/runs/366773
 - Production-evidence job deliberately skipped; this run performed no live deployment or migration.
 
 The emulator caught a permissive unconstrained post query when the visibility helper used a default-false field lookup. The helper now requires explicit `accountFrozen == false`; filtered feeds succeed and unconstrained/frozen reads are denied by the verified tests. The staged rule patch is separate from the generic hardening deployment so earlier workflows do not silently activate incompatible post-read requirements.
+
+## Expanded content protection and live preflight
+
+The final expanded candidate passed https://github.com/turgutburaktan-ops/tbt/actions/runs/36683176192: 159 backend unit tests, 50 general emulator tests, and 10 private-photo emulator tests passed (219 total); the legacy production contact finding remains the one explicitly skipped test. Flutter analysis, targeted encryption tests and debug bundle also passed. No new store artifact was produced.
+
+Read-only production preflight https://github.com/turgutburaktan-ops/tbt/actions/runs/36682968328 made no migration writes (`apply:false`). It found 224 records needing explicit visibility: 106 posts, 37 stories, one repost, 19 events, 60 routes and one community; no event memories and no invalid owners were reported. Use `tool/content_visibility_backfill.cjs` for all seven owner-bound collections, keeping dry-run default. The generalized initialization triggers must precede backfill, compatible clients and final strict policy enforcement.
+
+The last 24-hour App Check metrics showed INVALID or MISSING results and no VALID series in this sample. This does not establish which requests came from real store devices; enforcement remains blocked. Callable verification-log access returned HTTP 403. Android alpha build 62 (1.0.34) was completed; iOS 1.0.34 was READY_FOR_SALE with valid build 62. Neither API proves successful installation/attestation on the user's physical device.
+
+E2EE key recovery/device transfer is still not implemented; unchanged immutable-identity registration rejects a replacement device key. No claim of complete E2EE or release readiness is made. Database deletion protection remains unverified/blocked from the earlier permission failure; this preflight did not modify or recheck it. PITR was previously enabled.
