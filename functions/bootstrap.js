@@ -126,3 +126,16 @@ for (const collection of Object.keys(require('./content_visibility').owners).fil
     },
   );
 }
+
+// Recheck uploads that finish after the freeze sweep took its object listing.
+exports.guardFrozenUserUpload = require('firebase-functions/v2/storage').onObjectFinalized(
+  {region:'europe-west1',retry:true},
+  async event => {
+    const name=event.data.name;
+    if (!name || !name.startsWith('users/')) return;
+    await require('./frozen_media').guardFinishedUpload({
+      db:require('firebase-admin/firestore').getFirestore(),
+      bucket:require('firebase-admin/storage').getStorage().bucket(event.data.bucket),name,
+    });
+  },
+);

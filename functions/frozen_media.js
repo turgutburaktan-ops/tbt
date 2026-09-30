@@ -1,5 +1,7 @@
 const {createHash} = require('node:crypto');
 
+const privateCategory = name => ['chat','business_claims'].includes(name.split('/')[2]);
+
 // Recovery metadata is server-only. It must never be returned to a client.
 function manifestRef(db, uid, name) {
   return db.doc(`frozen_media/${uid}/objects/${createHash('sha256').update(name).digest('hex')}`);
@@ -12,7 +14,7 @@ async function suspendFile(db, uid, file) {
     const tokens = meta.metadata?.firebaseStorageDownloadTokens;
     if (!tokens) return;
     // Save before revoking; a failed save must not leave an unrecoverable URL.
-    await record.set({path:file.name, generation:meta.generation,
+    if (!privateCategory(file.name)) await record.set({path:file.name, generation:meta.generation,
       tokens, cacheControl:meta.cacheControl || null});
     try {
       await file.setMetadata({cacheControl:'private, no-store, max-age=0',
@@ -45,6 +47,12 @@ async function resumeUserMedia({db, bucket, uid}) {
       const saved = doc.data();
       if (!saved.path.startsWith(`users/${uid}/`)) throw Error('Unexpected archived media owner');
       const file = bucket.file(saved.path);
+      // Private chat/claim URLs must never regain a public download token.
+      if (privateCategory(saved.path)) {
+        try { await suspendFile(db, uid, file); } catch (error) { if (Number(error.code) !== 404) throw error; }
+        await doc.ref.delete();
+        continue;
+      }
       let meta;
       try { [meta] = await file.getMetadata(); }
       catch (error) { if (Number(error.code) !== 404) throw error; }
@@ -62,4 +70,15 @@ async function resumeUserMedia({db, bucket, uid}) {
     }
   }
 }
-module.exports = {suspendFile, suspendUserMedia, resumeUserMedia};
+async function guardFinishedUpload({db,bucket,name}) {
+  const match = /^users\/([^/]+)\/[^/]+\/.+/.exec(name || '');
+  if (!match) return;
+  const uid = match[1];
+  const profile = (await db.doc(`users/${uid}`).get()).data();
+  const active = profile && (profile.accountStatus || 'active') === 'active' && !profile.banned && !profile.disabled;
+  if (active && !privateCategory(name)) return;
+  try { await suspendFile(db, uid, bucket.file(name)); }
+  catch (error) { if (Number(error.code) !== 404) throw error; }
+}
+
+module.exports = {suspendFile, suspendUserMedia, resumeUserMedia, guardFinishedUpload};

@@ -58,3 +58,22 @@ test('pagination is exhausted and another owner is never touched',async()=>{
  const other=f.file('users/other/posts/a.jpg');await assert.rejects(suspendFile(f.db,'u',other),/Unexpected/);
  assert.equal(other.read().metadata.firebaseStorageDownloadTokens,'old-token');
 });
+test('private chat and claim tokens are revoked permanently, never restored on unfreeze',async()=>{
+ const f=fixture();const files=['users/u/chat/t/a.jpg','users/u/business_claims/c/a.jpg'].map(n=>f.file(n));
+ await suspendUserMedia({...f,uid:'u'});assert.equal(f.records.size,0);
+ // Old manifests created by previous candidates must not resurrect private URLs either.
+ for(const file of files)f.records.set(`frozen_media/u/objects/${file.name.split('/')[2]}`,{path:file.name,generation:'1',tokens:'old-token'});
+ f.activate();await resumeUserMedia({...f,uid:'u'});
+ for(const file of files)assert.equal(file.read().metadata.firebaseStorageDownloadTokens,null);
+ assert.equal(f.records.size,0);
+});
+test('late upload after freeze is sealed; active public upload is left accessible',async()=>{
+ const {guardFinishedUpload}=require('../frozen_media');
+ const f=fixture(),late=f.file('users/u/posts/late.jpg');
+ await guardFinishedUpload({...f,name:late.name});assert.equal(late.read().metadata.firebaseStorageDownloadTokens,null);
+ f.activate();const publicPhoto=f.file('users/u/posts/new.jpg');
+ await guardFinishedUpload({...f,name:publicPhoto.name});assert.equal(publicPhoto.read().metadata.firebaseStorageDownloadTokens,'old-token');
+ const privatePhoto=f.file('users/u/chat/t/new.jpg');
+ await guardFinishedUpload({...f,name:privatePhoto.name});assert.equal(privatePhoto.read().metadata.firebaseStorageDownloadTokens,null);
+ await guardFinishedUpload({...f,name:'unrelated/object.jpg'});
+});
