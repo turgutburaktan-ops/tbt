@@ -29,12 +29,15 @@ jobs:
           PY
       - name: Verify migration and lifecycle behavior
         run: node --test functions/test/content_visibility.test.js functions/test/post_visibility_backfill.test.js functions/test/frozen_media.test.js
-      - name: Install Firebase deployment CLI
-        run: npm install --prefix /tmp/firebase-deploy firebase-tools@14.12.0
-      - name: Deploy transition triggers before backfilling
-        run: >-
-          /tmp/firebase-deploy/node_modules/.bin/firebase deploy --project en-iyi-cekim-noktasi --non-interactive
-          --only functions:initializePostVisibility,functions:initializeVisibility_stories,functions:initializeVisibility_post_reposts,functions:initializeVisibility_social_events,functions:initializeVisibility_event_memories,functions:initializeVisibility_travel_plans,functions:initializeVisibility_communities
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy transition functions through Cloud Functions API
+        run: |
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --quiet
+          export VISIBILITY_DATABASE_LOCATION="$(gcloud firestore databases describe --database='(default)' --project=en-iyi-cekim-noktasi --format='value(locationId)')"
+          export VISIBILITY_RUNTIME_ACCOUNT="$(gcloud functions describe getAdminInsights --gen2 --region=europe-west1 --project=en-iyi-cekim-noktasi --format='value(serviceConfig.serviceAccountEmail)')"
+          test -n "$VISIBILITY_DATABASE_LOCATION"
+          test -n "$VISIBILITY_RUNTIME_ACCOUNT"
+          python3 tool/deploy_visibility_functions.py
       - name: Add and verify visibility indexes
         run: node tool/ensure_visibility_indexes.cjs
       - name: Add visibility flags transactionally
