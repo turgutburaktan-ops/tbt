@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:best_photo_spot/widgets/shared_story_video.dart';
 import 'package:best_photo_spot/services/video_audio_session.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:best_photo_spot/widgets/playback_indexed_stack.dart';
 
 class _VideoPlatform extends VideoPlayerPlatform {
   int next = 0;
+  final sources = <DataSource>[];
   final playing = <int, bool>{};
   final speeds = <int, double>{};
   final volumes = <int, double>{};
@@ -22,6 +24,7 @@ class _VideoPlatform extends VideoPlayerPlatform {
   Future<void> setMixWithOthers(bool mixWithOthers) async {}
   @override
   Future<int?> create(DataSource source) async {
+    sources.add(source);
     playing[++next] = false;
     return next;
   }
@@ -99,6 +102,27 @@ void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized()
         .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  });
+  testWidgets('cached original file is reused with one decoder and misses use the original URL', (tester) async {
+    final platform = _VideoPlatform();
+    VideoPlayerPlatform.instance = platform;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: AppVideoPlayer.network(
+      url: 'https://example.com/original.mp4', autoplay: true,
+      cachedFile: (_) => File('/tmp/original.mp4'),
+    ))));
+    await _tick(tester);
+    expect(platform.sources.single.sourceType, DataSourceType.file);
+    expect(platform.playing.length, 1);
+    await tester.pumpWidget(const SizedBox()); await _tick(tester);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: AppVideoPlayer.network(
+      url: 'https://example.com/uncached-original.mp4', autoplay: true,
+      cachedFile: (_) => null,
+    ))));
+    await _tick(tester);
+    expect(platform.sources.last.sourceType, DataSourceType.network);
+    expect(platform.sources.last.uri, 'https://example.com/uncached-original.mp4');
+    expect(platform.playing.length, 1);
+    await tester.pumpWidget(const SizedBox()); await _tick(tester);
   });
   testWidgets('hidden tab releases its decoder and resumes at its own position', (tester) async {
     final platform = _BufferingVideoPlatform();

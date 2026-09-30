@@ -9,6 +9,8 @@ class ReelsVideoCache {
     this.maxBytes = 72 * 1024 * 1024, this.root});
   final int maxFileBytes, maxBytes;
   final Directory? root;
+  static final _liveDirectories = <String>{};
+  static Future<void> _directoryQueue = Future<void>.value();
   final _files = LinkedHashMap<String, File>();
   final _sizes = <String, int>{};
   Future<void> _queue = Future<void>.value();
@@ -60,6 +62,24 @@ class ReelsVideoCache {
     try { if (file != null && await file.exists()) await file.delete(); } catch (_) {}
   }
 
+  Future<Directory> _createDirectory() async {
+    late Directory result;
+    final operation = _directoryQueue.then((_) async {
+      final parent = root ?? await getTemporaryDirectory();
+      // Remove leftovers after a killed process, without touching another live screen.
+      await for (final entry in parent.list()) {
+        if (entry is Directory && entry.path.split(Platform.pathSeparator).last.startsWith('tbt-reels-') && !_liveDirectories.contains(entry.path)) {
+          try { await entry.delete(recursive: true); } catch (_) {}
+        }
+      }
+      result = await parent.createTemp('tbt-reels-');
+      _liveDirectories.add(result.path);
+    });
+    _directoryQueue = operation.catchError((Object _) {});
+    await operation;
+    return result;
+  }
+
   Future<void> _download(String url, int generation) async {
     File? partial;
     IOSink? sink;
@@ -71,13 +91,15 @@ class ReelsVideoCache {
       final request = await client.getUrl(uri).timeout(const Duration(seconds: 5));
       final response = await request.close().timeout(const Duration(seconds: 8));
       if (response.statusCode != 200 || response.contentLength > maxFileBytes) return;
+      final mime = response.headers.contentType?.mimeType;
+      if (mime != null && !mime.startsWith('video/') && mime != 'application/octet-stream') return;
       // Reserve space for the in-flight file, including unknown content lengths.
       while (_sizes.values.fold<int>(0, (a, b) => a + b) + maxFileBytes > maxBytes || _files.length >= 3) {
         final candidates = _files.keys.where((key) => key != activeUrl).toList();
         if (candidates.isEmpty) return;
         await _remove(candidates.first);
       }
-      final directory = _directory ??= await (root ?? await getTemporaryDirectory()).createTemp('tbt-reels-');
+      final directory = _directory ??= await _createDirectory();
       partial = File('${directory.path}/${_serial++}.mp4');
       sink = partial.openWrite();
       int received = 0;
@@ -119,5 +141,6 @@ class ReelsVideoCache {
     await _queue;
     _files.clear(); _sizes.clear();
     try { await _directory?.delete(recursive: true); } catch (_) {}
+    _liveDirectories.remove(_directory?.path);
   }
 }

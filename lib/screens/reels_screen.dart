@@ -432,7 +432,11 @@ class _ReelPage extends StatelessWidget {
           child: AppVideoPlayer.network(
             url: _videoUrl,
             cachedFile: cache.peek,
-            onPlayback: (value) { if (active && value.isPlaying && !value.isBuffering) onPlaying(); },
+            onPlayback: (value) {
+              if (!active) return;
+              if (value.isBuffering) cache.stop();
+              else if (value.isPlaying) onPlaying();
+            },
             loading: Stack(fit: StackFit.expand, children: [
               if ((data['thumbnailUrl'] ?? data['imageUrl'] ?? '').toString().isNotEmpty)
                 Image.network((data['thumbnailUrl'] ?? data['imageUrl']).toString(),

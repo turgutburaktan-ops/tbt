@@ -14,6 +14,7 @@ void main() {
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) async {
       try {
+        request.response.headers.contentType = ContentType('video', 'mp4');
         if (request.uri.path == '/slow') await Future<void>.delayed(const Duration(milliseconds: 200));
         if (request.uri.path == '/error') { request.response.statusCode = 403; }
         else if (request.uri.path == '/large') { request.response.add(List.filled(16384, 1)); }
