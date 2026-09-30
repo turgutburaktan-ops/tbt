@@ -102,6 +102,7 @@ class PostService {
     final imageUrl = await uploadTask.ref.getDownloadURL();
 
     await postRef.set({
+      'accountFrozen': false,
       ..._postBase(
         id: postRef.id,
         user: user,
@@ -185,6 +186,7 @@ class PostService {
       mixed = Map<String, dynamic>.from(result.data as Map);
     }
     await postRef.set({
+      'accountFrozen': false,
       ..._postBase(
         id: postRef.id,
         user: user,
@@ -395,6 +397,7 @@ class PostService {
 
     if (visibility == 'public') {
       await _firestore.collection('posts').doc(memoryRef.id).set({
+        'accountFrozen': false,
         ...memoryData,
         'sourceType': 'event_memory',
         'likesCount': 0,
@@ -425,13 +428,13 @@ class PostService {
     final user = _auth.currentUser;
     if (user == null) return const Stream.empty();
     return _firestore
-        .collection('posts')
+        .collection('posts').where('accountFrozen', isEqualTo: false)
         .where('userId', isEqualTo: user.uid)
         .snapshots();
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> allPosts() => _firestore
-      .collection('posts')
+      .collection('posts').where('accountFrozen', isEqualTo: false)
       .orderBy('createdAt', descending: true)
       .snapshots();
 

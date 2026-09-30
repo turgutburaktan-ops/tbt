@@ -61,7 +61,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   }
 
   late final _posts = FirebaseFirestore.instance
-      .collection('posts')
+      .collection('posts').where('accountFrozen', isEqualTo: false)
       .orderBy('createdAt', descending: true)
       .limit(300)
       .snapshots();

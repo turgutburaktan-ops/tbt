@@ -17,6 +17,7 @@ before(async()=>{
   firestore:{rules:fs.readFileSync('firestore.rules','utf8')},
   storage:{rules:fs.readFileSync('storage.rules','utf8')}});
  await seed(async c=>{
+  await setDoc(doc(c.firestore(),'users/alice'),{accountStatus:'active'});
   await setDoc(doc(c.firestore(),'chat_threads/thread'),{memberIds:['alice','bob'],deletedMessageIds:[]});
   for(const id of ['message','old']) await setDoc(doc(c.firestore(),'chat_threads/thread/messages/'+id),{senderId:'alice',type:'image',deleted:false});
   for(const p of [path,legacy]) await uploadBytes(ref(c.storage(bucket),p),bytes,{contentType:'image/jpeg',customMetadata:{chatSealed:'true',chatMessageId:'old'}});

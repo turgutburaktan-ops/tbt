@@ -61,7 +61,7 @@ class _FeedScreenState extends State<FeedScreen> with RouteAware {
   }
 
   late final _query = FirebaseFirestore.instance
-      .collection('posts')
+      .collection('posts').where('accountFrozen', isEqualTo: false)
       .orderBy('createdAt', descending: true)
       .limit(120);
   late Stream<QuerySnapshot<Map<String, dynamic>>> _postsStream = _query

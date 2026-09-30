@@ -314,7 +314,7 @@ class _GuestFeed extends StatelessWidget {
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
-                  .collection('posts')
+                  .collection('posts').where('accountFrozen', isEqualTo: false)
                   .orderBy('createdAt', descending: true)
                   .limit(80)
                   .snapshots(),

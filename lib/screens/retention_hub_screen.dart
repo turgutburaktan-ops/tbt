@@ -82,7 +82,7 @@ class _TodayTbtTab extends StatelessWidget {
     final eventEnd = Timestamp.fromDate(now.add(const Duration(hours: 24)));
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
-          .collection('posts')
+          .collection('posts').where('accountFrozen', isEqualTo: false)
           .orderBy('createdAt', descending: true)
           .limit(80)
           .snapshots(),
@@ -224,7 +224,7 @@ class _LiveSocialMapTabState extends State<_LiveSocialMapTab> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('social_events').orderBy('startsAt').limit(120).snapshots(),
       builder: (context, eventSnapshot) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('posts').orderBy('createdAt', descending: true).limit(100).snapshots(),
+        stream: FirebaseFirestore.instance.collection('posts').where('accountFrozen', isEqualTo: false).orderBy('createdAt', descending: true).limit(100).snapshots(),
         builder: (context, postSnapshot) {
           final markers = <Marker>{};
           for (final doc in eventSnapshot.data?.docs ?? const []) {
@@ -307,7 +307,7 @@ class _MixedDiscoveryTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-    stream: FirebaseFirestore.instance.collection('posts').orderBy('createdAt', descending: true).limit(90).snapshots(),
+    stream: FirebaseFirestore.instance.collection('posts').where('accountFrozen', isEqualTo: false).orderBy('createdAt', descending: true).limit(90).snapshots(),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
         return const Center(child: CircularProgressIndicator());
@@ -394,7 +394,7 @@ class _CityProgressTab extends StatelessWidget {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
       builder: (context, profile) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: uid).limit(120).snapshots(),
+        stream: FirebaseFirestore.instance.collection('posts').where('accountFrozen', isEqualTo: false).where('userId', isEqualTo: uid).limit(120).snapshots(),
         builder: (context, posts) {
           final data = profile.data?.data() ?? const <String, dynamic>{};
           final configured = <String>{};

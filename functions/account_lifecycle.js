@@ -61,7 +61,6 @@ exports.freezeAccount = onCall(
     const uid = requireUser(request);
     const db = getFirestore();
     return withAccountLifecycle({db, auth: getAuth(), uid, operation: 'freeze'}, async () => {
-      await suspendUserMedia({db, bucket:getStorage().bucket(), uid});
       await settleAll(
         ownedContent.map(([collection, field]) =>
           updateQuery(db, db.collection(collection).where(field, '==', uid), {
@@ -70,6 +69,7 @@ exports.freezeAccount = onCall(
           })
         )
       );
+      await suspendUserMedia({db, bucket:getStorage().bucket(), uid});
       await db.collection('account_delete_requests').doc(uid).delete().catch(() => {});
       return {ok: true, status: 'frozen'};
     });
@@ -88,7 +88,7 @@ exports.unfreezeAccount = onCall(
       await settleAll(
         ownedContent.map(([collection, field]) =>
           updateQuery(db, db.collection(collection).where(field, '==', uid), {
-            accountFrozen: FieldValue.delete(),
+            accountFrozen: false,
             accountFrozenAt: FieldValue.delete(),
           })
         )

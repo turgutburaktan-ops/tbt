@@ -41,7 +41,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> get _stream => FirebaseFirestore
       .instance
-      .collection('posts')
+      .collection('posts').where('accountFrozen', isEqualTo: false)
       .where('mediaType', isEqualTo: 'video')
       .limit(100)
       .snapshots();

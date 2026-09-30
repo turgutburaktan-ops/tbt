@@ -116,7 +116,7 @@ class ExternalShareService {
     if (user == null) throw Exception('Paylaşmak için giriş yapmalısın.');
     if (externalSourceUrl(source.toString()) == null || caption.length > 500) throw Exception('Geçerli bağlantı ve en fazla 500 karakter açıklama gerekli.');
     final db = FirebaseFirestore.instance;
-    final existing = await db.collection('posts').where('userId', isEqualTo: user.uid).where('externalSourceUrl', isEqualTo: source.toString()).limit(1).get();
+    final existing = await db.collection('posts').where('accountFrozen', isEqualTo: false).where('userId', isEqualTo: user.uid).where('externalSourceUrl', isEqualTo: source.toString()).limit(1).get();
     if (existing.docs.isNotEmpty) throw Exception('Bu bağlantıyı daha önce paylaşmışsın.');
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);

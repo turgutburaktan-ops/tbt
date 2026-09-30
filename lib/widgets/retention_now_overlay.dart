@@ -107,7 +107,7 @@ class _NowSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recentPosts = FirebaseFirestore.instance
-        .collection('posts')
+        .collection('posts').where('accountFrozen', isEqualTo: false)
         .orderBy('createdAt', descending: true)
         .limit(60);
     final upcomingEvents = FirebaseFirestore.instance
@@ -450,7 +450,7 @@ class _FriendActivity extends StatelessWidget {
         if (ids.isEmpty) return const _Empty('Takip ettiğin kişilerin yeni hareketleri burada görünecek.');
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
-              .collection('posts')
+              .collection('posts').where('accountFrozen', isEqualTo: false)
               .where('userId', whereIn: ids)
               .orderBy('createdAt', descending: true)
               .limit(8)

@@ -114,7 +114,7 @@ async function publishing(request, db = getFirestore()) {
       if(existing.exists && (existing.data().userId!==uid || existing.data().mediaType!=='route' || !publicContent(existing.data())))fail('permission-denied','Bu rota gönderisi kullanılamıyor.');
       const limit=await quota(db,uid,'publishRoute',tx,20), plan=planSnap.data();
       tx.update(planRef,{isPublic:true,updatedAt:FieldValue.serverTimestamp()});
-      tx.set(postRef,{
+      tx.set(postRef,{accountFrozen:false,
         userId:uid,userName:text(current.displayName||current.username||'TBT kullanıcısı',80),userPhotoUrl:text(current.photoUrl,2000),
         mediaType:'route',contentType:'route',travelPlanId:planId,routeTitle:text(plan.title,180),routeCity:text(plan.city,100),
         routeDurationHours:plan.durationHours||0,routeBudget:plan.budget||'',routeTransport:plan.transport||'',

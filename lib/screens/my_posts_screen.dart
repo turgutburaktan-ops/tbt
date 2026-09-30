@@ -34,7 +34,7 @@ class MyPostsScreen extends StatelessWidget {
             )
           : StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('posts')
+                  .collection('posts').where('accountFrozen', isEqualTo: false)
                   .where('userId', isEqualTo: user.uid)
                   .snapshots(),
               builder: (context, snapshot) {

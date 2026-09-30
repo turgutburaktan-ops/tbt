@@ -5,7 +5,7 @@ const {doc,setDoc,updateDoc,getDoc,deleteField,Timestamp} = require('firebase/fi
 let env;
 const db = uid => env.authenticatedContext(uid).firestore();
 const content = uid => ({
-  posts: {userId:uid, caption:'Test', mediaType:'image'},
+  posts: {userId:uid, caption:'Test', mediaType:'image', accountFrozen:false},
   stories: {userId:uid, expiresAt:Timestamp.fromMillis(Date.now()+3600000)},
   social_events: {hostId:uid, status:'open', accessType:'free', visibility:'public'},
   event_memories: {userId:uid, eventId:'past'},

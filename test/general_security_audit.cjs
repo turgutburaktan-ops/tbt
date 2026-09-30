@@ -41,8 +41,9 @@ test('F04 regression: denied activity demand owner can be replaced by another ac
 test('F05 regression: denied comment author can reassign comment attribution',async()=>{
  await assertFails(updateDoc(doc(db('attacker'),'posts/post/comments/comment'),{userId:'victim',text:'forged attribution'}));
 });
-test.skip('F06 regression: denied frozen post remains readable anonymously',async()=>{
- await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'posts/post')));
+test('F06 regression: frozen post cannot be read anonymously',async()=>{
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'posts/post')));
+ await assertFails(getDoc(doc(db('attacker'),'posts/post/comments/comment')));
 });
 test('P01 protected: outsiders cannot read normal direct message documents',async()=>{
  await assertFails(getDoc(doc(db('attacker'),'chat_threads/secure-thread/messages/private')));

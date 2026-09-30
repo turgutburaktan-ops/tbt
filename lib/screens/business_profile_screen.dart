@@ -269,7 +269,7 @@ class BusinessProfileScreen extends StatelessWidget {
                         const SizedBox(height: 14),
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: FirebaseFirestore.instance
-                              .collection('posts')
+                              .collection('posts').where('accountFrozen', isEqualTo: false)
                               .where('venueKey', isEqualTo: _key)
                               .limit(20)
                               .snapshots(),
@@ -1031,7 +1031,7 @@ class _BusinessPostsTab extends StatelessWidget {
     BuildContext context,
   ) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
     stream: FirebaseFirestore.instance
-        .collection('posts')
+        .collection('posts').where('accountFrozen', isEqualTo: false)
         .where('businessVenueKey', isEqualTo: venueKey)
         .limit(60)
         .snapshots(),

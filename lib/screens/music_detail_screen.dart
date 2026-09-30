@@ -287,7 +287,7 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
         ),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
-              .collection('posts')
+              .collection('posts').where('accountFrozen', isEqualTo: false)
               .where('soundTrackId', isEqualTo: widget.music.trackId)
               .limit(60)
               .snapshots(),

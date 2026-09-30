@@ -189,8 +189,9 @@ service cloud.firestore {
           d.originalVideoStoragePath == 'users/' + request.auth.uid + '/posts/' + postId + '.mp4'
         ));
     }
+    function postReadable(d) { return d.get('accountFrozen', false) == false; }
     function validPostCreate() {
-      return signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&
+      return request.resource.data.get('accountFrozen', null) == false && signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&
         request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&
         request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120 &&
         request.resource.data.get('mediaType', 'image') in ['image','video'] &&
@@ -452,19 +453,19 @@ service cloud.firestore {
     match /creator_metric_receipts/{id} { allow read, write: if false; }
     match /social_publish_limits/{id} { allow read, write: if false; }
     match /posts/{postId} {
-      allow read: if true;
+      allow read: if isAdmin() || postReadable(resource.data);
       allow create: if contentLifecycleCreate() && validPostCreate() && validBusinessPost() && validPostMusic(postId);
       allow update: if isAdmin() || validPostOwnerUpdate();
       allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
+      match /likes/{uid} { allow read: if isAdmin() || postReadable(get(/databases/$(database)/documents/posts/$(postId)).data); allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
       match /comments/{commentId} {
-        allow read: if true;
+        allow read: if isAdmin() || postReadable(get(/databases/$(database)/documents/posts/$(postId)).data);
         allow create: if validCommentCreate();
         allow update: if validCommentUpdate();
         allow delete: if signedIn() && (resource.data.userId == request.auth.uid ||
           get(/databases/$(database)/documents/posts/$(postId)).data.userId == request.auth.uid);
       }
-      match /tags/{taggedUserId} { allow read: if true; allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
+      match /tags/{taggedUserId} { allow read: if isAdmin() || postReadable(get(/databases/$(database)/documents/posts/$(postId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
       match /{sub}/{docId} { allow read, write: if false; }
     }
     match /business_venues/{venueKey} {

@@ -268,7 +268,7 @@ class SocialService {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> userPosts(String userId) {
     return _firestore
-        .collection('posts')
+        .collection('posts').where('accountFrozen', isEqualTo: false)
         .where('userId', isEqualTo: userId)
         .snapshots();
   }

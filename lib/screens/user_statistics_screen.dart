@@ -44,7 +44,7 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
       db.collection('users').doc(uid).get(),
       db.collection('users').doc(uid).collection('followers').get(),
       db.collection('users').doc(uid).collection('following').get(),
-      db.collection('posts').where('userId', isEqualTo: uid).get(),
+      db.collection('posts').where('accountFrozen', isEqualTo: false).where('userId', isEqualTo: uid).get(),
       db.collection('stories').where('userId', isEqualTo: uid).get(),
       db.collection('social_events').where('hostId', isEqualTo: uid).get(),
       db
