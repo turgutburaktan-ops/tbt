@@ -29,7 +29,7 @@ async function reviews(){
 (async()=>{
  const app=(await api('/apps/'+appId)).data;
  if(app.attributes.bundleId!=='com.tbt.social')throw Error('Unexpected app');
- for(const path of ['/appEncryptionDeclarations?filter[app]='+appId+'&limit=100','/apps/'+appId+'/appAvailabilityV2','/apps/'+appId+'/appStoreVersions?filter[platform]=IOS&limit=20']){
+ for(const path of ['/builds?filter[app]='+appId+'&filter[version]=64&include=preReleaseVersion&limit=20','/apps/'+appId+'/appAvailabilityV2','/apps/'+appId+'/appStoreVersions?filter[platform]=IOS&limit=20']){
   try{const r=await api(path);console.log('APPLE_INSPECT '+JSON.stringify({path,data:Array.isArray(r.data)?r.data.map(x=>({id:x.id,attributes:x.attributes})):r.data}));
    if(path.endsWith('/appAvailabilityV2')){
     let p=r.data.relationships.territoryAvailabilities.links.related+'?limit=200&include=territory';
