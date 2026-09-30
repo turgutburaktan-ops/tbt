@@ -1,0 +1,38 @@
+name: Arm store-availability-checked mandatory update 64
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/update_policy64.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require both store submissions to be verified
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data:android}=await github.rest.actions.getJobForWorkflowRun({...context.repo,job_id:109828811744});
+            if(android.conclusion!=='success')throw new Error('Android store submission not verified');
+            const deadline=Date.now()+45*60*1000;
+            while(Date.now()<deadline){
+              const {data:r}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:36698025984});
+              if(r.status==='completed'){
+                if(r.conclusion!=='success')throw new Error('iOS store submission not verified');
+                return;
+              }
+              await new Promise(resolve=>setTimeout(resolve,20000));
+            }
+            throw new Error('iOS store submission timed out');
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Preserve client store-availability guard and arm target version
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/arm_release64_update_policy.cjs
