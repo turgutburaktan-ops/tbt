@@ -34,3 +34,11 @@ No Play/App Store upload or forced-update policy change was performed. These are
 The gate still reports private-contact migration, frozen-content read/media access, E2EE recovery/device verification/review, App Check device evidence, and database recovery as unresolved. The deployment identity lacks `datastore.databases.update`, as recorded in the previous read-only production diagnosis.
 
 The candidate iOS workflow leaves the encryption-export declaration unset pending review for the new E2EE implementation; it does not reuse the older unverified non-exempt-encryption declaration. A successful build does not resolve export compliance, device compatibility, or the security gate.
+
+## Recovery protection follow-up
+
+On 30 September 2026, the existing production configuration job was retried (job `109748145403`). The deployment identity still returned HTTP 403 for database updates; password enforcement/minimum length 10 remained verified.
+
+Using the already signed-in Firebase console, PITR was switched on for `(default)` in project `en-iyi-cekim-noktasi`. The console showed the switch enabled and a retention period of 7 days. Screenshot: `docs/evidence/tbt-pitr-enabled-20260930.jpg`. This protects newly retained data; it does not establish seven days of historical coverage immediately.
+
+Delete protection remains unresolved. Google Cloud dashboard, its directly linked database management page, and embedded Cloud Shell all returned Site Unavailable in this browser. No IAM role was changed, no credentials were copied, and no deletion was attempted. The database-recovery gate remains blocked until delete protection is enabled and verified.

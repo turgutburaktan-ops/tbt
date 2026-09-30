@@ -23,7 +23,7 @@
     {
       "id": "database-recovery",
       "status": "blocked",
-      "reason": "Veritabanı kurtarma koruması mevcut sunucu kimliğinde 403 yetki hatası veriyor."
+      "reason": "PITR Firebase konsolundan açıldı; 7 günlük saklama süresi doğrulandı. Veritabanını silinmeye karşı koruma henüz açılamadı; dağıtım kimliğinin güncelleme isteği 403 veriyor ve Google Cloud/Cloud Shell bu tarayıcıda açılamıyor."
     }
   ]
 }
