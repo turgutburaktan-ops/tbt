@@ -46,6 +46,11 @@ service firebase.storage {
     function isOwner(uid) {
       return signedIn() && request.auth.uid == uid;
     }
+    function activeMediaOwner(uid) {
+      let profile = firestore.get(/databases/(default)/documents/users/$(uid)).data;
+      return profile.get('accountStatus', 'active') == 'active' &&
+        profile.get('banned', false) == false && profile.get('disabled', false) == false;
+    }
 
     function safeImageWrite() {
       return request.resource != null &&
@@ -78,8 +83,8 @@ service firebase.storage {
     // User media stays namespaced by Firebase Auth uid. This keeps existing
     // public feed/profile rendering intact. Private chat has its own policy below.
     match /users/{uid}/{category}/{allPaths=**} {
-      allow read: if !(category in ['chat', 'business_claims']);
-      allow create, update: if !(category in ['chat', 'business_claims']) && isOwner(uid) && safeMediaWrite();
+      allow read: if !(category in ['chat', 'business_claims']) && activeMediaOwner(uid);
+      allow create, update: if !(category in ['chat', 'business_claims']) && isOwner(uid) && activeMediaOwner(uid) && safeMediaWrite();
       allow delete: if !(category in ['chat', 'business_claims']) && isOwner(uid);
     }
     match /users/{uid}/business_claims/{claimId}/{fileName} {
@@ -148,6 +153,5 @@ service firebase.storage {
     }
   }
 }
-
 
 

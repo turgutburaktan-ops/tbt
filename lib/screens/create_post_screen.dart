@@ -346,7 +346,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       final doc = users[index];
                       final data = doc.data();
                       final name =
-                          (data['displayName'] ?? data['email'] ?? 'Kullanıcı')
+                          (data['displayName'] ?? data['username'] ?? 'Kullanıcı')
                               .toString()
                               .trim();
                       final username =

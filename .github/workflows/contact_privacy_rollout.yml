@@ -108,8 +108,9 @@ jobs:
       - name: Require the available security client
         run: |
           node - <<'JS'
-          const {initializeApp}=require('./functions/node_modules/firebase-admin/app');
-          const {getFirestore,FieldValue}=require('./functions/node_modules/firebase-admin/firestore');
+          const fromFunctions=require('node:module').createRequire(require.resolve('./functions/package.json'));
+          const {initializeApp}=fromFunctions('firebase-admin/app');
+          const {getFirestore,FieldValue}=fromFunctions('firebase-admin/firestore');
           initializeApp({projectId:'en-iyi-cekim-noktasi'});
           const db=getFirestore(),ref=db.doc('app_config/update_policy');
           const rank=v=>String(v||'0').split('.').map(Number).reduce((n,x)=>n*1000+x,0);

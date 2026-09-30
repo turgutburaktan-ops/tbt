@@ -3,6 +3,7 @@ const {getAuth} = require('firebase-admin/auth');
 const {getFirestore, FieldValue} = require('firebase-admin/firestore');
 const {getStorage} = require('firebase-admin/storage');
 const {withAccountLifecycle} = require('./account_lifecycle_guard');
+const {suspendUserMedia, resumeUserMedia} = require('./frozen_media');
 
 function requireUser(request) {
   const uid = request.auth?.uid;
@@ -60,6 +61,7 @@ exports.freezeAccount = onCall(
     const uid = requireUser(request);
     const db = getFirestore();
     return withAccountLifecycle({db, auth: getAuth(), uid, operation: 'freeze'}, async () => {
+      await suspendUserMedia({db, bucket:getStorage().bucket(), uid});
       await settleAll(
         ownedContent.map(([collection, field]) =>
           updateQuery(db, db.collection(collection).where(field, '==', uid), {
@@ -79,7 +81,8 @@ exports.unfreezeAccount = onCall(
   async (request) => {
     const uid = requireUser(request);
     const db = getFirestore();
-    return withAccountLifecycle({db, auth: getAuth(), uid, operation: 'unfreeze'}, async (user) => {
+    return withAccountLifecycle({db, auth: getAuth(), uid, operation: 'unfreeze',
+      afterActivate:() => resumeUserMedia({db, bucket:getStorage().bucket(), uid})}, async (user) => {
       if (user.accountStatus !== 'frozen') return {ok: true, status: 'active'};
 
       await settleAll(
@@ -189,6 +192,7 @@ exports.deleteAccountNow = onCall(
         }
       }
       await db.recursiveDelete(db.collection('private_users').doc(uid));
+      await db.recursiveDelete(db.collection('frozen_media').doc(uid));
       await settleAll(['creator_profiles', 'creator_stats', 'notification_reply_limits', 'e2ee_identities', 'e2ee_key_limits', 'e2ee_send_limits'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
       await db.recursiveDelete(userRef);
       await db.collection('account_delete_requests').doc(uid).delete().catch(() => {});
@@ -200,4 +204,3 @@ exports.deleteAccountNow = onCall(
     });
   }
 );
-

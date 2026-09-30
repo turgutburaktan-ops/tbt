@@ -339,7 +339,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                         final doc = docs[index], data = doc.data();
                         final name =
                             (data['displayName'] ??
-                                    data['email'] ??
+                                    data['username'] ??
                                     'Kullanıcı')
                                 .toString();
                         names[doc.id] = name;

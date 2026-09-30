@@ -12,7 +12,7 @@ function assertRestorable(profile) {
   }
 }
 
-async function withAccountLifecycle({db, auth, uid, operation}, work) {
+async function withAccountLifecycle({db, auth, uid, operation, afterActivate}, work) {
   if (!['freeze', 'unfreeze', 'delete'].includes(operation)) throw Error('Invalid lifecycle operation');
   if (operation !== 'delete') {
     const account = await auth.getUser(uid);
@@ -58,6 +58,7 @@ async function withAccountLifecycle({db, auth, uid, operation}, work) {
           accountStatusUpdatedAt: FieldValue.serverTimestamp()}, {merge: true});
       });
     }
+    if (operation === 'unfreeze' && afterActivate) await afterActivate();
     return result;
   } finally {
     await db.runTransaction(async tx => {

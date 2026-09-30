@@ -114,10 +114,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                   final username = _normalize(
                     (data['username'] ?? data['handle'] ?? '').toString(),
                   );
-                  final email = _normalize((data['email'] ?? '').toString());
                   return displayName.contains(q) ||
-                      username.contains(q) ||
-                      email.contains(q);
+                      username.contains(q);
                 })
                 .toList(growable: false);
 
@@ -143,7 +141,6 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             final displayName =
                 (data['displayName'] ??
                         data['username'] ??
-                        data['email'] ??
                         'Kullanıcı')
                     .toString()
                     .trim();

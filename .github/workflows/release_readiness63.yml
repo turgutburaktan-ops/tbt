@@ -39,7 +39,7 @@ jobs:
       - run: npm install --prefix /tmp/security-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
       - env:
           NODE_PATH: /tmp/security-tests/node_modules
-        run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/e2ee_rules.cjs test/chat_media_security.cjs test/general_security_audit.cjs test/content_lifecycle_rules.cjs test/route_access_rules.cjs" --non-interactive
+        run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test --test-concurrency=1 test/e2ee_rules.cjs test/chat_media_security.cjs test/general_security_audit.cjs test/content_lifecycle_rules.cjs test/route_access_rules.cjs test/private_contacts.cjs" --non-interactive
       - env:
           NODE_PATH: /tmp/security-tests/node_modules
         run: /tmp/security-tests/node_modules/.bin/firebase emulators:exec --only firestore --project demo-tbt-access "node --test test/private_photo_backend.cjs" --non-interactive

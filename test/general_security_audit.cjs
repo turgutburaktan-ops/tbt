@@ -63,6 +63,19 @@ test('F07 regression: denied business verification evidence path is anonymously 
  await assertFails(getBytes(ref(env.authenticatedContext('attacker').storage(bucket),path)));
  await assertSucceeds(getBytes(ref(env.authenticatedContext('victim').storage(bucket),path)));
 });
+test('Frozen account public media cannot be read or overwritten through Storage rules',async()=>{
+ const bucket='gs://demo-tbt-general-audit.appspot.com',path='users/frozen-media-owner/posts/image.jpg';
+ await env.withSecurityRulesDisabled(async c=>{
+  await setDoc(doc(c.firestore(),'users/frozen-media-owner'),{accountStatus:'frozen'});
+  await uploadBytes(ref(c.storage(bucket),path),new Uint8Array([1,2,3]),{contentType:'image/jpeg'});
+ });
+ for(const context of [env.unauthenticatedContext(),env.authenticatedContext('attacker'),env.authenticatedContext('frozen-media-owner')]) {
+  await assertFails(getBytes(ref(context.storage(bucket),path)));
+ }
+ await assertFails(uploadBytes(ref(env.authenticatedContext('frozen-media-owner').storage(bucket),path),new Uint8Array([4]),{contentType:'image/jpeg'}));
+ await env.withSecurityRulesDisabled(c=>updateDoc(doc(c.firestore(),'users/frozen-media-owner'),{accountStatus:'active'}));
+ await assertSucceeds(getBytes(ref(env.unauthenticatedContext().storage(bucket),path)));
+});
 
 test('Invited user can join, then leave a private event atomically', async()=>{
  await env.withSecurityRulesDisabled(c=>updateDoc(doc(c.firestore(),'social_events/private-event'),{allowedUserIds:['friend']}));

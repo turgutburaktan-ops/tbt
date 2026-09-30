@@ -186,7 +186,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                         final data = doc.data();
                         final name =
                             (data['displayName'] ??
-                                    data['email'] ??
+                                    data['username'] ??
                                     'Kullanıcı')
                                 .toString();
                         final photo = (data['photoUrl'] ?? '').toString();
