@@ -39,7 +39,7 @@ async function reviews(){
  const description='TBT 1.0.36 uses Signal protocol messaging via libsignal_protocol_dart and AES-GCM media encryption. It uses standard cryptographic algorithms implemented outside the Apple operating system. No proprietary cryptographic algorithm is implemented. Distribution in France is disabled.';
  const declarations=(await api('/appEncryptionDeclarations?filter[app]='+appId+'&limit=100')).data;
  let declaration=declarations.find(x=>x.attributes.appDescription===description&&x.attributes.usesEncryption===true&&x.attributes.containsThirdPartyCryptography===true&&x.attributes.containsProprietaryCryptography===false&&x.attributes.availableOnFrenchStore===false);
- if(!declaration)declaration=(await api('/appEncryptionDeclarations','POST',{data:{type:'appEncryptionDeclarations',attributes:{appDescription:description,usesEncryption:true,exempt:false,containsProprietaryCryptography:false,containsThirdPartyCryptography:true,availableOnFrenchStore:false},relationships:{app:{data:{type:'apps',id:appId}}}}})).data;
+ if(!declaration)declaration=(await api('/appEncryptionDeclarations','POST',{data:{type:'appEncryptionDeclarations',attributes:{appDescription:description,containsProprietaryCryptography:false,containsThirdPartyCryptography:true,availableOnFrenchStore:false},relationships:{app:{data:{type:'apps',id:appId}}}}})).data;
  console.log('ENCRYPTION_DECLARATION '+declaration.id+' state='+declaration.attributes.appEncryptionDeclarationState);
 
 })().catch(e=>{console.error(e.message);process.exitCode=1;});
