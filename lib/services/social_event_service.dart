@@ -77,6 +77,7 @@ class SocialEventService {
   }) {
     return _firestore
         .collection(collection).where('accountFrozen', isEqualTo: false)
+        .where('visibility', isEqualTo: 'public')
         .where('communityId', isEqualTo: communityId)
         .limit(limit)
         .snapshots()
@@ -93,6 +94,7 @@ class SocialEventService {
   Stream<List<SocialEvent>> watchForSpot(String spotId, {int limit = 40}) {
     return _firestore
         .collection(collection).where('accountFrozen', isEqualTo: false)
+        .where('visibility', isEqualTo: 'public')
         .where('spotId', isEqualTo: spotId)
         .limit(limit)
         .snapshots()
