@@ -8,7 +8,7 @@ permissions:
   actions: read
 concurrency:
   group: tbt-release64
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   prerequisites:
     runs-on: ubuntu-latest
@@ -21,11 +21,14 @@ jobs:
         with:
           script: |
             const expected = [
-              [36694846452, '7a295ca6f1b3ca18ba6ed0b70f519562c714a6b9'],
               [36695614771, 'eeeb056f3b4f1171879791d2e4b428baf7e23aa3'],
               [36695743272, 'b92f2b6940801a6c0c6234a52963d3a28f26c7fd'],
               [36696296021, '72214a9318b6a0e71b4652cf4f1215a5494bd886']
             ];
+            const {data:native}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:36694846452});
+            if(native.head_sha!=='7a295ca6f1b3ca18ba6ed0b70f519562c714a6b9')throw new Error('Unexpected native source');
+            const {data:android}=await github.rest.actions.getJobForWorkflowRun({...context.repo,job_id:109820233318});
+            if(android.conclusion!=='success')throw new Error('Android artifact verification incomplete');
             const deadline = Date.now() + 60 * 60 * 1000;
             while (Date.now() < deadline) {
               let pending = 0;
@@ -62,12 +65,26 @@ jobs:
   ios:
     needs: prerequisites
     runs-on: macos-26
-    timeout-minutes: 50
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Require verified iOS artifact independently
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deadline=Date.now()+45*60*1000;
+            while(Date.now()<deadline){
+              const {data:j}=await github.rest.actions.getJobForWorkflowRun({...context.repo,job_id:109820233477});
+              if(j.status==='completed'){
+                if(j.conclusion!=='success')throw new Error('iOS build verification failed');
+                return;
+              }
+              await new Promise(resolve=>setTimeout(resolve,20000));
+            }
+            throw new Error('iOS build timed out');
       - uses: actions/download-artifact@v4
         with:
           name: tbt-ios-ipa-1.0.36-build64
