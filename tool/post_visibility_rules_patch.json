@@ -1,0 +1,22 @@
+[
+  {
+    "old": "    function validPostCreate() {\n      return signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&\n        request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&\n        request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120 &&\n        request.resource.data.get('mediaType', 'image') in ['image','video'] &&\n        request.resource.data.get('durationMs', 0) is int && request.resource.data.get('durationMs', 0) >= 0 && request.resource.data.get('durationMs', 0) <= 60000 &&\n        request.resource.data.get('sourceType', 'post') in ['post','event_memory'];\n    }\n",
+    "new": "    function postReadable(d) { return d.get('accountFrozen', false) == false; }\n    function validPostCreate() {\n      return request.resource.data.get('accountFrozen', null) == false && signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&\n        request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&\n        request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120 &&\n        request.resource.data.get('mediaType', 'image') in ['image','video'] &&\n        request.resource.data.get('durationMs', 0) is int && request.resource.data.get('durationMs', 0) >= 0 && request.resource.data.get('durationMs', 0) <= 60000 &&\n        request.resource.data.get('sourceType', 'post') in ['post','event_memory'];\n    }\n"
+  },
+  {
+    "old": "      match /comments/{commentId} {\n        allow read: if true;\n        allow create: if validCommentCreate();\n        allow update: if validCommentUpdate();\n        allow delete: if signedIn() && (resource.data.userId == request.auth.uid ||\n          get(/databases/$(database)/documents/posts/$(postId)).data.userId == request.auth.uid);\n      }\n",
+    "new": "      match /comments/{commentId} {\n        allow read: if isAdmin() || postReadable(get(/databases/$(database)/documents/posts/$(postId)).data);\n        allow create: if validCommentCreate();\n        allow update: if validCommentUpdate();\n        allow delete: if signedIn() && (resource.data.userId == request.auth.uid ||\n          get(/databases/$(database)/documents/posts/$(postId)).data.userId == request.auth.uid);\n      }\n"
+  },
+  {
+    "old": "      match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }\n",
+    "new": "      match /likes/{uid} { allow read: if isAdmin() || postReadable(get(/databases/$(database)/documents/posts/$(postId)).data); allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }\n"
+  },
+  {
+    "old": "      match /tags/{taggedUserId} { allow read: if true; allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }\n",
+    "new": "      match /tags/{taggedUserId} { allow read: if isAdmin() || postReadable(get(/databases/$(database)/documents/posts/$(postId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }\n"
+  },
+  {
+    "old": "    match /posts/{postId} {\n      allow read: if true;",
+    "new": "    match /posts/{postId} {\n      allow read: if isAdmin() || postReadable(resource.data);"
+  }
+]
