@@ -1,5 +1,20 @@
 # Security implementation progress — 30 September 2026
 
+## Live release repair — 30 September, 09:51 UTC
+
+This section supersedes the earlier pre-deployment observations below. The owner explicitly requested release 64 with disclosed open work; `release64_accepted_risks.json` pins that acceptance to the unchanged security checklist. Default security gates remain strict, and release 64 does not report pending controls as verified.
+
+- Firebase CLI was blocked on an unrelated Extensions read. Scoped official Cloud Functions deployment succeeded after explicitly providing the existing Firebase runtime configuration. No IAM roles were expanded.
+- All seven content initialization triggers were deployed. All 60 visibility indexes reached READY. Run 36695614771 then migrated 224 records (106 posts, 37 stories, 1 repost, 19 events, 60 routes, 1 community) and read-only completion verification found zero incompatible records.
+- Run 36695743272 deployed 14 selected callable endpoints, including admin health, E2EE registration/key claim/message send, private media and lifecycle endpoints. Every endpoint was ACTIVE and rejected unauthenticated HTTP requests with UNAUTHENTICATED.
+- Run 36696296021 passed all three E2EE rules tests and deployed compatibility-only changes to the existing live Firestore and Storage rules. Unrelated rules and old-client feed queries were preserved. Firestore ruleset: `99664fc6-968a-424d-b45f-4550238570dc`; Storage: `5772605b-75c0-4741-9c96-eb32f87b739e`.
+- Both signed Android and iOS 1.0.36 (64) artifacts passed verification in run 36694846452. Run 36696663036 was superseded before upload so that Android would not wait for iOS. In run 36697339213, Android job 109828811744 uploaded, checksum-verified, committed and read back build 64 on the existing alpha closed-testing track. This is not proof of public production distribution. Apple upload succeeded, and build `d64c3229-c5bb-4cae-b336-3bfd48509e0a` became VALID and APP_STORE_ELIGIBLE. The original submission encountered the documentation API error described below; corrective run 36698025984 succeeded and read back WAITING_FOR_REVIEW for iOS 1.0.36 (64), review `280284fb-6249-4dee-b773-e497c3d4d674`, version `9530bd19-8f4b-474e-a4cb-269a31337af2`. Release is configured AFTER_APPROVAL.
+- Apple read-only inspection confirmed Turkey available, France unavailable, automatic new-territory availability disabled, and no existing encryption declarations. The app implements standard algorithms outside the OS. Apple rejected document creation for proprietary=false, thirdParty=true, France=false because this combination does not require a declaration. Apple documentation specifies the French declaration only when distributed in France and permits usesNonExemptEncryption=false for encryption exempt from documentation requirements. Submission now checks France remains unavailable before setting that documentation exemption; this does not disable encryption or claim the app uses no encryption. Sources: https://developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption and https://developer.apple.com/help/app-store-connect/manage-app-information/determine-and-upload-app-encryption-documentation .
+- Run 36698126140 successfully armed and read back `androidMinimumBuild:64` and `iosMinimumVersion:1.0.36`. The existing client checks Play availability per device and Apple availability per country before making an update mandatory, so this does not force an unavailable build. Android alpha submission and iOS App Review submission are confirmed; neither is a claim that version 64 is publicly available everywhere. Contacts, complete frozen-read enforcement, App Check device evidence, key recovery/device transfer and deletion protection remain open as documented below.
+
+
+## Historical candidate observations (before the live repair above)
+
 ## Contact privacy
 
 The candidate Firestore policy now denies email, phoneNumber and verifiedPhoneNumber writes on public users documents and allows owner/admin reads of server-written private_users records. Normal people pickers no longer use public email fields. Private-contact rules run in the primary emulator CI, including enumeration and write denial. The release-gated migration workflow Firebase Admin imports were corrected for a clean runner.
@@ -43,3 +58,10 @@ Read-only production preflight https://github.com/turgutburaktan-ops/tbt/actions
 The last 24-hour App Check metrics showed INVALID or MISSING results and no VALID series in this sample. This does not establish which requests came from real store devices; enforcement remains blocked. Callable verification-log access returned HTTP 403. Android alpha build 62 (1.0.34) was completed; iOS 1.0.34 was READY_FOR_SALE with valid build 62. Neither API proves successful installation/attestation on the user's physical device.
 
 E2EE key recovery/device transfer is still not implemented; unchanged immutable-identity registration rejects a replacement device key. No claim of complete E2EE or release readiness is made. Database deletion protection remains unverified/blocked from the earlier permission failure; this preflight did not modify or recheck it. PITR was previously enabled.
+
+
+Final release evidence:
+- Android submission: https://github.com/turgutburaktan-ops/tbt/actions/runs/36697339213 (Android job succeeded; original iOS declaration step was superseded).
+- Successful iOS App Review submission: https://github.com/turgutburaktan-ops/tbt/actions/runs/36698025984 .
+- Verified conditional mandatory-update policy: https://github.com/turgutburaktan-ops/tbt/actions/runs/36698126140 .
+- Gate checks: default invocation and release 65 remain blocked; explicit approved release 64 succeeds without marking any pending security check verified.
