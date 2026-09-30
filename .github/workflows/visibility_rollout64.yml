@@ -30,7 +30,7 @@ jobs:
       - name: Verify migration and lifecycle behavior
         run: node --test functions/test/content_visibility.test.js functions/test/post_visibility_backfill.test.js functions/test/frozen_media.test.js
       - uses: google-github-actions/setup-gcloud@v2
-      - name: Deploy transition functions through Cloud Functions API
+      - name: Deploy transition functions with Firebase runtime configuration
         run: |
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --quiet
           export VISIBILITY_DATABASE_LOCATION="$(gcloud firestore databases describe --database='(default)' --project=en-iyi-cekim-noktasi --format='value(locationId)')"
