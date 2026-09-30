@@ -10,7 +10,7 @@ function token(){
  return unsigned+'.'+crypto.sign('sha256',Buffer.from(unsigned),{key:process.env.APP_STORE_CONNECT_API_KEY,dsaEncoding:'ieee-p1363'}).toString('base64url');
 }
 async function api(path,method='GET',data){
- const r=await fetch(root+path,{method,headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},...(data===undefined?{}:{body:JSON.stringify(data)}),signal:AbortSignal.timeout(60000)});
+ const r=await fetch(path.startsWith('https://api.appstoreconnect.apple.com/')?path:root+path,{method,headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},...(data===undefined?{}:{body:JSON.stringify(data)}),signal:AbortSignal.timeout(60000)});
  const b=await r.json().catch(()=>({}));
  if(!r.ok)throw Error('App Store '+method+' '+path+' HTTP '+r.status+' '+JSON.stringify(b.errors?.map(e=>({code:e.code,detail:e.detail}))||[]));
  return b;
@@ -29,11 +29,11 @@ async function reviews(){
 (async()=>{
  const app=(await api('/apps/'+appId)).data;
  if(app.attributes.bundleId!=='com.tbt.social')throw Error('Unexpected app');
- for(const path of ['/apps/'+appId+'/appEncryptionDeclarations?limit=100','/apps/'+appId+'/appAvailabilityV2','/apps/'+appId+'/appStoreVersions?filter[platform]=IOS&limit=20']){
-  try{const r=await api(path);console.log('APPLE_INSPECT '+JSON.stringify({path,data:r.data}));
+ for(const path of ['/appEncryptionDeclarations?filter[app]='+appId+'&limit=100','/apps/'+appId+'/appAvailabilityV2','/apps/'+appId+'/appStoreVersions?filter[platform]=IOS&limit=20']){
+  try{const r=await api(path);console.log('APPLE_INSPECT '+JSON.stringify({path,data:Array.isArray(r.data)?r.data.map(x=>({id:x.id,attributes:x.attributes})):r.data}));
    if(path.endsWith('/appAvailabilityV2')){
-    let p='/appAvailabilities/'+r.data.id+'/territoryAvailabilities?limit=200&include=territory';
-    while(p){const t=await api(p);console.log('TERRITORIES '+JSON.stringify(t.data.map(x=>({attributes:x.attributes,territory:x.relationships?.territory?.data?.id}))));p=t.links?.next?t.links.next.replace(root,''):null;}
+    let p=r.data.relationships.territoryAvailabilities.links.related+'?limit=200&include=territory';
+    while(p){const t=await api(p);console.log('TERRITORIES '+JSON.stringify(t.data.filter(x=>['FRA','TUR'].includes(x.relationships?.territory?.data?.id)).map(x=>({attributes:x.attributes,territory:x.relationships?.territory?.data?.id}))));p=t.links?.next?t.links.next.replace(root,''):null;}
    }
   }catch(e){console.log(e.message);}
  }
