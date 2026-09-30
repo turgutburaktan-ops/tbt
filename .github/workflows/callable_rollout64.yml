@@ -1,0 +1,39 @@
+name: Deploy version 64 callable compatibility
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/callable_rollout64.yml']
+permissions:
+  contents: read
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Authenticate existing deployment identity
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'preflight.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - name: Verify migration and lifecycle behavior
+        run: node --test functions/test/content_visibility.test.js functions/test/post_visibility_backfill.test.js functions/test/frozen_media.test.js
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy and verify selected callable endpoints
+        run: |
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --quiet
+          python3 tool/deploy_release64_callables.py
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/preflight.json"
