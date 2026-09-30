@@ -1,0 +1,49 @@
+name: Read-only security rollout preflight
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/visibility_preflight.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Authenticate existing deployment identity
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'preflight.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - name: Inspect content migration without writing
+        run: node tool/content_visibility_backfill.cjs
+      - name: Inspect App Check verification
+        if: always()
+        run: node tool/app_check_readiness.cjs
+      - name: Inspect Android store availability
+        if: always()
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/play_release_status.cjs
+      - name: Inspect Apple store availability
+        if: always()
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/store_status60.cjs
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/preflight.json"
