@@ -1,0 +1,46 @@
+name: Deploy backward-compatible E2EE rules
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/e2ee_compat_rules64.yml']
+permissions:
+  contents: read
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Authenticate existing deployment identity
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          assert account['project_id']=='en-iyi-cekim-noktasi'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'preflight.json'
+          path.write_text(json.dumps(account));path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write(f'GOOGLE_APPLICATION_CREDENTIALS={path}\n')
+          PY
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install rules test tools
+        run: npm install --prefix /tmp/e2ee-tests @firebase/rules-unit-testing@4.0.1 firebase@11.10.0 firebase-tools@14.12.0
+      - name: Prepare compatible live rule changes
+        run: node tool/deploy_e2ee_compat_rules64.cjs
+      - name: Verify encryption access and downgrade protections
+        env:
+          NODE_PATH: /tmp/e2ee-tests/node_modules
+        run: /tmp/e2ee-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt-general-audit "node --test test/e2ee_rules.cjs" --non-interactive
+      - name: Deploy and read back tested changes
+        run: node tool/deploy_e2ee_compat_rules64.cjs --deploy
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/preflight.json"
