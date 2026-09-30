@@ -21,3 +21,15 @@ Still open: equivalent read/query protection for stories, events, memories, comm
 Key recovery/device transfer has not been implemented in this change. A safe design must handle stale backups, concurrent devices, ratchet rollback and revocation of the old device; copying the vault or clearing server identity checks would not satisfy this requirement. Real-device checks and independent review remain required.
 
 No Functions/Rules/index deployment, data backfill, store upload or forced-update change occurred. Build 63 predates these changes and is not the final candidate for this code.
+
+## Verified candidate evidence
+
+GitHub Actions run https://github.com/turgutburaktan-ops/tbt/actions/runs/36677339230 verified commit `20b7c1e03d8b8ac124d549a7aac3f33507529657`:
+
+- Client analysis, targeted Signal/attachment/update-policy tests and debug bundle succeeded.
+- Backend: 155 unit tests passed.
+- General Firestore/Storage emulator suite: 48 passed, zero failed, one skipped (F01 legacy production contact exposure, still unresolved).
+- Private-photo backend emulator suite: 10 passed, zero failed.
+- Production-evidence job deliberately skipped; this run performed no live deployment or migration.
+
+The emulator caught a permissive unconstrained post query when the visibility helper used a default-false field lookup. The helper now requires explicit `accountFrozen == false`; filtered feeds succeed and unconstrained/frozen reads are denied by the verified tests. The staged rule patch is separate from the generic hardening deployment so earlier workflows do not silently activate incompatible post-read requirements.
