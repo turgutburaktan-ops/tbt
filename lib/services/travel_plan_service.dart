@@ -29,7 +29,7 @@ class TravelPlanService {
     final user = _auth.currentUser;
     if (user == null) return Stream.value(const <TravelPlan>[]);
     return _firestore
-        .collection('travel_plans')
+        .collection('travel_plans').where('accountFrozen', isEqualTo: false)
         .where(
           Filter.or(
             Filter('memberIds', arrayContains: user.uid),
@@ -87,6 +87,7 @@ class TravelPlanService {
     if (accessError != null) throw Exception(accessError);
     final reference = _firestore.collection('travel_plans').doc();
     await reference.set({
+      'accountFrozen': false,
       'ownerId': user.uid,
       'ownerName': (user.displayName ?? '').trim().isEmpty
           ? 'TBT kullanıcısı'
@@ -719,7 +720,7 @@ class TravelPlanService {
 
   Stream<List<TravelPlan>> watchPublic({bool discoverOnly = false}) {
     return _firestore
-        .collection('travel_plans')
+        .collection('travel_plans').where('accountFrozen', isEqualTo: false)
         .where('isPublic', isEqualTo: true)
         .snapshots()
         .map((snapshot) {

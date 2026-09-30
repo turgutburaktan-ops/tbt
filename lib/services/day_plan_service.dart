@@ -49,7 +49,7 @@ class DayPlanService {
     List<SocialEvent> events=[];
     try {
       final end=request.startAt.add(Duration(minutes:request.minutes));
-      final snap=await FirebaseFirestore.instance.collection('social_events').where('visibility',isEqualTo:'public').where('city',isEqualTo:request.city)
+      final snap=await FirebaseFirestore.instance.collection('social_events').where('accountFrozen', isEqualTo: false).where('visibility',isEqualTo:'public').where('city',isEqualTo:request.city)
         .where('startsAt',isGreaterThanOrEqualTo:Timestamp.fromDate(request.startAt)).where('startsAt',isLessThan:Timestamp.fromDate(end))
         .orderBy('startsAt').limit(150).get().timeout(const Duration(seconds:6));
       events=snap.docs.map(SocialEvent.fromDocument).where((e)=>foldDayCity(e.city)==foldDayCity(request.city) && e.isOpen &&

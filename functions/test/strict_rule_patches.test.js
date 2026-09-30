@@ -16,12 +16,17 @@ test('current security rules are an idempotent result of all reviewed patches', 
   const current = fs.readFileSync(path.join(root, 'firestore.rules'), 'utf8');
   const patches = JSON.parse(fs.readFileSync(path.join(root, 'tool/security_rules_patch.json'), 'utf8')).firestore;
   const visibility = JSON.parse(fs.readFileSync(path.join(root, 'tool/post_visibility_rules_patch.json'), 'utf8'));
-  assert.equal(applyStrictPatches(current, [...patches, ...visibility]), current);
+  const content = JSON.parse(fs.readFileSync(path.join(root, 'tool/content_visibility_rules_patch.json'), 'utf8'));
+  let previous = current;
+  for (const patch of [...content].reverse()) previous = previous.replace(patch.new, patch.old);
+  assert.equal(applyStrictPatches(previous, [...patches, ...visibility]), previous);
+  assert.equal(applyStrictPatches(previous, content), current);
+  assert.equal(applyStrictPatches(current, content), current);
 });
 test('reviewed encrypted-storage addition is idempotent and rejects a missing anchor',()=>{
  const root=path.resolve(__dirname,'../..');
  const current=fs.readFileSync(path.join(root,'storage.rules'),'utf8');
- const patches=JSON.parse(fs.readFileSync(path.join(root,'tool/security_rules_patch.json'),'utf8')).e2eeStorage;
+ const patches=[...JSON.parse(fs.readFileSync(path.join(root,'tool/security_rules_patch.json'),'utf8')).e2eeStorage,...JSON.parse(fs.readFileSync(path.join(root,'tool/content_visibility_storage_patch.json'),'utf8'))];
  assert.equal(applyStrictPatches(current,patches),current);
  assert.throws(()=>applyStrictPatches('unreviewed policy',patches),/does not match/);
 });

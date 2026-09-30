@@ -1,0 +1,18 @@
+[
+  {
+    "old": "        return request.auth != null && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));",
+    "new": "        return request.auth != null && e.accountFrozen == false && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));"
+  },
+  {
+    "old": "      function member() { let p = firestore.get(/databases/(default)/documents/social_events/$(parentId)).data; return request.auth != null && (p.hostId == request.auth.uid || p.get('participantIds',[]).hasAny([request.auth.uid])); }",
+    "new": "      function member() { let p = firestore.get(/databases/(default)/documents/social_events/$(parentId)).data; return request.auth != null && p.accountFrozen == false && (p.hostId == request.auth.uid || p.get('participantIds',[]).hasAny([request.auth.uid])); }"
+  },
+  {
+    "old": "      function member() { let p = firestore.get(/databases/(default)/documents/travel_plans/$(parentId)).data; return request.auth != null && p.memberIds.hasAny([request.auth.uid]); }",
+    "new": "      function member() { let p = firestore.get(/databases/(default)/documents/travel_plans/$(parentId)).data; return request.auth != null && p.accountFrozen == false && p.memberIds.hasAny([request.auth.uid]); }"
+  },
+  {
+    "old": "        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);",
+    "new": "        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.accountFrozen == false && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);"
+  }
+]

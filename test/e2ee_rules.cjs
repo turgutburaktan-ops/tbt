@@ -11,8 +11,8 @@ before(async()=>{
   for(const uid of ['alice','bob'])await setDoc(doc(db,'users',uid),{accountStatus:'active'});
   await setDoc(doc(db,'chat_threads/e2ee'),{type:'direct',memberIds:['alice','bob'],e2eeVersion:1,lastMessage:'Şifreli mesaj'});
   await setDoc(doc(db,'chat_threads/e2ee/messages/secret'),{type:'e2ee',senderId:'alice',deleted:false,e2ee:{version:1}});
-  await setDoc(doc(db,'travel_plans/secure'),{ownerId:'alice',memberIds:['alice','bob'],e2eeVersion:1});
-  await setDoc(doc(db,'social_events/secure'),{hostId:'alice',participantIds:['bob'],status:'open',e2eeVersion:1});
+  await setDoc(doc(db,'travel_plans/secure'),{accountFrozen:false,ownerId:'alice',memberIds:['alice','bob'],e2eeVersion:1});
+  await setDoc(doc(db,'social_events/secure'),{accountFrozen:false,hostId:'alice',participantIds:['bob'],status:'open',e2eeVersion:1});
   for(const [scope,parent,sub] of [['route','travel_plans','messages'],['event','social_events','chat']]) {
     await setDoc(doc(db,`${parent}/secure/${sub}/secret`),{type:'e2ee',senderId:'alice',deleted:false});
     await uploadBytes(ref(c.storage(),`e2ee_${scope}/secure/alice/secret/payload.bin`),new Uint8Array(40),{contentType:'application/octet-stream'});

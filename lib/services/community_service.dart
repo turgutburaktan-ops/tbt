@@ -11,7 +11,7 @@ class CommunityService {
   Stream<QuerySnapshot<Map<String, dynamic>>> watchCommunities({
     String? university,
   }) {
-    Query<Map<String, dynamic>> query = _firestore.collection('communities');
+    Query<Map<String, dynamic>> query = _firestore.collection('communities').where('accountFrozen', isEqualTo: false);
     if (university != null && university.trim().isNotEmpty) {
       query = query.where('university', isEqualTo: university.trim());
     }
@@ -74,6 +74,7 @@ class CommunityService {
       'name': cleanName,
       'university': university.trim(),
       'description': description.trim(),
+      'accountFrozen': false,
       'ownerId': user.uid,
       'adminIds': [user.uid],
       'verificationStatus': 'pending',

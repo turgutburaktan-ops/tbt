@@ -14,7 +14,7 @@ before(async()=>{
   await setDoc(doc(d,'activity_demands/victim-owned'),{userId:'victim',activity:'walk'});
   await setDoc(doc(d,'posts/post'),{userId:'victim',caption:'synthetic',accountFrozen:true});
   await setDoc(doc(d,'posts/post/comments/comment'),{userId:'attacker',text:'synthetic'});
-  await setDoc(doc(d,'social_events/private-event'),{hostId:'victim',visibility:'private',allowedUserIds:[],participantIds:['victim'],status:'open',capacity:10,interestedCount:0,privateParticipantCount:0});
+  await setDoc(doc(d,'social_events/private-event'),{accountFrozen:false,hostId:'victim',visibility:'private',allowedUserIds:[],participantIds:['victim'],status:'open',capacity:10,interestedCount:0,privateParticipantCount:0});
   await setDoc(doc(d,'social_events/private-event/chat/secret'),{senderId:'victim',text:'SYNTHETIC_ONLY'});
   await setDoc(doc(d,'chat_threads/secure-thread'),{type:'direct',memberIds:['victim','friend']});
   await setDoc(doc(d,'chat_threads/secure-thread/messages/private'),{senderId:'victim',text:'SYNTHETIC_ONLY'});

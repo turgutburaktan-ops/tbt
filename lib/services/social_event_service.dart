@@ -39,7 +39,7 @@ class SocialEventService {
     final threshold = Timestamp.fromDate(
       DateTime.now().subtract(const Duration(minutes: 30)),
     );
-    final base = _firestore.collection(collection);
+    final base = _firestore.collection(collection).where('accountFrozen', isEqualTo: false);
     final uid = _auth.currentUser?.uid;
     final queries = <Query<Map<String, dynamic>>>[
       base.where('visibility', isEqualTo: 'public').where('startsAt', isGreaterThan: threshold).orderBy('startsAt').limit(limit),
@@ -76,7 +76,7 @@ class SocialEventService {
     int limit = 50,
   }) {
     return _firestore
-        .collection(collection)
+        .collection(collection).where('accountFrozen', isEqualTo: false)
         .where('communityId', isEqualTo: communityId)
         .limit(limit)
         .snapshots()
@@ -92,7 +92,7 @@ class SocialEventService {
 
   Stream<List<SocialEvent>> watchForSpot(String spotId, {int limit = 40}) {
     return _firestore
-        .collection(collection)
+        .collection(collection).where('accountFrozen', isEqualTo: false)
         .where('spotId', isEqualTo: spotId)
         .limit(limit)
         .snapshots()
@@ -203,6 +203,7 @@ class SocialEventService {
       'title': safeTitle,
       'type': type.name,
       'customTypeLabel': customTypeLabel.trim(),
+      'accountFrozen': false,
       'hostId': user.uid,
       'hostName': hostName,
       'communityId': safeCommunityId,

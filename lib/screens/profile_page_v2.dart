@@ -924,7 +924,7 @@ class _ProfileEventsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-        .collection('social_events')
+        .collection('social_events').where('accountFrozen', isEqualTo: false)
         .where('hostId', isEqualTo: userId);
     if (publicOnly) query = query.where('visibility', isEqualTo: 'public');
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(

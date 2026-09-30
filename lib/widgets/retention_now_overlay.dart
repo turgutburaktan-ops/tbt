@@ -111,7 +111,7 @@ class _NowSheet extends StatelessWidget {
         .orderBy('createdAt', descending: true)
         .limit(60);
     final upcomingEvents = FirebaseFirestore.instance
-        .collection('social_events')
+        .collection('social_events').where('accountFrozen', isEqualTo: false)
         .orderBy('startsAt')
         .limit(40);
     return SafeArea(

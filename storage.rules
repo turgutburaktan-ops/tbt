@@ -4,7 +4,7 @@ service firebase.storage {
     match /event_chat/{eventId}/{uid}/{messageId}/{fileName} {
       function eventChatParticipant() {
         let e = firestore.get(/databases/(default)/documents/social_events/$(eventId)).data;
-        return request.auth != null && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));
+        return request.auth != null && e.accountFrozen == false && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));
       }
       function eventChatUpload() {
         return request.resource != null && request.resource.size > 0 &&
@@ -26,14 +26,14 @@ service firebase.storage {
       allow delete: if member() && request.auth.uid == uid;
     }
     match /e2ee_event/{parentId}/{uid}/{messageId}/payload.bin {
-      function member() { let p = firestore.get(/databases/(default)/documents/social_events/$(parentId)).data; return request.auth != null && (p.hostId == request.auth.uid || p.get('participantIds',[]).hasAny([request.auth.uid])); }
+      function member() { let p = firestore.get(/databases/(default)/documents/social_events/$(parentId)).data; return request.auth != null && p.accountFrozen == false && (p.hostId == request.auth.uid || p.get('participantIds',[]).hasAny([request.auth.uid])); }
       allow get: if member() && firestore.get(/databases/(default)/documents/social_events/$(parentId)/chat/$(messageId)).data.type == 'e2ee' && firestore.get(/databases/(default)/documents/social_events/$(parentId)/chat/$(messageId)).data.get('deleted',false) == false;
       allow create: if member() && request.auth.uid == uid && request.resource.contentType == 'application/octet-stream' && request.resource.size > 28 && request.resource.size <= 100*1024*1024+28 && !firestore.exists(/databases/(default)/documents/social_events/$(parentId)/chat/$(messageId));
       allow list, update: if false;
       allow delete: if member() && request.auth.uid == uid;
     }
     match /e2ee_route/{parentId}/{uid}/{messageId}/payload.bin {
-      function member() { let p = firestore.get(/databases/(default)/documents/travel_plans/$(parentId)).data; return request.auth != null && p.memberIds.hasAny([request.auth.uid]); }
+      function member() { let p = firestore.get(/databases/(default)/documents/travel_plans/$(parentId)).data; return request.auth != null && p.accountFrozen == false && p.memberIds.hasAny([request.auth.uid]); }
       allow get: if member() && firestore.get(/databases/(default)/documents/travel_plans/$(parentId)/messages/$(messageId)).data.type == 'e2ee' && firestore.get(/databases/(default)/documents/travel_plans/$(parentId)/messages/$(messageId)).data.get('deleted',false) == false;
       allow create: if member() && request.auth.uid == uid && request.resource.contentType == 'application/octet-stream' && request.resource.size > 28 && request.resource.size <= 100*1024*1024+28 && !firestore.exists(/databases/(default)/documents/travel_plans/$(parentId)/messages/$(messageId));
       allow list, update: if false;
@@ -130,7 +130,7 @@ service firebase.storage {
     }
     match /route_albums/{planId}/{uid}/{mediaId}/{fileName} {
       function participant() {
-        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.accountFrozen == false && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
       }
       allow read: if participant();
       allow create: if participant() && isOwner(uid) && (safeImageWrite() || safeVideoWrite()) &&
@@ -140,7 +140,7 @@ service firebase.storage {
     }
     match /route_chat/{planId}/{uid}/{messageId}/audio.m4a {
       function participant() {
-        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.accountFrozen == false && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
       }
       allow read: if participant();
       allow create: if resource == null && participant() && isOwner(uid) && safeAudioWrite() && request.resource.contentType == 'audio/mp4';

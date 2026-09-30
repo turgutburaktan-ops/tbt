@@ -378,6 +378,7 @@ class PostService {
         : 'Katılımcı';
     final visibility = (eventData['visibility'] ?? 'public').toString();
     final memoryData = <String, dynamic>{
+      'accountFrozen': false,
       'id': memoryRef.id,
       'eventId': eventId,
       'eventTitle': eventTitle.trim(),
@@ -419,7 +420,7 @@ class PostService {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> eventMemories(String eventId) =>
       _firestore
-          .collection('event_memories')
+          .collection('event_memories').where('accountFrozen', isEqualTo: false)
           .where('eventId', isEqualTo: eventId)
           .limit(120)
           .snapshots();

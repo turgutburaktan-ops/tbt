@@ -83,7 +83,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
               _subscriptions.putIfAbsent(
                 id,
                 () => FirebaseFirestore.instance
-                    .collection('travel_plans')
+                    .collection('travel_plans').where('accountFrozen', isEqualTo: false)
                     .where('ownerId', isEqualTo: id)
                     .where('visibility', isEqualTo: 'followers')
                     .snapshots()

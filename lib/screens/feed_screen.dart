@@ -67,7 +67,7 @@ class _FeedScreenState extends State<FeedScreen> with RouteAware {
   late Stream<QuerySnapshot<Map<String, dynamic>>> _postsStream = _query
       .snapshots();
   late final _repostsStream = FirebaseFirestore.instance
-      .collection('post_reposts')
+      .collection('post_reposts').where('accountFrozen', isEqualTo: false)
       .orderBy('createdAt', descending: true)
       .limit(120)
       .snapshots();

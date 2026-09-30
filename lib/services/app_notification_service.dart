@@ -213,7 +213,7 @@ class AppNotificationService {
       if (university.isEmpty) return;
 
       final communities = await _firestore
-          .collection('communities')
+          .collection('communities').where('accountFrozen', isEqualTo: false)
           .where('university', isEqualTo: university)
           .limit(80)
           .get()
@@ -224,7 +224,7 @@ class AppNotificationService {
       final now = DateTime.now();
       final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
       final events = await _firestore
-          .collection('social_events')
+          .collection('social_events').where('accountFrozen', isEqualTo: false)
           .where('visibility', isEqualTo: 'public')
           .limit(120)
           .get()

@@ -168,7 +168,7 @@ async function publishing(request, db = getFirestore()) {
       const existing = await tx.get(ref);
       if (data.enabled && !existing.exists) {
         const limit = await quota(db, uid, 'repost', tx, 20);
-        tx.create(ref, {userId:uid,postId,createdAt:FieldValue.serverTimestamp()});
+        tx.create(ref, {accountFrozen:false,userId:uid,postId,createdAt:FieldValue.serverTimestamp()});
         spend(tx, limit, uid);
       }
       if (!data.enabled && existing.exists) tx.delete(ref);
@@ -187,7 +187,7 @@ async function publishing(request, db = getFirestore()) {
       const saved = await tx.get(archive);
       if (existing.exists || saved.exists) return {id:ref.id,alreadyPublished:true};
       const limit = await quota(db, uid, 'story', tx, 20);
-      const story = {id:ref.id,userId:uid,userName:text(profile.displayName || profile.username || 'TBT kullanıcısı',80),userPhotoUrl:text(profile.photoUrl,2000),
+      const story = {accountFrozen:false,id:ref.id,userId:uid,userName:text(profile.displayName || profile.username || 'TBT kullanıcısı',80),userPhotoUrl:text(profile.photoUrl,2000),
         sharedPostId:postId,mediaType:'image',imageUrl:'',storagePath:'',videoUrl:'',thumbnailUrl:'',
         caption:data.note.trim(),createdAt:FieldValue.serverTimestamp(),expiresAt:Timestamp.fromMillis(Date.now()+86400000)};
       tx.create(ref,story);

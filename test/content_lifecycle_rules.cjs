@@ -6,18 +6,18 @@ let env;
 const db = uid => env.authenticatedContext(uid).firestore();
 const content = uid => ({
   posts: {userId:uid, caption:'Test', mediaType:'image', accountFrozen:false},
-  stories: {userId:uid, expiresAt:Timestamp.fromMillis(Date.now()+3600000)},
-  social_events: {hostId:uid, status:'open', accessType:'free', visibility:'public'},
-  event_memories: {userId:uid, eventId:'past'},
-  communities: {ownerId:uid, verified:false, verificationStatus:'pending', adminIds:[uid], name:'Test'},
-  travel_plans: {ownerId:uid, memberIds:[uid], visibility:'private', isPublic:false, spotIds:['spot'], title:'Test'},
+  stories: {accountFrozen:false,userId:uid, expiresAt:Timestamp.fromMillis(Date.now()+3600000)},
+  social_events: {accountFrozen:false,hostId:uid, status:'open', accessType:'free', visibility:'public'},
+  event_memories: {accountFrozen:false,userId:uid, eventId:'past'},
+  communities: {accountFrozen:false,ownerId:uid, verified:false, verificationStatus:'pending', adminIds:[uid], name:'Test'},
+  travel_plans: {accountFrozen:false,ownerId:uid, memberIds:[uid], visibility:'private', isPublic:false, spotIds:['spot'], title:'Test'},
 });
 before(async () => {
   env = await initializeTestEnvironment({projectId:'demo-tbt-content-lifecycle',firestore:{rules:fs.readFileSync('firestore.rules','utf8')}});
   await env.withSecurityRulesDisabled(async c => {
     const d = c.firestore();
     for (const [uid,profile] of Object.entries({active:{accountStatus:'active'},legacy:{},frozen:{accountStatus:'frozen'},banned:{banned:true},disabled:{disabled:true},deleting:{accountStatus:'deleting'}})) await setDoc(doc(d,'users',uid),profile);
-    await setDoc(doc(d,'social_events/past'),{hostId:'active',participantIds:['active','legacy','frozen','banned','disabled','deleting'],startsAt:Timestamp.fromMillis(1),status:'open',visibility:'public'});
+    await setDoc(doc(d,'social_events/past'),{accountFrozen:false,hostId:'active',participantIds:['active','legacy','frozen','banned','disabled','deleting'],startsAt:Timestamp.fromMillis(1),status:'open',visibility:'public'});
     for (const [collection,data] of Object.entries(content('active'))) await setDoc(doc(d,collection,'existing'),{...data,accountFrozen:true,accountFrozenAt:Timestamp.fromMillis(1)});
   });
 });

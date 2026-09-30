@@ -221,6 +221,698 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibility",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startsAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sharedPostId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "post_reposts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibility",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startsAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "hostId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "hostId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibility",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibility",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startsAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startsAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "city",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "participantIds",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "social_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "allowedUserIds",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "event_memories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "eventId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "event_memories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "eventId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "event_memories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "event_memories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "event_memories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "event_memories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ownerId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ownerId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "memberIds",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "invitedIds",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPublic",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPublic",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "discoverPublished",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "discoverPublished",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibility",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibility",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "travel_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "communities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "university",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "communities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "university",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "communities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ownerId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "communities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ownerId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "post_reposts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "post_reposts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "post_reposts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "post_reposts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountFrozen",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "userId",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [

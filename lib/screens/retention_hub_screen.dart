@@ -88,7 +88,7 @@ class _TodayTbtTab extends StatelessWidget {
           .snapshots(),
       builder: (context, posts) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
-            .collection('social_events')
+            .collection('social_events').where('accountFrozen', isEqualTo: false)
             .orderBy('startsAt')
             .limit(80)
             .snapshots(),
@@ -222,7 +222,7 @@ class _LiveSocialMapTabState extends State<_LiveSocialMapTab> {
   Widget build(BuildContext context) {
     final now = DateTime.now(), recent = now.subtract(const Duration(hours: 6));
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('social_events').orderBy('startsAt').limit(120).snapshots(),
+      stream: FirebaseFirestore.instance.collection('social_events').where('accountFrozen', isEqualTo: false).orderBy('startsAt').limit(120).snapshots(),
       builder: (context, eventSnapshot) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection('posts').where('accountFrozen', isEqualTo: false).orderBy('createdAt', descending: true).limit(100).snapshots(),
         builder: (context, postSnapshot) {

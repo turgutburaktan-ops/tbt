@@ -13,7 +13,7 @@ class StoryContextLinkService {
     if (user == null) return null;
 
     final snapshot = await _firestore
-        .collection('stories')
+        .collection('stories').where('accountFrozen', isEqualTo: false)
         .where('userId', isEqualTo: user.uid)
         .limit(20)
         .get()

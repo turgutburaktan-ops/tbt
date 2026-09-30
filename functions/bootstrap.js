@@ -116,3 +116,13 @@ exports.initializePostVisibility = require('firebase-functions/v2/firestore').on
     await require('./post_visibility').backfillPost({db:getFirestore(),ref:event.data.ref,apply:true});
   },
 );
+
+for (const collection of Object.keys(require('./content_visibility').owners).filter(c=>c!=='posts')) {
+  exports['initializeVisibility_'+collection] = require('firebase-functions/v2/firestore').onDocumentCreated(
+    {document:collection+'/{contentId}',region:'europe-west1'},
+    async event => {
+      if (!event.data) return;
+      await require('./content_visibility').backfillContent({db:require('firebase-admin/firestore').getFirestore(),ref:event.data.ref,apply:true});
+    },
+  );
+}

@@ -481,7 +481,7 @@ class _EventsSection extends StatelessWidget {
           .toSet();
       return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
-            .collection('social_events')
+            .collection('social_events').where('accountFrozen', isEqualTo: false)
             .where('visibility', isEqualTo: 'public')
             .limit(100)
             .snapshots(),

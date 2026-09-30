@@ -56,7 +56,7 @@ class StoryService {
 
   Stream<List<AppStory>> watchActive() {
     return _firestore
-        .collection('stories')
+        .collection('stories').where('accountFrozen', isEqualTo: false)
         .where('expiresAt', isGreaterThan: Timestamp.now())
         .limit(150)
         .snapshots()
@@ -98,7 +98,7 @@ class StoryService {
     final user = _auth.currentUser;
     if (user == null) return;
     final stories = await _firestore
-        .collection('stories')
+        .collection('stories').where('accountFrozen', isEqualTo: false)
         .where('userId', isEqualTo: user.uid)
         .limit(200)
         .get();
@@ -131,6 +131,7 @@ class StoryService {
           : 'TBT kullanıcısı',
       'userPhotoUrl': user.photoURL ?? '',
       'createdAt': FieldValue.serverTimestamp(),
+      'accountFrozen': false,
       'expiresAt': Timestamp.fromDate(now.add(const Duration(hours: 24))),
     };
   }

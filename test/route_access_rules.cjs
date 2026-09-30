@@ -6,7 +6,7 @@ let env;
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-tbt-access',firestore:{rules:readFileSync('firestore.rules','utf8')}});});
 after(async()=>{await env?.cleanup();});
 const db=uid=>env.authenticatedContext(uid).firestore();
-const base=()=>({ownerId:'owner',memberIds:['owner'],invitedIds:['invite'],visibility:'public',isPublic:true,
+const base=()=>({accountFrozen:false,ownerId:'owner',memberIds:['owner'],invitedIds:['invite'],visibility:'public',isPublic:true,
  accessVersion:2,joinAudience:'followers',joinEnabled:true,joinRequiresApproval:false,
  hasSchedule:true,startAt:Timestamp.fromMillis(Date.now()+86400000),participantLimit:60,spotIds:['s'],title:'Rota'});
 async function seed(extra={}) {await env.withSecurityRulesDisabled(async c=>{
@@ -99,9 +99,9 @@ test('public editorial routes without participants are discoverable but absent f
  await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),'travel_plans/tbt_ready_example'),{
   ...base(),memberIds:[],invitedIds:[],joinEnabled:false,hasSchedule:false,discoverPublished:true
  }));
- const discover=await assertSucceeds(getDocs(query(collection(db('owner'),'travel_plans'),where('isPublic','==',true))));
+ const discover=await assertSucceeds(getDocs(query(collection(db('owner'),'travel_plans'),where('accountFrozen','==',false),where('isPublic','==',true))));
  if(!discover.docs.some(d=>d.id==='tbt_ready_example')) throw Error('Editorial route missing from Discover');
- const mine=await assertSucceeds(getDocs(query(collection(db('owner'),'travel_plans'),where('memberIds','array-contains','owner'))));
+ const mine=await assertSucceeds(getDocs(query(collection(db('owner'),'travel_plans'),where('accountFrozen','==',false),where('memberIds','array-contains','owner'))));
  if(mine.docs.some(d=>d.id==='tbt_ready_example')) throw Error('Editorial route leaked into personal plans');
  await assertSucceeds(getDoc(doc(db('outsider'),'travel_plans/tbt_ready_example')));
 });

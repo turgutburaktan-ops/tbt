@@ -540,7 +540,7 @@ class _PublicProfileEvents extends StatelessWidget {
     BuildContext context,
   ) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
     stream: FirebaseFirestore.instance
-        .collection('social_events')
+        .collection('social_events').where('accountFrozen', isEqualTo: false)
         .where('hostId', isEqualTo: userId)
         .where('visibility', isEqualTo: 'public')
         .limit(10)
