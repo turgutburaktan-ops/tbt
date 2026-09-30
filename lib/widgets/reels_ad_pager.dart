@@ -12,8 +12,9 @@ class ReelsAdPager extends StatefulWidget {
   final Widget Function(BuildContext, int, bool) videoBuilder;
   final ReelsAdLoader adLoader;
   final double topInset;
+  final ValueChanged<int?>? onVideoSettled;
   const ReelsAdPager({super.key, required this.videoIds,
-    required this.videoBuilder, this.adLoader = loadReelsAd, this.topInset = 64});
+    required this.videoBuilder, this.onVideoSettled, this.adLoader = loadReelsAd, this.topInset = 64});
   @override
   State<ReelsAdPager> createState() => _ReelsAdPagerState();
 }
@@ -53,6 +54,7 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
     if (_enabled == enabled) return;
     setState(() => _enabled = enabled);
     if (!enabled) {
+      widget.onVideoSettled?.call(null);
       _generation++;
       _removeAd();
     } else {
@@ -101,6 +103,7 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
   void _settle() {
     if (!mounted || _scrolling || widget.videoIds.isEmpty) return;
     if (_expired) _removeAd();
+    widget.onVideoSettled?.call(_enabled && _page != _adIndex ? _videoIndex(_page) : null);
     if (_adIndex != null) {
       if (_page == _adIndex) { _seenAd = true; return; }
       if (_seenAd || _page > _adIndex! || _page < _adIndex! - 1) _removeAd();

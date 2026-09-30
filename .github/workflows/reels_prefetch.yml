@@ -1,0 +1,20 @@
+name: Verify original-quality Reels prefetch
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['lib/services/reels_video_cache.dart', 'lib/widgets/app_video_player.dart', 'lib/widgets/reels_ad_pager.dart', 'lib/screens/reels_screen.dart', 'test/reels_video_cache_test.dart', '.github/workflows/reels_prefetch.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/reels_video_cache.dart lib/widgets/app_video_player.dart lib/widgets/reels_ad_pager.dart lib/screens/reels_screen.dart test/reels_video_cache_test.dart
+      - run: flutter test test/reels_video_cache_test.dart test/video_playback_test.dart test/reels_ad_pager_test.dart

@@ -1,3 +1,5 @@
+import 'dart:async';
+import '../services/reels_video_cache.dart';
 import '../theme/app_theme.dart';
 import '../services/video_audio_session.dart';
 import '../services/creator_service.dart';
@@ -36,7 +38,27 @@ class ReelsScreen extends StatefulWidget {
   State<ReelsScreen> createState() => _ReelsScreenState();
 }
 
-class _ReelsScreenState extends State<ReelsScreen> {
+class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
+  ReelsVideoCache _videoCache = ReelsVideoCache();
+  StreamSubscription<String?>? _authChanges;
+  String? _settledUrl;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    var uid = FirebaseAuth.instance.currentUser?.uid;
+    _authChanges = FirebaseAuth.instance.authStateChanges().map((u) => u?.uid).distinct().listen((next) {
+      if (!mounted || uid == next) return;
+      uid = next;
+      final old = _videoCache;
+      setState(() { _videoCache = ReelsVideoCache(); _settledUrl = null; });
+      unawaited(old.dispose());
+    });
+  }
+  @override
+  void didHaveMemoryPressure() { unawaited(_videoCache.trim()); }
+  @override
+  void dispose() { WidgetsBinding.instance.removeObserver(this); unawaited(_authChanges?.cancel()); unawaited(_videoCache.dispose()); super.dispose(); }
   int _section = 0;
 
   Stream<QuerySnapshot<Map<String, dynamic>>> get _stream => FirebaseFirestore
@@ -152,6 +174,18 @@ class _ReelsScreenState extends State<ReelsScreen> {
                   key: ValueKey(_section),
                   videoIds: docs.map((doc) => doc['id'].toString()).toList(),
                   topInset: widget.embedded ? 108 : 64,
+                  onVideoSettled: (index) {
+                    final url = index == null ? null : (docs[index]['videoUrl'] ?? '').toString();
+                    if (_settledUrl != url) {
+                      _videoCache.stop(); _settledUrl = url;
+                      if (index != null && index + 1 < docs.length) {
+                        final next = docs[index + 1];
+                        final cover = (next['thumbnailUrl'] ?? next['imageUrl'] ?? '').toString();
+                        if (cover.isNotEmpty) unawaited(precacheImage(ResizeImage(NetworkImage(cover), width: 720), context, onError: (_, __) {}));
+                      }
+                    }
+                    _videoCache.activeUrl = url;
+                  },
                   videoBuilder: (context, index, active) {
                     final doc = docs[index];
                     return CreatorViewTracker(
@@ -162,6 +196,15 @@ class _ReelsScreenState extends State<ReelsScreen> {
                         postId: doc['id'].toString(),
                         data: doc,
                         active: active,
+                        cache: _videoCache,
+                        onPlaying: () {
+                          final url = (doc['videoUrl'] ?? '').toString();
+                          if (_settledUrl != url) return;
+                          _videoCache.warm([
+                            if (index + 1 < docs.length) (docs[index + 1]['videoUrl'] ?? '').toString(),
+                            url,
+                          ]);
+                        },
                       ),
                     );
                   },
@@ -251,12 +294,16 @@ class _ReelPage extends StatelessWidget {
   final String postId;
   final Map<String, dynamic> data;
   final bool active;
+  final ReelsVideoCache cache;
+  final VoidCallback onPlaying;
 
   const _ReelPage({
     super.key,
     required this.postId,
     required this.data,
     required this.active,
+    required this.cache,
+    required this.onPlaying,
   });
 
   String get _videoUrl => (data['videoUrl'] ?? '').toString();
@@ -384,6 +431,15 @@ class _ReelPage extends StatelessWidget {
           },
           child: AppVideoPlayer.network(
             url: _videoUrl,
+            cachedFile: cache.peek,
+            onPlayback: (value) { if (active && value.isPlaying && !value.isBuffering) onPlaying(); },
+            loading: Stack(fit: StackFit.expand, children: [
+              if ((data['thumbnailUrl'] ?? data['imageUrl'] ?? '').toString().isNotEmpty)
+                Image.network((data['thumbnailUrl'] ?? data['imageUrl']).toString(),
+                  fit: BoxFit.contain, cacheWidth: 720,
+                  errorBuilder: (_, __, ___) => const ColoredBox(color: Colors.black)),
+              const Center(child: CircularProgressIndicator()),
+            ]),
             holdToSpeed: true,
             autoplay: true,
             active: active,

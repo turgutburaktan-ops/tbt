@@ -48,6 +48,7 @@ class _PlaybackOwner {
 class AppVideoPlayer extends StatefulWidget {
   final String? url;
   final File? file;
+  final File? Function(String)? cachedFile;
   final bool autoplay, muted, loop, showControls, active;
   final double volume;
   final VideoAudioSession? audioSession;
@@ -64,6 +65,7 @@ class AppVideoPlayer extends StatefulWidget {
   const AppVideoPlayer.network({
     super.key,
     required String this.url,
+    this.cachedFile,
     this.autoplay = false,
     this.muted = true,
     this.volume = 1,
@@ -106,7 +108,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.onReady,
     this.onError,
     this.onPlayback,
-  }) : url = null;
+  }) : url = null, cachedFile = null;
   @override
   State<AppVideoPlayer> createState() => _AppVideoPlayerState();
 }
@@ -287,8 +289,9 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
       // This State owns lifecycle pause/resume. Disable the plugin's second
       // lifecycle observer, which can otherwise issue play outside our queue.
       final options = VideoPlayerOptions(allowBackgroundPlayback: true);
-      c = widget.file != null
-          ? VideoPlayerController.file(widget.file!, videoPlayerOptions: options)
+      final local = widget.file ?? widget.cachedFile?.call(widget.url!);
+      c = local != null
+          ? VideoPlayerController.file(local, videoPlayerOptions: options)
           : VideoPlayerController.networkUrl(Uri.parse(widget.url!), videoPlayerOptions: options);
       _controller = c;
       await c.initialize().timeout(const Duration(seconds: 15));
