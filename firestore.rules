@@ -189,7 +189,7 @@ service cloud.firestore {
           d.originalVideoStoragePath == 'users/' + request.auth.uid + '/posts/' + postId + '.mp4'
         ));
     }
-    function postReadable(d) { return d.get('accountFrozen', false) == false; }
+    function postReadable(d) { return d.accountFrozen == false; }
     function validPostCreate() {
       return request.resource.data.get('accountFrozen', null) == false && signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&
         request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&
