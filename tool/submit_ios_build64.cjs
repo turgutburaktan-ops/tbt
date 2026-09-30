@@ -1,0 +1,93 @@
+'use strict';
+require('node:child_process').execFileSync(process.execPath, [require('node:path').join(__dirname, 'security_release_gate.cjs'), '--release=64'], {stdio: 'inherit'});
+const crypto=require('node:crypto'),fs=require('node:fs');
+const root='https://api.appstoreconnect.apple.com/v1';
+const appId='6808182194';
+const encode=x=>Buffer.from(JSON.stringify(x)).toString('base64url');
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function token(){
+ const now=Math.floor(Date.now()/1000);
+ const unsigned=encode({alg:'ES256',kid:process.env.APP_STORE_CONNECT_API_KEY_ID,typ:'JWT'})+'.'+encode({iss:process.env.APP_STORE_CONNECT_API_ISSUER_ID,iat:now,exp:now+1000,aud:'appstoreconnect-v1'});
+ return unsigned+'.'+crypto.sign('sha256',Buffer.from(unsigned),{key:process.env.APP_STORE_CONNECT_API_KEY,dsaEncoding:'ieee-p1363'}).toString('base64url');
+}
+async function api(path,method='GET',data){
+ const r=await fetch(path.startsWith('https://api.appstoreconnect.apple.com/')?path:root+path,{method,headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},...(data===undefined?{}:{body:JSON.stringify(data)}),signal:AbortSignal.timeout(60000)});
+ const b=await r.json().catch(()=>({}));
+ if(!r.ok)throw Error('App Store '+method+' '+path+' HTTP '+r.status+' '+JSON.stringify(b.errors?.map(e=>({code:e.code,detail:e.detail}))||[]));
+ return b;
+}
+async function reviews(){
+ const list=await api('/reviewSubmissions?filter[app]='+appId+'&limit=50');
+ const out=[];
+ for(const r of list.data){
+  if(['COMPLETE','CANCELED'].includes(r.attributes.state))continue;
+  const items=await api('/reviewSubmissions/'+r.id+'/items?include=appStoreVersion');
+  out.push({...r,items:items.data});
+ }
+ return out;
+}
+
+(async()=>{
+ const app=(await api('/apps/'+appId)).data;
+ if(app.attributes.bundleId!=='com.tbt.social')throw Error('Unexpected app');
+ let build;
+ for(let attempt=0;attempt<60;attempt++){
+  const list=await api('/builds?filter[app]='+appId+'&filter[version]=64&include=preReleaseVersion&limit=20');
+  build=list.data.find(b=>list.included?.find(v=>v.id===b.relationships?.preReleaseVersion?.data?.id)?.attributes?.version==='1.0.36');
+  if(build?.attributes.processingState==='VALID')break;
+  if(build&&['FAILED','INVALID'].includes(build.attributes.processingState))throw Error('Build 64 processing failed');
+  console.log('Waiting for iOS 1.0.36 build 64 processing: '+(attempt+1));
+  await sleep(30000);
+ }
+ if(!build||build.attributes.processingState!=='VALID'||build.attributes.expired)throw Error('Build 64 not ready; existing release left unchanged');
+ console.log('VALIDATED_IOS_BUILD '+build.id);
+ const versions=(await api('/apps/'+appId+'/appStoreVersions?filter[platform]=IOS&limit=50')).data;
+ const newer=v=>v.attributes.versionString.split('.').map(Number).reduce((n,x)=>n*1000+x,0)>1000036;
+ if(versions.some(newer))throw Error('A newer iOS version exists; refusing an older update');
+ let version=versions.find(v=>v.attributes.versionString==='1.0.36');
+ if(!version){
+  const editable=versions.filter(v=>!['READY_FOR_SALE','READY_FOR_DISTRIBUTION','REMOVED_FROM_SALE','DEVELOPER_REMOVED_FROM_SALE','REPLACED_WITH_NEW_VERSION'].includes(v.attributes.appStoreState));
+  if(editable.length)throw Error('Another iOS version is active; refusing to replace it');
+  version=(await api('/appStoreVersions','POST',{data:{type:'appStoreVersions',attributes:{platform:'IOS',versionString:'1.0.36',releaseType:'AFTER_APPROVAL',copyright:'2026 TBT'},relationships:{app:{data:{type:'apps',id:appId}}}}})).data;
+ }
+ const versionId=version.id;
+ const attached=(await api('/appStoreVersions/'+versionId+'/build')).data;
+ if(attached?.id===build.id&&['WAITING_FOR_REVIEW','IN_REVIEW','PENDING_DEVELOPER_RELEASE','READY_FOR_SALE','READY_FOR_DISTRIBUTION'].includes(version.attributes.appStoreState)){
+  console.log('IOS_UPDATE_ALREADY_SUBMITTED version=1.0.36 build=64 state='+version.attributes.appStoreState);return;
+ }
+ if(!['PREPARE_FOR_SUBMISSION','DEVELOPER_REJECTED','REJECTED','METADATA_REJECTED','READY_FOR_REVIEW'].includes(version.attributes.appStoreState))throw Error('Target version not editable: '+version.attributes.appStoreState);
+ // The app implements standard encryption outside the OS. Do not claim OS-only encryption.
+ const availability=(await api('/apps/'+appId+'/appAvailabilityV2')).data;
+ if(availability.attributes.availableInNewTerritories)throw Error('Encryption distribution needs review: new territories automatically enabled');
+ let territoryPath=availability.relationships.territoryAvailabilities.links.related+'?limit=200&include=territory',france;
+ while(territoryPath){const page=await api(territoryPath);france=france||page.data.find(x=>x.relationships?.territory?.data?.id==='FRA');territoryPath=page.links?.next;}
+ if(!france||france.attributes.available!==false)throw Error('French encryption documentation required before submission');
+ const description='TBT 1.0.36 uses Signal protocol messaging via libsignal_protocol_dart and AES-GCM media encryption. It uses standard cryptographic algorithms implemented outside the Apple operating system. No proprietary cryptographic algorithm is implemented. Distribution in France is disabled.';
+ const declarations=(await api('/appEncryptionDeclarations?filter[app]='+appId+'&limit=100')).data;
+ let declaration=declarations.find(x=>x.attributes.appDescription===description&&x.attributes.usesEncryption===true&&x.attributes.containsThirdPartyCryptography===true&&x.attributes.containsProprietaryCryptography===false&&x.attributes.availableOnFrenchStore===false);
+ if(!declaration)declaration=(await api('/appEncryptionDeclarations','POST',{data:{type:'appEncryptionDeclarations',attributes:{appDescription:description,usesEncryption:true,exempt:false,containsProprietaryCryptography:false,containsThirdPartyCryptography:true,availableOnFrenchStore:false},relationships:{app:{data:{type:'apps',id:appId}}}}})).data;
+ console.log('ENCRYPTION_DECLARATION '+declaration.id+' state='+declaration.attributes.appEncryptionDeclarationState);
+ await api('/builds/'+build.id,'PATCH',{data:{type:'builds',id:build.id,attributes:{usesNonExemptEncryption:true},relationships:{appEncryptionDeclaration:{data:{type:'appEncryptionDeclarations',id:declaration.id}}}}});
+ const linked=(await api('/builds/'+build.id+'/appEncryptionDeclaration')).data;
+ if(linked?.id!==declaration.id)throw Error('Encryption declaration readback mismatch');
+ await api('/appStoreVersions/'+versionId+'/relationships/build','PATCH',{data:{type:'builds',id:build.id}});
+ const localizations=(await api('/appStoreVersions/'+versionId+'/appStoreVersionLocalizations')).data;
+ if(!localizations.length)throw Error('New version has no inherited store metadata');
+ for(const l of localizations){
+  const whatsNew=l.attributes.locale.startsWith('tr')
+   ? 'Profilde çoklu görsellerin gösterimi ve admin sistem sağlığı düzeltildi. Rota, sohbet ve albüm akışları güncellendi.'
+   : 'Fixed profile photo carousels and admin system health. Updated route, chat and album flows.';
+  await api('/appStoreVersionLocalizations/'+l.id,'PATCH',{data:{type:'appStoreVersionLocalizations',id:l.id,attributes:{whatsNew}}});
+ }
+ let review=(await reviews()).find(r=>r.attributes.state==='READY_FOR_REVIEW'&&r.items.length===1&&r.items[0].relationships?.appStoreVersion?.data?.id===versionId);
+ if(!review){
+  review=(await api('/reviewSubmissions','POST',{data:{type:'reviewSubmissions',attributes:{platform:'IOS'},relationships:{app:{data:{type:'apps',id:appId}}}}})).data;
+  await api('/reviewSubmissionItems','POST',{data:{type:'reviewSubmissionItems',relationships:{reviewSubmission:{data:{type:'reviewSubmissions',id:review.id}},appStoreVersion:{data:{type:'appStoreVersions',id:versionId}}}}});
+ }
+ await api('/reviewSubmissions/'+review.id,'PATCH',{data:{type:'reviewSubmissions',id:review.id,attributes:{submitted:true}}});
+ const final=(await api('/reviewSubmissions/'+review.id)).data;
+ const finalBuild=(await api('/appStoreVersions/'+versionId+'/build')).data;
+ if(finalBuild?.id!==build.id||!['WAITING_FOR_REVIEW','IN_REVIEW','COMPLETE'].includes(final.attributes.state))throw Error('Submission state not confirmed');
+ console.log('IOS_UPDATE_SUBMITTED version=1.0.36 build=64 state='+final.attributes.state+' review='+review.id+' versionId='+versionId);
+ if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'TBT iOS 1.0.36 (64) submitted: '+final.attributes.state+'\n');
+})().catch(e=>{console.error(e.message);process.exitCode=1;});

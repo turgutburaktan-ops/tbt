@@ -1,0 +1,100 @@
+name: Submit approved TBT 1.0.36 (64) update
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/store_release64.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: tbt-release64
+  cancel-in-progress: false
+jobs:
+  prerequisites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tool/security_release_gate.cjs --release=64
+      - name: Require verified source, native builds and live compatibility
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const expected = [
+              [36694846452, '7a295ca6f1b3ca18ba6ed0b70f519562c714a6b9'],
+              [36695614771, 'eeeb056f3b4f1171879791d2e4b428baf7e23aa3'],
+              [36695743272, 'b92f2b6940801a6c0c6234a52963d3a28f26c7fd'],
+              [36696296021, '72214a9318b6a0e71b4652cf4f1215a5494bd886']
+            ];
+            const deadline = Date.now() + 60 * 60 * 1000;
+            while (Date.now() < deadline) {
+              let pending = 0;
+              for (const [run_id, sha] of expected) {
+                const {data:r} = await github.rest.actions.getWorkflowRun({...context.repo, run_id});
+                if (r.head_sha !== sha) throw new Error('Unexpected prerequisite source');
+                if (r.status !== 'completed') { pending++; continue; }
+                if (r.conclusion !== 'success') throw new Error('Prerequisite failed: '+run_id+' '+r.conclusion);
+              }
+              if (!pending) { core.info('ALL_RELEASE64_PREREQUISITES_VERIFIED'); return; }
+              core.info('Waiting for '+pending+' release prerequisites');
+              await new Promise(resolve => setTimeout(resolve, 20000));
+            }
+            throw new Error('Release prerequisites timed out');
+  android:
+    needs: prerequisites
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-play-release-1.0.36-code64
+          path: build/app/outputs/bundle/release
+          run-id: 36694846452
+          github-token: ${{ github.token }}
+      - name: Submit and read back Play closed testing update
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/upload_play_build64.cjs
+  ios:
+    needs: prerequisites
+    runs-on: macos-26
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-ios-ipa-1.0.36-build64
+          path: build/ios/ipa
+          run-id: 36694846452
+          github-token: ${{ github.token }}
+      - name: Verify artifact identity
+        run: python3 tool/verify_ios_branding64.py
+      - name: Upload signed version 64 to Apple
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          set -euo pipefail
+          API_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$API_KEYS_DIR"
+          KEY_PATH="$API_KEYS_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          trap 'rm -f "$KEY_PATH"' EXIT
+          printf '%s' "$APP_STORE_CONNECT_API_KEY" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          IPA_PATH=$(find build/ios/ipa -maxdepth 1 -name '*.ipa' -print -quit)
+          test -n "$IPA_PATH"
+          xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$APP_STORE_CONNECT_API_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+      - name: Submit update with truthful encryption declaration
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build64.cjs
