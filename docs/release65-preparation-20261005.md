@@ -1,3 +1,18 @@
+# Release 65 store submission — completed 2026-10-05
+
+User explicitly approved the five disclosed open checks for release65 at 14:59 Europe/Istanbul. Recorded in tool/release65_accepted_risks.json. The default security gate and release66 still fail; no security check was marked verified.
+
+Submission source: ab605d5d924b4c90f84b6da17309eb068beb24f1. Workflow 37306646546 completed successfully using signed artifacts from 37301788819.
+
+- Android job 111751925167: versionCode65 uploaded, checksum verified, alpha edit committed and read back as 65 (1.0.37), completed; review submitted at 12:02:56 UTC. This is closed testing, not production rollout.
+- iOS job 111751925268: upload succeeded; build 9983a93e-d23f-4005-8761-87b7490fc54e VALID; truthful encryption documentation exemption rechecked against unavailable France; submitted at 12:11:18 UTC, WAITING_FOR_REVIEW.
+- Apple review: f2764add-2359-4acc-b161-8b967b82b007; version: ef20ec52-ca5c-42fb-a91b-3fff4cf4ce92; releaseType AFTER_APPROVAL.
+- Existing mandatory-update policy was not changed during this submission.
+
+The preparation history below predates this approval and submission.
+
+---
+
 # Requested update 1.0.37 (65)
 
 Request: “Tamam bunları güncelleme yap” on 2026-10-05, following the screen-recording review.
