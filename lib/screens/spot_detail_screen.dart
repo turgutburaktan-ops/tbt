@@ -11,7 +11,7 @@ import '../widgets/spot_presence_section.dart';
 import '../widgets/spot_user_posts_gallery.dart';
 import '../widgets/venue_badge_strip.dart';
 import 'camera_screen.dart';
-import 'route_planner_screen.dart';
+import 'route_create_screen.dart';
 
 class SpotDetailScreen extends StatelessWidget {
   final PhotoSpot spot;
@@ -203,7 +203,7 @@ class SpotDetailScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                RoutePlannerScreen(initialSpot: spot),
+                                RouteCreateScreen(initialStops: [spot]),
                           ),
                         ),
                         icon: const Icon(Icons.route_outlined),

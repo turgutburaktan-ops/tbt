@@ -1,4 +1,5 @@
 import 'feed_post_card.dart';
+import 'post_loading_placeholder.dart';
 import '../theme/app_theme.dart';
 import 'content_engagement_bar.dart';
 import 'profile_name_link.dart';
@@ -375,6 +376,9 @@ class _SharedPostCardState extends State<SharedPostCard> {
   @override
   Widget build(BuildContext context) {
     final post = _post;
+    if (post == null && _loading && widget.feedPresentation) {
+      return const PostLoadingPlaceholder();
+    }
     if (post == null)
       return Padding(
         padding: const EdgeInsets.all(20),

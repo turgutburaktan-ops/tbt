@@ -1,0 +1,20 @@
+name: Verify October video review fixes
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['lib/widgets/post_loading_placeholder.dart', 'lib/widgets/shared_post_card.dart', 'lib/widgets/retention_hub_quick_entry.dart', 'lib/screens/spot_detail_screen.dart', 'test/discover_post_feed_test.dart', '.github/workflows/video_review_fixes.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/widgets/post_loading_placeholder.dart lib/widgets/shared_post_card.dart lib/widgets/retention_hub_quick_entry.dart lib/screens/spot_detail_screen.dart test/discover_post_feed_test.dart
+      - run: flutter test test/discover_post_feed_test.dart test/route_create_test.dart test/route_selection_modes_test.dart test/ready_route_event_test.dart test/reels_video_cache_test.dart test/video_playback_test.dart

@@ -57,7 +57,10 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        widget.child,
+        Positioned.fill(
+          top: _isAdmin ? 44 : 0,
+          child: widget.child,
+        ),
         if (_isAdmin)
           Positioned(
             left: 12,
