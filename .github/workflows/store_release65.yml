@@ -1,0 +1,80 @@
+name: Submit prepared TBT 1.0.37 (65) update
+# Manual only. The unchanged release gate blocks submission until the release is authorized.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: tbt-release65
+  cancel-in-progress: false
+jobs:
+  prerequisites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tool/security_release_gate.cjs --release=65
+      - name: Require exact signed build source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data:r}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:37301788819});
+            if(r.head_sha!=='690bd183a850b39b5223966a9f26b7e51ebcb513'||r.conclusion!=='success')throw new Error('Signed release 65 artifacts are not verified');
+  android:
+    needs: prerequisites
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-play-release-1.0.37-code65
+          path: build/app/outputs/bundle/release
+          run-id: 37301788819
+          github-token: ${{ github.token }}
+      - name: Submit and read back Play closed testing update
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/upload_play_build65.cjs
+  ios:
+    needs: prerequisites
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-ios-ipa-1.0.37-build65
+          path: build/ios/ipa
+          run-id: 37301788819
+          github-token: ${{ github.token }}
+      - name: Verify artifact identity
+        run: python3 tool/verify_ios_branding65.py
+      - name: Upload signed version 65 to Apple
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          set -euo pipefail
+          API_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$API_KEYS_DIR"
+          KEY_PATH="$API_KEYS_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          trap 'rm -f "$KEY_PATH"' EXIT
+          printf '%s' "$APP_STORE_CONNECT_API_KEY" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          IPA_PATH=$(find build/ios/ipa -maxdepth 1 -name '*.ipa' -print -quit)
+          test -n "$IPA_PATH"
+          xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$APP_STORE_CONNECT_API_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+      - name: Submit update with truthful encryption declaration
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build65.cjs
