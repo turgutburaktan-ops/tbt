@@ -1,7 +1,10 @@
 name: Submit prepared TBT 1.0.37 (65) update
-# Manual only. The unchanged release gate blocks submission until the release is authorized.
+# Release 65 risk acceptance explicitly authorized by the user on 2026-10-05.
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/store_release65.yml']
 permissions:
   contents: read
   actions: read

@@ -13,12 +13,14 @@ try {
       blocked.push(id + ': ' + (check.reason || 'Doğrulama kanıtı eksik.'));
     }
   }
-  if (blocked.length && process.argv.slice(2).join(' ') === '--release=64') {
+  const releaseArg = process.argv.slice(2).join(' ');
+  const release = releaseArg === '--release=64' ? 64 : releaseArg === '--release=65' ? 65 : null;
+  if (blocked.length && release !== null) {
     const crypto = require('node:crypto');
-    const acceptance = JSON.parse(fs.readFileSync(path.join(__dirname, 'release64_accepted_risks.json'), 'utf8'));
+    const acceptance = JSON.parse(fs.readFileSync(path.join(__dirname, `release${release}_accepted_risks.json`), 'utf8'));
     const actualHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, 'security_release_readiness.json'))).digest('hex');
-    if (acceptance.release !== 64 || acceptance.version !== '1.0.36' || acceptance.readinessSha256 !== actualHash || JSON.stringify([...acceptance.acceptedChecks].sort()) !== JSON.stringify([...required].sort()) || !acceptance.authorization) throw Error('Release-specific acceptance is missing or stale.');
-    console.log('RELEASE_64_ACCEPTED_RISKS_NOT_SECURITY_VERIFIED');
+    if (acceptance.release !== release || acceptance.version !== ({64: '1.0.36', 65: '1.0.37'})[release] || acceptance.readinessSha256 !== actualHash || JSON.stringify([...acceptance.acceptedChecks].sort()) !== JSON.stringify([...required].sort()) || !acceptance.authorization) throw Error('Release-specific acceptance is missing or stale.');
+    console.log(`RELEASE_${release}_ACCEPTED_RISKS_NOT_SECURITY_VERIFIED`);
     blocked.forEach(item => console.log('OPEN_SECURITY_CHECK '+item));
     return;
   }

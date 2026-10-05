@@ -1,0 +1,19 @@
+{
+  "release": 65,
+  "version": "1.0.37",
+  "authorizationDate": "2026-10-05",
+  "authorization": "Kullanıcıya 1.0.37 (65) hazır paketleri ve beş açık güvenlik kontrolü belirtilerek 65. sürümün gönderimi soruldu. Kullanıcı 14:59 Europe/Istanbul: Onay.",
+  "readinessSha256": "feccde3fdb222d7b686210dee2df669c12aca39bdcfd42cb402142fa467fc8c7",
+  "acceptedChecks": [
+    "private-contacts",
+    "frozen-content-reads",
+    "end-to-end-encryption",
+    "app-check",
+    "database-recovery"
+  ],
+  "limits": [
+    "Applies only to release 65; does not mark security checks verified.",
+    "Does not waive functional deployment, artifact identity, store requirements or encryption declarations.",
+    "Mandatory updates remain off until the target build is available to the affected users."
+  ]
+}
