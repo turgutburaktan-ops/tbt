@@ -1,0 +1,48 @@
+{
+  "locale": "tr-TR",
+  "title": "TBT: Rota, Gezi ve Etkinlik",
+  "slogan": "Keşfet. Paylaş. Buluş.",
+  "shortDescription": "Keşfet. Paylaş. Buluş. Rota oluştur, etkinliklere katıl, yeni insanlarla tanış.",
+  "subtitle": "Keşfet. Paylaş. Buluş.",
+  "description": "TBT — Keşfet. Paylaş. Buluş.\n\nGezilecek yerleri keşfet, kendi rotanı oluştur ve etkinliklere katılarak yeni insanlarla tanış. TBT; gezi planlama, etkinlik oluşturma, sohbet ve anı paylaşımını bir araya getirir.\n\nKEŞFET: YERLER VE ROTALAR\nŞehrindeki veya gitmek istediğin şehirdeki gezilecek yerleri, kafeleri, restoranları ve otelleri incele. Hazır rotalardan ilham al ya da duraklarını seçerek kendi gezi rotanı oluştur. Araç, yürüyüş veya bisiklet seçenekleriyle planını şekillendir.\n\nBULUŞ: ETKİNLİK OLUŞTUR VE KATIL\nFotoğraf gezisi, yürüyüş, kahve buluşması veya hafta sonu gezisi planla. Etkinliğin zamanını ve buluşma noktasını belirle. Kimlerin görebileceğini ve katılabileceğini seç; istersen katılım taleplerini onayla. Çevrendeki etkinlikleri inceleyerek ilgi alanlarını paylaşan insanlarla tanış.\n\nBİRLİKTE PLANLA\nRota sohbetinde durakları ve gezi ayrıntılarını konuş. Arkadaşlarınla plan yap veya katıldığın gezi grubuyla iletişimde kal.\n\nPAYLAŞ: ANILARINI BİRİKTİR\nGezilerinden fotoğraf ve videolar paylaş, hikâyeler ve Reels ile keşiflerini anlat. Katıldığın gezinin anılarını ortak albümde bir araya getir. Başkalarının paylaşımlarından bir sonraki planın için ilham al.\n\nİster kendi şehrinde yeni bir yer keşfet, ister birlikte yola çıkacağın insanları bul. Bir sonraki planını TBT’de başlat.",
+  "promotionalText": "Keşfet. Paylaş. Buluş. Gezilecek yerleri keşfet, rotanı oluştur ve etkinliklere katıl. Birlikte planla, sohbet et, gezi anılarını paylaş.",
+  "keywords": "gezilecek yerler,seyahat,planlayıcı,harita,yürüyüş,bisiklet,kamp,arkadaş,fotoğraf,albüm",
+  "screenshots": [
+    {
+      "order": 1,
+      "headline": "Keşfet. Paylaş. Buluş.",
+      "subline": "Rotalar, etkinlikler ve gezi anıları bir arada.",
+      "screen": "Rota keşfi veya dolu etkinlik listesi"
+    },
+    {
+      "order": 2,
+      "headline": "Etkinlik bul, yeni insanlarla tanış",
+      "subline": "İlgi alanına uygun bir plana katıl.",
+      "screen": "Etkinlik detayı ve katılım"
+    },
+    {
+      "order": 3,
+      "headline": "Kendi etkinliğini oluştur",
+      "subline": "Zamanı, buluşma noktasını ve katılımı belirle.",
+      "screen": "Etkinlik oluşturma"
+    },
+    {
+      "order": 4,
+      "headline": "Rotanı birlikte planla",
+      "subline": "Durakları seç, sırala, yola çık.",
+      "screen": "Rota haritası ve durak listesi"
+    },
+    {
+      "order": 5,
+      "headline": "Gezi öncesi sohbete başla",
+      "subline": "Ayrıntıları birlikte konuş.",
+      "screen": "Gerçek rota sohbeti; izinli örnek mesajlar"
+    },
+    {
+      "order": 6,
+      "headline": "Anılarınızı aynı albümde toplayın",
+      "subline": "Gezinizi fotoğraf ve videolarla paylaşın.",
+      "screen": "Gerçek ortak albüm; izinli fotoğraflar"
+    }
+  ]
+}

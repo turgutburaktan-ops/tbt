@@ -1,0 +1,30 @@
+name: Apply approved Turkish ASO metadata
+on:
+  push:
+    branches: [codex/release-readiness-20260929]
+    paths: ['.github/workflows/aso_apply.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        store: [apple, play]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply and read back approved metadata
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/aso_apply.cjs ${{ matrix.store }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aso-apply-${{ matrix.store }}
+          path: build/aso/*.json
