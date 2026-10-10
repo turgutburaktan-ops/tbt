@@ -57,10 +57,8 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned.fill(
-          top: _isAdmin ? 44 : 0,
-          child: widget.child,
-        ),
+        // Admin access floats above the page without reserving header space.
+        Positioned.fill(child: widget.child),
         if (_isAdmin)
           Positioned(
             left: 12,
