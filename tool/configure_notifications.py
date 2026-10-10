@@ -2,6 +2,9 @@
 from pathlib import Path
 import sys
 if sys.argv[1] == 'android':
+    # Hosts are regenerated during release builds; reapply launch branding here.
+    from configure_android_splash import configure as configure_splash
+    configure_splash()
     path = Path('android/app/build.gradle.kts')
     source = path.read_text()
     if 'isCoreLibraryDesugaringEnabled = true' not in source:
